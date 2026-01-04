@@ -1,10 +1,3 @@
-좋은 시작이야! 더 풍부하게 확장해볼게:
-
-```bash
-micro README.md
-```
-
-```markdown
 # Lazarus
 
 **Offline-first Personal Knowledge Management for the Rest of Us**
