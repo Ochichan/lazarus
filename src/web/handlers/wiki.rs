@@ -268,6 +268,13 @@ pub async fn get_article(
     // 먼저 이진 탐색으로 빠르게 시도
     if let Some(content) = zim.get_content_fast(&decoded_url)? {
         let content_type = guess_mime(&decoded_url);
+        // HTML이면 네비게이션 추가
+        if content_type.contains("html") {
+            let html = String::from_utf8_lossy(&content);
+            let title = decoded_url.split('/').last().unwrap_or(&decoded_url);
+            let wrapped = wrap_wiki_html(&html, title, &zim_names, &selected_name);
+            return Ok(Html(wrapped).into_response());
+        }
         return Ok((
             StatusCode::OK,
             [(header::CONTENT_TYPE, content_type)],
@@ -320,9 +327,8 @@ fn wrap_wiki_html(content: &str, title: &str, zim_names: &[String], selected_zim
             let selected = if name == selected_zim { " selected" } else { "" };
             format!(r#"<option value="{}"{}>{}</option>"#, name, selected, name)
         }).collect();
-
         format!(r#"
-            <select onchange="changeZim(this.value)" style="padding: 0.25rem 0.5rem; border-radius: 4px; border: 1px solid #444; background: #1a1a2e; color: white;">
+            <select onchange="changeZim(this.value)" class="zim-select">
                 {}
             </select>
         "#, options)
@@ -332,31 +338,97 @@ fn wrap_wiki_html(content: &str, title: &str, zim_names: &[String], selected_zim
 
     format!(r#"
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{} - Lazarus</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{} - Lazarus Wiki</title>
     <link rel="stylesheet" href="/static/style.css">
     <style>
+        :root {{
+            --wiki-nav-height: 50px;
+        }}
         .wiki-nav {{
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            background: var(--bg-secondary);
-            padding: 0.5rem 1rem;
+            height: var(--wiki-nav-height);
+            background: var(--bg);
+            padding: 0 1rem;
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.5rem;
             border-bottom: 1px solid var(--border);
             z-index: 1000;
         }}
-        .wiki-nav a {{
-            color: var(--accent);
+        .wiki-nav-left {{
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }}
+        .wiki-nav-center {{
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }}
+        .wiki-nav-right {{
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }}
+        .wiki-nav a, .wiki-nav button {{
+            color: var(--text);
             text-decoration: none;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius);
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }}
+        .wiki-nav a:hover, .wiki-nav button:hover {{
+            background: var(--bg-secondary);
+        }}
+        .wiki-nav .logo {{
+            font-weight: bold;
+            font-size: 1rem;
+        }}
+        .nav-btn {{
+            background: var(--bg-secondary) !important;
+            border: 1px solid var(--border) !important;
+        }}
+        .nav-btn:hover {{
+            background: var(--accent) !important;
+            color: white !important;
+        }}
+        .nav-btn:disabled {{
+            opacity: 0.5;
+            cursor: not-allowed;
+        }}
+        .wiki-title {{
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }}
+        .zim-select {{
+            padding: 0.3rem 0.5rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text);
+            font-size: 0.85rem;
         }}
         .wiki-content {{
-            margin-top: 60px;
+            margin-top: calc(var(--wiki-nav-height) + 1rem);
             padding: 1rem;
             max-width: 900px;
             margin-left: auto;
@@ -366,33 +438,144 @@ fn wrap_wiki_html(content: &str, title: &str, zim_names: &[String], selected_zim
             max-width: 100%;
             height: auto;
         }}
+        .wiki-content a {{
+            color: var(--accent);
+        }}
+        .wiki-content h1, .wiki-content h2, .wiki-content h3 {{
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }}
+        .wiki-content p {{
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }}
+        .wiki-content table {{
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }}
+        .wiki-content th, .wiki-content td {{
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            text-align: left;
+        }}
+        .wiki-content th {{
+            background: var(--bg-secondary);
+        }}
+        .wiki-content pre, .wiki-content code {{
+            background: var(--bg-secondary);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }}
+        .wiki-content pre {{
+            padding: 1rem;
+            overflow-x: auto;
+        }}
+        .wiki-content blockquote {{
+            border-left: 3px solid var(--accent);
+            margin: 1rem 0;
+            padding-left: 1rem;
+            color: var(--text-secondary);
+        }}
+        .breadcrumb {{
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }}
+        .breadcrumb a {{
+            color: var(--text-secondary);
+        }}
+        .breadcrumb a:hover {{
+            color: var(--accent);
+        }}
+        /* 모바일 */
+        @media (max-width: 768px) {{
+            .wiki-nav-center {{
+                display: none;
+            }}
+            .wiki-title {{
+                max-width: 150px;
+            }}
+        }}
     </style>
 </head>
 <body>
-    <div class="wiki-nav">
-        <a href="/">📚 Lazarus</a>
-        <a href="/wiki/search?zim={}">🔍 검색</a>
+    <nav class="wiki-nav">
+        <div class="wiki-nav-left">
+            <a href="/" class="logo">📚</a>
+            <button onclick="goBack()" class="nav-btn" id="back-btn" title="Back">←</button>
+            <button onclick="goForward()" class="nav-btn" id="forward-btn" title="Forward">→</button>
+        </div>
+        <div class="wiki-nav-center">
+            <a href="/notes">📝 Notes</a>
+            <a href="/search">🔍 Search</a>
+            <a href="/wiki/search?zim={}">📖 Wiki</a>
+            <a href="/srs">🧠 SRS</a>
+        </div>
+        <div class="wiki-nav-right">
+            {}
+            <span class="wiki-title" title="{}">{}</span>
+        </div>
+    </nav>
+
+    <main class="wiki-content">
+        <div class="breadcrumb">
+            <a href="/">Home</a> → <a href="/wiki/search?zim={}">Wiki</a> → {}
+        </div>
         {}
-        <span style="color: var(--text-secondary); margin-left: auto;">{}</span>
-    </div>
-    <div class="wiki-content">
-        {}
-    </div>
+    </main>
+
     <script>
+        // 히스토리 네비게이션
+        function goBack() {{
+            if (window.history.length > 1) {{
+                window.history.back();
+            }}
+        }}
+        
+        function goForward() {{
+            window.history.forward();
+        }}
+
         function changeZim(name) {{
             window.location = '/wiki/search?zim=' + name;
         }}
+
         // 위키 내부 링크 수정
-        document.querySelectorAll('a[href^="./"], a[href^="../"]').forEach(a => {{
+        document.querySelectorAll('a').forEach(a => {{
             const href = a.getAttribute('href');
-            if (href && !href.startsWith('http')) {{
-                a.href = '/wiki/' + href.replace(/^\.\.?\//g, '') + '?zim={}';
+            if (href && !href.startsWith('http') && !href.startsWith('/') && !href.startsWith('#')) {{
+                // 상대 경로 처리
+                a.href = '/wiki/' + href.replace(/^\.\.?\//g, '').replace(/^\/+/, '') + '?zim={}';
+            }}
+        }});
+
+        // 키보드 단축키
+        document.addEventListener('keydown', (e) => {{
+            if (e.altKey && e.key === 'ArrowLeft') {{
+                goBack();
+            }}
+            if (e.altKey && e.key === 'ArrowRight') {{
+                goForward();
+            }}
+            if (e.key === 'Escape') {{
+                window.location = '/wiki/search?zim={}';
             }}
         }});
     </script>
 </body>
 </html>
-"#, title, selected_zim, zim_selector, title, content, selected_zim)
+"#, 
+        title,  // <title>
+        selected_zim,  // wiki nav link
+        zim_selector,  // ZIM 선택기
+        title, title,  // wiki-title (title, span)
+        selected_zim, title,  // breadcrumb
+        content,  // 본문
+        selected_zim,  // 링크 수정 스크립트
+        selected_zim   // ESC 키 스크립트
+    )
 }
 
 /// MIME 타입 추측
