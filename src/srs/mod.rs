@@ -414,3 +414,150 @@ impl UserStats {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    fn make_test_engine() -> SrsEngine {
+        let dir = tempdir().unwrap();
+        let srs_path = dir.path().join("test_srs.jsonl");
+        // dir을 leak해서 테스트 동안 유지
+        let path_str = srs_path.to_str().unwrap().to_string();
+        std::mem::forget(dir);
+        SrsEngine::open(&path_str).unwrap()
+    }
+
+    fn make_card(question: &str, answer: &str, card_type: CardType) -> Card {
+        Card {
+            id: 0,
+            card_type,
+            question: question.to_string(),
+            answer: answer.to_string(),
+            source_note_id: None,
+            source_wiki_url: None,
+            hints: vec![],
+            tags: vec![],
+            srs: SrsData::new(),
+            created_at: Utc::now(),
+        }
+    }
+
+    #[test]
+    fn test_add_card() {
+        let mut engine = make_test_engine();
+        
+        let card = make_card("What is 2+2?", "4", CardType::Basic);
+        let id = engine.add_card(card).unwrap();
+        assert!(id > 0);
+        
+        let card = engine.get_card(id).unwrap();
+        assert_eq!(card.question, "What is 2+2?");
+        assert_eq!(card.answer, "4");
+    }
+
+    #[test]
+    fn test_review_good() {
+        let mut engine = make_test_engine();
+        
+        let card = make_card("Q?", "A!", CardType::Basic);
+        let id = engine.add_card(card).unwrap();
+        
+        // 초기 상태
+        let card = engine.get_card(id).unwrap();
+        assert_eq!(card.srs.repetitions, 0);
+        
+        // Good 복습
+        engine.review(id, ReviewResult::Good).unwrap();
+        
+        let card = engine.get_card(id).unwrap();
+        assert_eq!(card.srs.repetitions, 1);
+        assert!(card.srs.interval >= 1);
+    }
+
+    #[test]
+    fn test_review_again_resets() {
+        let mut engine = make_test_engine();
+        
+        let card = make_card("Q?", "A!", CardType::Basic);
+        let id = engine.add_card(card).unwrap();
+        
+        // 몇 번 성공
+        engine.review(id, ReviewResult::Good).unwrap();
+        engine.review(id, ReviewResult::Good).unwrap();
+        engine.review(id, ReviewResult::Easy).unwrap();
+        
+        let card = engine.get_card(id).unwrap();
+        let old_interval = card.srs.interval;
+        assert!(old_interval > 1);
+        
+        // Again → 간격 초기화
+        engine.review(id, ReviewResult::Again).unwrap();
+        
+        let card = engine.get_card(id).unwrap();
+        assert_eq!(card.srs.interval, 1);
+        assert_eq!(card.srs.streak, 0);
+    }
+
+    #[test]
+    fn test_ease_factor_bounds() {
+        let mut engine = make_test_engine();
+        
+        let card = make_card("Q?", "A!", CardType::Basic);
+        let id = engine.add_card(card).unwrap();
+        
+        // 계속 Hard → ease_factor 감소
+        for _ in 0..20 {
+            engine.review(id, ReviewResult::Hard).unwrap();
+        }
+        
+        let card = engine.get_card(id).unwrap();
+        // ease_factor는 1.3 아래로 안 내려감
+        assert!(card.srs.ease_factor >= 1.3);
+    }
+
+    #[test]
+    fn test_card_types() {
+        let mut engine = make_test_engine();
+        
+        let id1 = engine.add_card(make_card("Q", "A", CardType::Basic)).unwrap();
+        let id2 = engine.add_card(make_card("Q", "A", CardType::Cloze)).unwrap();
+        let id3 = engine.add_card(make_card("Q", "A", CardType::Definition)).unwrap();
+        
+        assert_eq!(engine.get_card(id1).unwrap().card_type, CardType::Basic);
+        assert_eq!(engine.get_card(id2).unwrap().card_type, CardType::Cloze);
+        assert_eq!(engine.get_card(id3).unwrap().card_type, CardType::Definition);
+    }
+
+    #[test]
+    fn test_streak_emoji() {
+        let mut stats = UserStats::default();
+        
+        assert_eq!(stats.streak_emoji(), "");
+        
+        stats.streak = 1;
+        assert_eq!(stats.streak_emoji(), "🔥");
+        
+        stats.streak = 7;
+        assert_eq!(stats.streak_emoji(), "🔥🔥🔥");
+        
+        stats.streak = 30;
+        assert_eq!(stats.streak_emoji(), "💎");
+        
+        stats.streak = 100;
+        assert_eq!(stats.streak_emoji(), "👑");
+    }
+
+    #[test]
+    fn test_delete_card() {
+        let mut engine = make_test_engine();
+        
+        let card = make_card("Q", "A", CardType::Basic);
+        let id = engine.add_card(card).unwrap();
+        assert!(engine.get_card(id).is_some());
+        
+        engine.delete_card(id).unwrap();
+        assert!(engine.get_card(id).is_none());
+    }
+}

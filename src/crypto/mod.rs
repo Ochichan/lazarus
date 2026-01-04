@@ -197,6 +197,38 @@ mod tests {
         assert!(header.verify("1234").unwrap());
         assert!(!header.verify("5678").unwrap());
     }
+    #[test]
+    fn test_encrypt_produces_different_output() {
+        let salt = CryptoManager::generate_salt();
+        let crypto = CryptoManager::from_pin("123456", &salt).unwrap();
+        let plaintext = b"Same message";
+        
+        let encrypted1 = crypto.encrypt(plaintext).unwrap();
+        let encrypted2 = crypto.encrypt(plaintext).unwrap();
+        
+        // 다른 nonce로 다른 결과
+        assert_ne!(encrypted1, encrypted2);
+    }
+
+    #[test]
+    fn test_empty_plaintext() {
+        let salt = CryptoManager::generate_salt();
+        let crypto = CryptoManager::from_pin("123456", &salt).unwrap();
+        let plaintext = b"";
+        
+        let encrypted = crypto.encrypt(plaintext).unwrap();
+        let decrypted = crypto.decrypt(&encrypted).unwrap();
+        
+        assert_eq!(plaintext.to_vec(), decrypted);
+    }
+
+    #[test]
+    fn test_salt_uniqueness() {
+        let salt1 = CryptoManager::generate_salt();
+        let salt2 = CryptoManager::generate_salt();
+        
+        assert_ne!(salt1, salt2);
+    }
 }
 
 use std::path::Path;
@@ -270,3 +302,4 @@ impl SecurityConfig {
         }
     }
 }
+
