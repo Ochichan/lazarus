@@ -15,19 +15,6 @@ Lazarus is a lightweight, offline-capable personal knowledge management system. 
 
 **The name "Lazarus" comes from the biblical figure who rose from the dead** — symbolizing knowledge that persists and remains accessible even when everything else fails.
 
-### Why Lazarus?
-
-| Feature | Lazarus | Obsidian/Notion |
-|---------|---------|-----------------|
-| RAM usage (idle) | **~10 MB** | 200-500 MB |
-| Binary size | **7 MB**  | 150-300 MB |
-| 111GB Wikipedia | ✅ Instant | ❌ Impossible |
-| Offline-first | ✅ Always | ⚠️ Limited |
-| No account needed | ✅ | ❌ |
-| Self-contained binary | ✅ | ❌ |
-
----
-
 ## Features
 
 ### 📝 Note Management
