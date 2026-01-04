@@ -8,7 +8,7 @@ use axum::{
 };
 use askama::Template;
 use serde::Deserialize;
-
+use ammonia::clean;
 use std::collections::HashMap;
 use crate::error::{LazarusError, Result};
 use crate::web::state::AppState;
@@ -179,7 +179,7 @@ pub async fn notes_view(
         note: NoteViewData {
             id: note.id,
             title: note.title,
-            content: note.content,
+            content: clean(&note.content),
             created_at: note.created_at.format("%Y-%m-%d %H:%M").to_string(),
             updated_at: note.updated_at.format("%Y-%m-%d %H:%M").to_string(),
             tags: note.tags,

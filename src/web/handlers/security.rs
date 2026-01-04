@@ -104,18 +104,17 @@ pub async fn set_pin(
     State(state): State<AppState>,
     Json(req): Json<SetPinRequest>,
 ) -> Result<Json<ApiResponse>> {
-    // PIN 유효성 검사 (4-8자리 숫자)
-    if req.new_pin.len() < 4 || req.new_pin.len() > 8 {
+    // PIN 유효성 검사 (6-32자리 영숫자)
+    if req.new_pin.len() < 6 || req.new_pin.len() > 32 {
         return Ok(Json(ApiResponse {
             success: false,
-            message: "PIN은 4-8자리여야 합니다".to_string(),
+            message: "PIN must be 6-32 characters".to_string(),
         }));
     }
-    
-    if !req.new_pin.chars().all(|c| c.is_ascii_digit()) {
+    if !req.new_pin.chars().all(|c| c.is_ascii_alphanumeric()) {
         return Ok(Json(ApiResponse {
             success: false,
-            message: "PIN은 숫자만 가능합니다".to_string(),
+            message: "PIN must be alphanumeric only".to_string(),
         }));
     }
     

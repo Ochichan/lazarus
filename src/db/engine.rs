@@ -95,7 +95,10 @@ impl StorageEngine {
             match reader.next_entry() {
                 Ok(Some((entry_offset, entry))) => {
                     // rkyv 역직렬화 시도
-                    let archived = unsafe { rkyv::archived_root::<NoteAtom>(&entry.data) };
+                    let archived = match rkyv::check_archived_root::<NoteAtom>(&entry.data) {
+                        Ok(a) => a,
+                        Err(_) => continue, // 손상된 엔트리 스킵
+                    };
                     let id = archived.id;
                     
                     // 삭제된 노트는 인덱스에서 제외
@@ -304,8 +307,8 @@ impl StorageEngine {
             handle.read_exact(&mut buffer)?;
         }
 
-        // rkyv 역직렬화
-        let atom = unsafe { rkyv::from_bytes_unchecked::<NoteAtom>(&buffer) }
+		// rkyv 역직렬화 (validation 포함)
+        let atom = rkyv::from_bytes::<NoteAtom>(&buffer)
             .map_err(|e| LazarusError::Deserialize(e.to_string()))?;
 
         if atom.deleted {
