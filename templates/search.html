@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block nav_notes %}{{ t["nav.notes"] }}{% endblock %}
+{% block nav_search %}{{ t["nav.search"] }}{% endblock %}
+{% block nav_wiki %}{{ t["nav.wiki"] }}{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["search.title"] }} - Lazarus{% endblock %}
+{% block content %}
+<section class="search-page">
+    <h1>🔍 {{ t["search.title"] }}</h1>
+    <form action="/search" method="get" class="search-form">
+        <input
+            type="search"
+            name="q"
+            value="{{ query }}"
+            placeholder="{{ t["search.placeholder"] }}"
+            autofocus
+            autocomplete="off"
+        >
+        <button type="submit" class="btn btn-primary">{{ t["search.button"] }}</button>
+    </form>
+    {% if !query.is_empty() %}
+    <section class="search-results">
+        <h2>{{ t["search.results"] }}: "{{ query }}"</h2>
+        {% if results.is_empty() %}
+        <p class="no-results">{{ t["search.no_results"] }}</p>
+        {% else %}
+        <ul class="result-list">
+            {% for result in results %}
+            <li class="result-item">
+                <a href="{% if result.source == "note" %}/notes/{{ result.id }}{% else %}/wiki/{{ result.id }}{% endif %}">
+                    <span class="source-badge">{{ result.source }}</span>
+                    <h3>{{ result.title }}</h3>
+                    <p class="preview">{{ result.preview }}</p>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </section>
+    {% endif %}
+</section>
+<section class="search-tips">
+    <details>
+        <summary>{{ t["search.tips"] }}</summary>
+        <ul>
+            <li>{{ t["search.tip1"] }}</li>
+            <li>{{ t["search.tip2"] }}</li>
+            <li>{{ t["search.tip3"] }}</li>
+        </ul>
+    </details>
+</section>
+
+<!-- 언어 선택 -->
+<section class="lang-selector">
+    <form action="/api/lang" method="post" style="display: inline;">
+        <button type="submit" name="lang" value="en" class="btn btn-sm {% if lang == "en" %}btn-primary{% else %}btn-secondary{% endif %}">EN</button>
+        <button type="submit" name="lang" value="ko" class="btn btn-sm {% if lang == "ko" %}btn-primary{% else %}btn-secondary{% endif %}">한국어</button>
+    </form>
+</section>
+
+<style>
+.search-page {
+    max-width: 800px;
+    margin: 0 auto;
+}
+.search-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+.search-form input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 1.1rem;
+}
+.search-results h2 {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+.result-list {
+    list-style: none;
+    padding: 0;
+}
+.result-item {
+    border-bottom: 1px solid var(--border);
+}
+.result-item a {
+    display: block;
+    padding: 1rem;
+    color: var(--text);
+    text-decoration: none;
+}
+.result-item:hover {
+    background: var(--bg-secondary);
+}
+.result-item h3 {
+    margin: 0 0 0.5rem;
+}
+.result-item .preview {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+.source-badge {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background: var(--accent);
+    color: white;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+.no-results {
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 2rem;
+}
+.search-tips {
+    margin-top: 2rem;
+    color: var(--text-secondary);
+}
+.search-tips ul {
+    margin-top: 0.5rem;
+}
+.lang-selector {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+}
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+}
+</style>
+{% endblock %}

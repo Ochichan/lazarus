@@ -1,0 +1,98 @@
+[package]
+name = "lazarus"
+version = "0.1.0"
+edition = "2021"
+authors = ["Lazarus Contributors"]
+description = "Lightweight PKM for everyone - works offline on minimal hardware"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/example/lazarus"
+keywords = ["pkm", "offline", "education", "wiki", "notes"]
+categories = ["command-line-utilities", "web-programming"]
+
+[dependencies]
+chacha20poly1305 = "0.10"
+argon2 = "0.5"
+rand = "0.8"
+regex = "1.10"
+zip = "0.6"
+sha2 = "0.10"
+flate2 = "1.0"
+# === 웹 서버 ===
+axum = { version = "0.7", features = ["multipart"] }
+bytes = "1.5"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "fs", "io-util", "signal"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["fs", "compression-gzip", "trace"] }
+
+# === 템플릿 ===
+askama = { version = "0.12", features = ["with-axum"] }
+askama_axum = "0.4"
+
+# === 직렬화 ===
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+
+# === 데이터베이스 (기존 LazarusDB 기반) ===
+rkyv = { version = "0.7", features = ["validation"] }
+bytecheck = "0.6"
+zstd = "0.13"
+crc32fast = "1.3"
+memmap2 = "0.9"  # mmap 처리
+urlencoding = "2.1"
+
+# === 검색 ===
+tantivy = "0.22"
+
+# === 유틸리티 ===
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = "1"
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+
+# === 암호화 (나중에 활성화) ===
+# chacha20poly1305 = "0.10"
+# argon2 = "0.5"
+
+# === 웹 스크래핑 (아카이빙용, 나중에) ===
+# scraper = "0.19"
+# reqwest = { version = "0.12", features = ["blocking"] }
+
+[dev-dependencies]
+tempfile = "3"
+criterion = "0.5"
+
+[[bench]]
+name = "db_benchmark"
+harness = false
+
+[profile.release]
+panic = "abort"
+strip = true
+lto = true
+codegen-units = 1
+opt-level = "z"  # 크기 최적화 (속도는 "3")
+
+[profile.release-small]
+inherits = "release"
+opt-level = "z"        # 크기 최적화 우선
+lto = true
+strip = true
+panic = "abort"
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+# zstd 정적 빌드 (크로스 컴파일용)
+[build-dependencies]
+
+[package.metadata.cross]
+
+[features]
+default = []
+tts = []               # Piper TTS 통합 (선택적)
+full-text = []         # 전체 텍스트 인덱싱 (선택적)

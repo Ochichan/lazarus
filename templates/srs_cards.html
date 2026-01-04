@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block nav_notes %}{{ t["nav.notes"] }}{% endblock %}
+{% block nav_search %}{{ t["nav.search"] }}{% endblock %}
+{% block nav_wiki %}{{ t["nav.wiki"] }}{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["srs.cards"] }} - Lazarus{% endblock %}
+{% block content %}
+<section class="page-header">
+    <h1>📚 {{ t["srs.cards"] }}</h1>
+    <div class="header-actions">
+        <a href="/srs" class="btn btn-primary">🧠 {{ t["srs.start_review"] }}</a>
+    </div>
+</section>
+{% if cards.is_empty() %}
+<section class="empty-state">
+    <p>{{ t["srs.no_cards_yet"] }}</p>
+    <p>{{ t["srs.create_hint"] }}</p>
+    <a href="/notes" class="btn">{{ t["notes.title"] }}</a>
+</section>
+{% else %}
+<div class="cards-list">
+    {% for card in cards %}
+    <div class="card-item" data-id="{{ card.id }}">
+        <div class="card-type badge-{{ card.card_type }}">{{ card.card_type }}</div>
+        <div class="card-content">
+            <div class="card-q">Q: {{ card.question }}</div>
+            <div class="card-a">A: {{ card.answer }}</div>
+        </div>
+        <div class="card-stats">
+            <span>{{ t["srs.repetitions"] }}: {{ card.repetitions }}</span>
+            <span>{{ t["srs.interval"] }}: {{ card.interval }}{{ t["srs.days"] }}</span>
+        </div>
+        <button class="btn btn-danger btn-sm delete-card" data-id="{{ card.id }}">🗑️</button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- 언어 선택 -->
+<section class="lang-selector">
+    <form action="/api/lang" method="post" style="display: inline;">
+        <button type="submit" name="lang" value="en" class="btn btn-sm {% if lang == "en" %}btn-primary{% else %}btn-secondary{% endif %}">EN</button>
+        <button type="submit" name="lang" value="ko" class="btn btn-sm {% if lang == "ko" %}btn-primary{% else %}btn-secondary{% endif %}">한국어</button>
+    </form>
+</section>
+
+<style>
+.cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.card-item {
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 1rem;
+    align-items: center;
+}
+.card-type {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.badge-basic { background: #3b82f6; color: white; }
+.badge-cloze { background: #8b5cf6; color: white; }
+.badge-definition { background: #10b981; color: white; }
+.card-content {
+    overflow: hidden;
+}
+.card-q {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.card-a {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.card-stats {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: right;
+}
+.lang-selector {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+}
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+}
+</style>
+<script>
+const t = {
+    delete_confirm: "{{ t["srs.delete_card_confirm"] }}",
+    delete_failed: "{{ t["srs.delete_failed"] }}"
+};
+
+document.querySelectorAll('.delete-card').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        if (!confirm(t.delete_confirm)) return;
+        const id = btn.dataset.id;
+        const response = await fetch(`/api/srs/cards/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (result.success) {
+            btn.closest('.card-item').remove();
+        } else {
+            alert(t.delete_failed + ': ' + result.message);
+        }
+    });
+});
+</script>
+{% endblock %}

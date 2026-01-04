@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+{% block nav_notes %}{{ t["nav.notes"] }}{% endblock %}
+{% block nav_search %}{{ t["nav.search"] }}{% endblock %}
+{% block nav_wiki %}{{ t["nav.wiki"] }}{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["notes.title"] }} - Lazarus{% endblock %}
+{% block content %}
+<section class="page-header">
+    <h1>📋 {{ t["notes.title"] }}</h1>
+    <div class="header-actions">
+        <button type="button" class="btn btn-secondary" id="duplicates-btn">🔍 {{ t["notes.find_duplicates"] }}</button>
+        <button type="button" class="btn btn-secondary" id="import-btn">📥 {{ t["notes.import"] }}</button>
+        <button type="button" class="btn btn-secondary" id="export-btn">📤 {{ t["notes.export"] }}</button>
+        <a href="/notes/new" class="btn btn-primary">+ {{ t["home.new_note"] }}</a>
+    </div>
+</section>
+{% if notes.is_empty() %}
+<section class="empty-state">
+    <p>{{ t["notes.no_notes"] }}</p>
+    <a href="/notes/new" class="btn">{{ t["notes.create_first"] }}</a>
+</section>
+{% else %}
+<form id="export-form">
+    <div class="select-all-bar" id="select-bar" style="display: none;">
+        <label>
+            <input type="checkbox" id="select-all"> {{ t["notes.select_all"] }}
+        </label>
+        <span id="selected-count">0 {{ t["notes.selected"] }}</span>
+        <button type="button" class="btn btn-primary btn-sm" id="do-export">📦 {{ t["notes.create_package"] }}</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="cancel-select">{{ t["common.cancel"] }}</button>
+    </div>
+    <ul class="note-list">
+        {% for note in notes %}
+        <li class="note-item">
+            <label class="note-checkbox" style="display: none;">
+                <input type="checkbox" name="note_ids" value="{{ note.id }}">
+            </label>
+            <a href="/notes/{{ note.id }}">
+                <h3>{{ note.title }}</h3>
+                <p class="preview">{{ note.preview }}</p>
+                <time>{{ note.updated_at }}</time>
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</form>
+{% endif %}
+
+<!-- 중복 관리 모달 -->
+<div id="duplicates-modal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3>🔍 {{ t["notes.duplicates_title"] }}</h3>
+            <button class="modal-close" id="close-duplicates">&times;</button>
+        </div>
+        <div class="modal-body" id="duplicates-content">
+            <p>{{ t["common.loading"] }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- 내보내기 모달 -->
+<div id="export-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📦 {{ t["notes.export_package"] }}</h3>
+            <button class="modal-close" id="close-export-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="pkg-title">{{ t["notes.package_title"] }}</label>
+                <input type="text" id="pkg-title" placeholder="{{ t["notes.package_title_placeholder"] }}" required>
+            </div>
+            <div class="form-group">
+                <label for="pkg-author">{{ t["notes.package_author"] }}</label>
+                <input type="text" id="pkg-author" placeholder="{{ t["notes.package_author_placeholder"] }}">
+            </div>
+            <div class="form-group">
+                <label for="pkg-desc">{{ t["notes.package_description"] }}</label>
+                <textarea id="pkg-desc" rows="3" placeholder="{{ t["notes.package_description_placeholder"] }}"></textarea>
+            </div>
+            <button type="button" class="btn btn-primary" id="confirm-export">{{ t["notes.export"] }}</button>
+        </div>
+    </div>
+</div>
+
+<!-- 가져오기 모달 -->
+<div id="import-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📥 {{ t["notes.import_package"] }}</h3>
+            <button class="modal-close" id="close-import-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="dropzone" id="dropzone">
+                <p>{{ t["notes.drop_file"] }}</p>
+                <p>{{ t["notes.or"] }}</p>
+                <input type="file" id="file-input" accept=".laz" style="display:none;">
+                <button type="button" class="btn" id="select-file-btn">{{ t["notes.select_file"] }}</button>
+            </div>
+            <div id="import-progress" style="display:none;">
+                <p>{{ t["common.loading"] }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 언어 선택 -->
+<section class="lang-selector">
+    <form action="/api/lang" method="post" style="display: inline;">
+        <button type="submit" name="lang" value="en" class="btn btn-sm {% if lang == "en" %}btn-primary{% else %}btn-secondary{% endif %}">EN</button>
+        <button type="submit" name="lang" value="ko" class="btn btn-sm {% if lang == "ko" %}btn-primary{% else %}btn-secondary{% endif %}">한국어</button>
+    </form>
+</section>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+.note-list {
+    list-style: none;
+    padding: 0;
+}
+.note-item {
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+}
+.note-item a {
+    flex: 1;
+    padding: 1rem;
+    display: block;
+    color: var(--text);
+    text-decoration: none;
+}
+.note-item:hover {
+    background: var(--bg-secondary);
+}
+.note-item h3 {
+    margin: 0 0 0.5rem;
+}
+.note-item .preview {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.9rem;
+}
+.note-item time {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+.note-checkbox {
+    padding: 1rem;
+    cursor: pointer;
+}
+.select-all-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+}
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+.modal.show {
+    display: flex;
+}
+.modal-content {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: auto;
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { margin: 0; }
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+.modal-body {
+    padding: 1rem;
+}
+.dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 3rem;
+    text-align: center;
+}
+.dropzone.dragover {
+    border-color: var(--accent);
+    background: var(--bg-secondary);
+}
+.duplicate-group {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+.duplicate-item {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--border);
+}
+.duplicate-item:last-child {
+    border-bottom: none;
+}
+.lang-selector {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+}
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+}
+</style>
+
+<script>
+// ... (기존 JavaScript 유지)
+const duplicatesBtn = document.getElementById('duplicates-btn');
+const duplicatesModal = document.getElementById('duplicates-modal');
+const closeDuplicates = document.getElementById('close-duplicates');
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const exportModal = document.getElementById('export-modal');
+const importModal = document.getElementById('import-modal');
+const selectBar = document.getElementById('select-bar');
+
+duplicatesBtn?.addEventListener('click', async () => {
+    duplicatesModal.classList.add('show');
+    const content = document.getElementById('duplicates-content');
+    content.innerHTML = '<p>Loading...</p>';
+    
+    const res = await fetch('/api/notes/duplicates');
+    const groups = await res.json();
+    
+    if (groups.length === 0) {
+        content.innerHTML = '<p>{{ t["notes.no_duplicates"] }}</p>';
+        return;
+    }
+    
+    let html = '';
+    for (const group of groups) {
+        html += `<div class="duplicate-group">
+            <strong>${group.count} duplicates</strong>
+            <button class="btn btn-sm btn-danger" onclick="removeDuplicates([${group.notes.map(n => n.id).join(',')}])">Keep latest</button>`;
+        for (const note of group.notes) {
+            html += `<div class="duplicate-item">
+                <div class="note-title">${note.title}</div>
+                <div class="note-date">${note.updated_at}</div>
+            </div>`;
+        }
+        html += '</div>';
+    }
+    content.innerHTML = html;
+});
+
+closeDuplicates?.addEventListener('click', () => duplicatesModal.classList.remove('show'));
+
+async function removeDuplicates(ids) {
+    const res = await fetch('/api/notes/duplicates/remove', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({groups: [{note_ids: ids}]})
+    });
+    const result = await res.json();
+    alert(result.message);
+    location.reload();
+}
+
+exportBtn?.addEventListener('click', () => {
+    selectBar.style.display = 'flex';
+    document.querySelectorAll('.note-checkbox').forEach(el => el.style.display = 'block');
+});
+
+document.getElementById('cancel-select')?.addEventListener('click', () => {
+    selectBar.style.display = 'none';
+    document.querySelectorAll('.note-checkbox').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.note-checkbox input').forEach(el => el.checked = false);
+});
+
+document.getElementById('select-all')?.addEventListener('change', (e) => {
+    document.querySelectorAll('.note-checkbox input').forEach(el => el.checked = e.target.checked);
+    updateSelectedCount();
+});
+
+document.querySelectorAll('.note-checkbox input').forEach(el => {
+    el.addEventListener('change', updateSelectedCount);
+});
+
+function updateSelectedCount() {
+    const count = document.querySelectorAll('.note-checkbox input:checked').length;
+    document.getElementById('selected-count').textContent = count + ' selected';
+}
+
+document.getElementById('do-export')?.addEventListener('click', () => {
+    const checked = document.querySelectorAll('.note-checkbox input:checked');
+    if (checked.length === 0) {
+        alert('Please select notes to export');
+        return;
+    }
+    exportModal.classList.add('show');
+});
+
+document.getElementById('close-export-modal')?.addEventListener('click', () => exportModal.classList.remove('show'));
+
+document.getElementById('confirm-export')?.addEventListener('click', async () => {
+    const title = document.getElementById('pkg-title').value;
+    const author = document.getElementById('pkg-author').value;
+    const description = document.getElementById('pkg-desc').value;
+    const noteIds = Array.from(document.querySelectorAll('.note-checkbox input:checked')).map(el => parseInt(el.value));
+    
+    if (!title) {
+        alert('Please enter a title');
+        return;
+    }
+    
+    const res = await fetch('/api/laz/export', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({title, author, description, note_ids: noteIds})
+    });
+    
+    if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = title + '.laz';
+        a.click();
+        exportModal.classList.remove('show');
+        selectBar.style.display = 'none';
+        document.querySelectorAll('.note-checkbox').forEach(el => el.style.display = 'none');
+    } else {
+        alert('Export failed');
+    }
+});
+
+importBtn?.addEventListener('click', () => importModal.classList.add('show'));
+document.getElementById('close-import-modal')?.addEventListener('click', () => importModal.classList.remove('show'));
+
+document.getElementById('select-file-btn')?.addEventListener('click', () => {
+    document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input')?.addEventListener('change', handleFile);
+
+const dropzone = document.getElementById('dropzone');
+dropzone?.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('dragover');
+});
+dropzone?.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone?.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleFile({target: {files: e.dataTransfer.files}});
+});
+
+async function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    document.getElementById('import-progress').style.display = 'block';
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const res = await fetch('/api/laz/import', {
+        method: 'POST',
+        body: formData
+    });
+    
+    if (res.ok) {
+        const result = await res.json();
+        alert('Imported ' + result.imported_count + ' notes');
+        location.reload();
+    } else {
+        alert('Import failed');
+        document.getElementById('import-progress').style.display = 'none';
+    }
+}
+
+duplicatesModal?.addEventListener('click', (e) => { if (e.target === duplicatesModal) duplicatesModal.classList.remove('show'); });
+exportModal?.addEventListener('click', (e) => { if (e.target === exportModal) exportModal.classList.remove('show'); });
+importModal?.addEventListener('click', (e) => { if (e.target === importModal) importModal.classList.remove('show'); });
+</script>
+{% endblock %}

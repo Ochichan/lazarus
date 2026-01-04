@@ -1,0 +1,614 @@
+{% extends "base.html" %}
+{% block nav_notes %}{{ t["nav.notes"] }}{% endblock %}
+{% block nav_search %}{{ t["nav.search"] }}{% endblock %}
+{% block nav_wiki %}{{ t["nav.wiki"] }}{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{% if is_new %}{{ t["home.new_note"] }}{% else %}{{ t["editor.edit_note"] }}{% endif %} - Lazarus{% endblock %}
+{% block content %}
+<div class="editor-container">
+<form id="note-form" method="post" action="{% if is_new %}/api/notes{% else %}/api/notes/{{ note_id }}{% endif %}">
+        <div class="editor-header">
+            <input type="text" id="title" name="title" class="title-input" value="{{ note_title }}" placeholder="{{ t["editor.title_placeholder"] }}" required>
+            <div class="editor-actions">
+            	<button type="button" class="btn btn-secondary" id="encrypt-btn" title="{{ t["editor.encrypt"] }}">🔓</button>
+                <button type="button" class="btn btn-secondary" id="focus-mode-btn">🎯 {{ t["editor.focus"] }}</button>
+                <button type="button" class="btn btn-secondary" id="fullscreen-btn">⛶ {{ t["editor.fullscreen"] }}</button>
+                <button type="submit" class="btn btn-primary" id="save-btn">💾 {{ t["editor.save"] }}</button>
+            </div>
+        </div>
+        <div class="editor-body">
+            <div id="editorjs" class="editorjs-container"></div>
+            <input type="hidden" name="content" id="content-input">
+            <input type="hidden" name="encrypted" id="encrypted-input" value="false">
+        </div>
+        
+        <div class="editor-footer">
+            <div class="form-group tags-group">
+                <label for="tags">{{ t["editor.tags"] }}</label>
+                <input type="text" name="tags" id="tags" value="{{ tags }}" 
+                       placeholder="{{ t["editor.tags_placeholder"] }}" list="tag-suggestions">
+                <datalist id="tag-suggestions">
+                    {% for tag in all_tags %}
+                    <option value="{{ tag }}">
+                    {% endfor %}
+                </datalist>
+            </div>
+            <div class="editor-status">
+                <span id="auto-save-status">✓ {{ t["editor.saved"] }}</span>
+                <span id="word-count">0 {{ t["editor.words"] }}</span>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.editor-container {
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.title-input {
+    flex: 1;
+    font-size: 1.75rem;
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    padding: 0.5rem;
+}
+
+.title-input:focus {
+    outline: none;
+    border-bottom: 2px solid var(--accent);
+}
+
+.editor-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.editor-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0;
+}
+
+.editorjs-container {
+    min-height: 400px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+
+.editor-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border);
+}
+
+.tags-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.tags-group label {
+    margin: 0;
+    font-weight: normal;
+}
+
+.tags-group input {
+    width: 300px;
+}
+
+.editor-status {
+    display: flex;
+    gap: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+#auto-save-status {
+    color: var(--success);
+}
+
+/* 집중 모드 */
+body.focus-mode header,
+body.focus-mode footer,
+body.focus-mode .editor-footer {
+    display: none;
+}
+
+body.focus-mode .editor-container {
+    height: 100vh;
+    max-width: 800px;
+}
+
+body.focus-mode .editor-header {
+    border: none;
+}
+
+body.focus-mode .editor-actions button:not(#save-btn):not(#focus-mode-btn) {
+    display: none;
+}
+
+/* 전체화면 모드 */
+body.fullscreen-mode {
+    overflow: hidden;
+}
+
+body.fullscreen-mode header,
+body.fullscreen-mode footer {
+    display: none;
+}
+
+body.fullscreen-mode main {
+    max-width: 100%;
+    padding: 0 2rem;
+}
+
+body.fullscreen-mode .editor-container {
+    height: 100vh;
+}
+
+/* Editor.js 스타일 오버라이드 */
+.ce-block__content {
+    max-width: 100%;
+}
+
+.ce-toolbar__content {
+    max-width: 100%;
+}
+
+.codex-editor__redactor {
+    padding-bottom: 100px !important;
+}
+
+.ce-paragraph {
+    line-height: 1.8;
+}
+</style>
+
+<!-- 토스트 메시지 -->
+<div id="toast" class="toast"></div>
+
+<!-- 최근 노트 모달 -->
+<div id="recent-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📂 최근 노트 열기</h3>
+            <button class="modal-close" id="close-modal">&times;</button>
+        </div>
+        <ul class="recent-list" id="recent-list">
+            {% for tag in all_tags %}
+            <!-- 동적으로 채워짐 -->
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<style>
+/* 토스트 메시지 */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 1rem 1.5rem;
+    background: var(--accent);
+    color: white;
+    border-radius: var(--radius);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s;
+    z-index: 1000;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast.error {
+    background: #dc2626;
+}
+
+.toast.success {
+    background: #16a34a;
+}
+
+/* 모달 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--bg);
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.recent-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.recent-list li {
+    border-bottom: 1px solid var(--border);
+}
+
+.recent-list a {
+    display: block;
+    padding: 1rem;
+    color: var(--text);
+    text-decoration: none;
+}
+
+.recent-list a:hover {
+    background: var(--bg-secondary);
+}
+
+.recent-list .note-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.recent-list .note-date {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+</style>
+
+<script type="module">
+import EditorJS from '/static/editorjs.js';
+import Header from '/static/editorjs-header.js';
+import NestedList from '/static/editorjs-list.js';
+import Quote from '/static/editorjs-quote.js';
+import Marker from '/static/editorjs-marker.js';
+import InlineCode from '/static/editorjs-inline-code.js';
+
+// 상태 관리
+let isDirty = false;
+let isNewNote = {{ is_new }};
+let lastSavedContent = '';
+
+// 토스트 메시지
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast ' + type + ' show';
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// 기존 콘텐츠 파싱
+let initialData = null;
+const existingContent = `{{ content }}`;
+lastSavedContent = existingContent;
+
+if (existingContent && existingContent.trim()) {
+    const paragraphs = existingContent.split('\n').filter(p => p.trim());
+    initialData = {
+        blocks: paragraphs.map(text => ({
+            type: 'paragraph',
+            data: { text: text }
+        }))
+    };
+}
+
+// Editor.js 초기화
+const editor = new EditorJS({
+    holder: 'editorjs',
+    placeholder: '{{ t["editor.content_placeholder"] }}',
+    data: initialData,
+    tools: {
+        header: {
+            class: Header,
+            config: {
+                levels: [1, 2, 3, 4],
+                defaultLevel: 2
+            }
+        },
+        list: {
+            class: NestedList,
+            inlineToolbar: true
+        },
+        quote: {
+            class: Quote,
+            inlineToolbar: true
+        },
+        marker: Marker,
+        inlineCode: InlineCode
+    },
+    onChange: () => {
+        isDirty = true;
+        updateWordCount();
+        scheduleAutoSave();
+    }
+});
+
+// 단어 수 카운트
+function updateWordCount() {
+    editor.save().then(data => {
+        let text = '';
+        data.blocks.forEach(block => {
+            if (block.data.text) text += block.data.text + ' ';
+            if (block.data.items) {
+                block.data.items.forEach(item => {
+                    text += (typeof item === 'string' ? item : item.content) + ' ';
+                });
+            }
+        });
+        const words = text.trim().split(/\s+/).filter(w => w).length;
+        document.getElementById('word-count').textContent = `${words} 단어`;
+    });
+}
+
+// 자동 저장
+let autoSaveTimer = null;
+function scheduleAutoSave() {
+    document.getElementById('auto-save-status').textContent = '⏳ 변경됨...';
+    document.getElementById('auto-save-status').style.color = 'var(--text-secondary)';
+    
+    if (autoSaveTimer) clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(autoSave, 2000);
+}
+
+async function autoSave() {
+    const data = await editor.save();
+    const content = blocksToText(data.blocks);
+    document.getElementById('content-input').value = content;
+    
+    // 로컬 스토리지에 백업
+    localStorage.setItem('lazarus-draft', JSON.stringify({
+        title: document.getElementById('title').value,
+        content: content,
+        tags: document.getElementById('tags').value,
+        time: Date.now()
+    }));
+    
+    lastSavedContent = content;
+    isDirty = false;
+    document.getElementById('auto-save-status').textContent = '✓ 자동 저장됨';
+    document.getElementById('auto-save-status').style.color = 'var(--success)';
+}
+
+// Editor.js 블록을 텍스트로 변환
+function blocksToText(blocks) {
+    return blocks.map(block => {
+        switch (block.type) {
+            case 'header':
+                return '#'.repeat(block.data.level) + ' ' + block.data.text;
+            case 'paragraph':
+                return block.data.text;
+            case 'list':
+                return block.data.items.map((item, i) => {
+                    const content = typeof item === 'string' ? item : item.content;
+                    return block.data.style === 'ordered' ? `${i+1}. ${content}` : `- ${content}`;
+                }).join('\n');
+            case 'quote':
+                return '> ' + block.data.text;
+            default:
+                return block.data.text || '';
+        }
+    }).join('\n\n');
+}
+
+// 폼 제출 (저장)
+document.getElementById('note-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const data = await editor.save();
+    const content = blocksToText(data.blocks);
+	document.getElementById('content-input').value = content;
+    
+    // 드래프트 삭제
+    localStorage.removeItem('lazarus-draft');
+    isDirty = false;
+    isNewNote = false;
+    lastSavedContent = content;
+    
+    showToast('💾 저장 완료!', 'success');
+    
+    // 약간의 딜레이 후 제출
+    setTimeout(() => {
+        e.target.submit();
+    }, 500);
+});
+// 집중 모드 토글
+document.getElementById('focus-mode-btn').addEventListener('click', () => {
+    document.body.classList.toggle('focus-mode');
+    const btn = document.getElementById('focus-mode-btn');
+    const isFocus = document.body.classList.contains('focus-mode');
+    btn.textContent = isFocus ? '✕ 나가기' : '🎯 집중';
+    showToast(isFocus ? '집중 모드 켜짐' : '집중 모드 꺼짐');
+});
+
+// 전체화면 토글
+document.getElementById('fullscreen-btn').addEventListener('click', () => {
+    document.body.classList.toggle('fullscreen-mode');
+    const btn = document.getElementById('fullscreen-btn');
+    const isFull = document.body.classList.contains('fullscreen-mode');
+    btn.textContent = isFull ? '⛶ 축소' : '⛶ 전체화면';
+});
+
+// 최근 노트 모달
+const modal = document.getElementById('recent-modal');
+const closeModal = document.getElementById('close-modal');
+
+async function loadRecentNotes() {
+    try {
+        const response = await fetch('/api/notes');
+        const notes = await response.json();
+        const list = document.getElementById('recent-list');
+        list.innerHTML = notes.slice(0, 10).map(note => `
+            <li>
+                <a href="/notes/${note.id}/edit">
+                    <div class="note-title">${note_title || '제목 없음'}</div>
+                    <div class="note-date">${note.updated_at}</div>
+                </a>
+            </li>
+        `).join('');
+    } catch (e) {
+        console.error('노트 목록 로드 실패:', e);
+    }
+}
+
+function openRecentModal() {
+    loadRecentNotes();
+    modal.classList.add('show');
+}
+
+closeModal?.addEventListener('click', () => {
+    modal.classList.remove('show');
+});
+
+modal?.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        modal.classList.remove('show');
+    }
+});
+
+// 단축키
+document.addEventListener('keydown', (e) => {
+    // Ctrl+S: 저장
+    if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        document.getElementById('note-form').dispatchEvent(new Event('submit'));
+    }
+    // Ctrl+O: 최근 노트 열기
+    if (e.ctrlKey && e.key === 'o') {
+        e.preventDefault();
+        openRecentModal();
+    }
+    // Escape: 모드 해제 또는 모달 닫기
+    if (e.key === 'Escape') {
+        if (modal.classList.contains('show')) {
+            modal.classList.remove('show');
+        } else {
+            document.body.classList.remove('focus-mode');
+            document.body.classList.remove('fullscreen-mode');
+        }
+    }
+});
+
+window.addEventListener('beforeunload', (e) => {
+    // 저장 완료 후에는 경고 안 함
+    if (!isDirty) return;
+    
+    // 변경사항이 있으면 경고
+    e.preventDefault();
+    e.returnValue = '';
+});
+
+// 드래프트 복구
+window.addEventListener('load', () => {
+    const draft = localStorage.getItem('lazarus-draft');
+    const existingContentCheck = `{{ content }}`;
+    if (draft && !existingContentCheck) {
+        const data = JSON.parse(draft);
+        const age = (Date.now() - data.time) / 1000 / 60;
+        if (age < 60) {
+            if (confirm(`${Math.round(age)}분 전의 임시 저장본이 있습니다. 복구하시겠습니까?`)) {
+                document.getElementById('title').value = data.title || '';
+                document.getElementById('tags').value = data.tags || '';
+                const paragraphs = data.content.split('\n').filter(p => p.trim());
+                editor.render({
+                    blocks: paragraphs.map(text => ({
+                        type: 'paragraph',
+                        data: { text: text }
+                    }))
+                });
+                showToast('📄 임시 저장본 복구됨', 'success');
+            }
+        }
+    }
+    updateWordCount();
+});
+
+// 초기 단어 수
+setTimeout(updateWordCount, 1000);
+
+// 암호화 토글
+let isEncrypted = false;
+const encryptBtn = document.getElementById('encrypt-btn');
+
+encryptBtn.addEventListener('click', async () => {
+    // PIN 상태 확인
+    const statusRes = await fetch('/api/security/status');
+    const status = await statusRes.json();
+    
+    if (!status.enabled) {
+        showToast('먼저 PIN을 설정하세요 (보안 메뉴)', 'error');
+        return;
+    }
+    
+    if (status.locked) {
+        showToast('PIN 잠금을 해제하세요', 'error');
+        return;
+    }
+    
+    isEncrypted = !isEncrypted;
+    document.getElementById('encrypted-input').value = isEncrypted;
+    encryptBtn.textContent = isEncrypted ? '🔒' : '🔓';
+    encryptBtn.title = isEncrypted ? '암호화됨 (클릭하여 해제)' : '암호화 안됨 (클릭하여 암호화)';
+    showToast(isEncrypted ? '🔒 암호화 활성화' : '🔓 암호화 해제', 'success');
+    isDirty = true;
+});
+
+</script>
+{% endblock %}

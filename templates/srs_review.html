@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block nav_notes %}{{ t["nav.notes"] }}{% endblock %}
+{% block nav_search %}{{ t["nav.search"] }}{% endblock %}
+{% block nav_wiki %}{{ t["nav.wiki"] }}{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["srs.title"] }} - Lazarus{% endblock %}
+{% block content %}
+<section class="page-header">
+    <h1>🧠 {{ t["srs.title"] }}</h1>
+    <a href="/srs/cards" class="btn btn-secondary">📚 {{ t["srs.cards"] }}</a>
+</section>
+
+<div class="srs-stats">
+    <div class="stat-item streak-item" id="streak-display">
+        <span class="stat-value" id="streak-emoji">🔥</span>
+        <span class="stat-label" id="streak-days">{{ streak }} {{ t["home.day"] }} {{ t["srs.streak"] }}</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-value">{{ stats.due }}</span>
+        <span class="stat-label">{{ t["srs.today_review"] }}</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-value">{{ stats.new }}</span>
+        <span class="stat-label">{{ t["srs.new_cards"] }}</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-value">{{ stats.learning }}</span>
+        <span class="stat-label">{{ t["srs.learning"] }}</span>
+    </div>
+    <div class="stat-item">
+        <span class="stat-value">{{ stats.mature }}</span>
+        <span class="stat-label">{{ t["srs.mature"] }}</span>
+    </div>
+</div>
+
+<div id="review-container">
+    <div id="card-display" class="card-display" style="display: none;">
+        <div class="card-question" id="card-question"></div>
+        <div class="card-answer" id="card-answer" style="display: none;"></div>
+        <div class="card-meta" id="card-meta"></div>
+    </div>
+
+    <div id="empty-state" class="empty-state">
+        <h2>{{ t["srs.complete"] }}</h2>
+        <p>{{ t["srs.no_cards"] }}</p>
+        <a href="/notes" class="btn btn-primary">{{ t["srs.create_from_notes"] }}</a>
+    </div>
+
+    <div class="review-actions" id="review-actions" style="display: none;">
+        <button class="btn btn-show" id="show-answer">{{ t["srs.show_answer"] }}</button>
+    </div>
+
+    <div class="rating-actions" id="rating-actions" style="display: none;">
+        <button class="btn btn-again" data-score="0">😵 {{ t["srs.again"] }}</button>
+        <button class="btn btn-hard" data-score="1">😓 {{ t["srs.hard"] }}</button>
+        <button class="btn btn-good" data-score="2">😊 {{ t["srs.good"] }}</button>
+        <button class="btn btn-easy" data-score="3">😎 {{ t["srs.easy"] }}</button>
+    </div>
+</div>
+
+<div class="progress-bar">
+    <div class="progress-fill" id="progress-fill"></div>
+</div>
+<div class="progress-text" id="progress-text">0 / 0</div>
+
+<!-- 언어 선택 -->
+<section class="lang-selector">
+    <form action="/api/lang" method="post" style="display: inline;">
+        <button type="submit" name="lang" value="en" class="btn btn-sm {% if lang == "en" %}btn-primary{% else %}btn-secondary{% endif %}">EN</button>
+        <button type="submit" name="lang" value="ko" class="btn btn-sm {% if lang == "ko" %}btn-primary{% else %}btn-secondary{% endif %}">한국어</button>
+    </form>
+</section>
+
+<style>
+.streak-item {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    color: white;
+}
+.streak-item .stat-value {
+    color: white;
+    font-size: 2.5rem;
+}
+.streak-item .stat-label {
+    color: rgba(255,255,255,0.9);
+}
+.srs-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+.stat-item {
+    background: var(--bg-secondary);
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius);
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+}
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+.card-display {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: 3rem;
+    min-height: 300px;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.card-question {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+.card-answer {
+    font-size: 1.25rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+    color: var(--accent);
+}
+.card-meta {
+    margin-top: 1rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+.review-actions, .rating-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.btn-show {
+    background: var(--accent);
+    color: white;
+    padding: 1rem 3rem;
+    font-size: 1.1rem;
+}
+.rating-actions button {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    flex: 1;
+    max-width: 150px;
+}
+.btn-again { background: #dc2626; color: white; }
+.btn-hard { background: #f59e0b; color: white; }
+.btn-good { background: #16a34a; color: white; }
+.btn-easy { background: #2563eb; color: white; }
+.progress-bar {
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+.progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.3s;
+}
+.progress-text {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+}
+.lang-selector {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+}
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+}
+</style>
+
+<script>
+let cards = [];
+let currentIndex = 0;
+let totalDue = 0;
+let reviewed = 0;
+
+const t = {
+    repetitions: "{{ t["srs.repetitions"] }}",
+    streak_days: "{{ t["srs.streak_days"] }}",
+    day: "{{ t["home.day"] }}",
+    streak: "{{ t["srs.streak"] }}"
+};
+
+async function loadDueCards() {
+    fetch('/api/srs/stats')
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('streak-emoji').textContent = data.streak_emoji || '🔥';
+            document.getElementById('streak-days').textContent = `${data.streak} ${t.day} ${t.streak}`;
+        });
+    const response = await fetch('/api/srs/due');
+    cards = await response.json();
+    totalDue = cards.length;
+
+    if (cards.length > 0) {
+        document.getElementById('empty-state').style.display = 'none';
+        showCard();
+    } else {
+        document.getElementById('empty-state').style.display = 'block';
+        document.getElementById('card-display').style.display = 'none';
+        document.getElementById('review-actions').style.display = 'none';
+    }
+
+    updateProgress();
+}
+
+function showCard() {
+    if (currentIndex >= cards.length) {
+        document.getElementById('empty-state').style.display = 'block';
+        document.getElementById('card-display').style.display = 'none';
+        document.getElementById('review-actions').style.display = 'none';
+        document.getElementById('rating-actions').style.display = 'none';
+        return;
+    }
+
+    const card = cards[currentIndex];
+
+    document.getElementById('card-display').style.display = 'block';
+    document.getElementById('card-question').textContent = card.question;
+    document.getElementById('card-answer').textContent = card.answer;
+    document.getElementById('card-answer').style.display = 'none';
+    document.getElementById('card-meta').textContent = `${t.repetitions}: ${card.repetitions} | ${t.streak_days}: ${card.streak}`;
+
+    document.getElementById('review-actions').style.display = 'flex';
+    document.getElementById('rating-actions').style.display = 'none';
+}
+
+function updateProgress() {
+    const percent = totalDue > 0 ? (reviewed / totalDue) * 100 : 0;
+    document.getElementById('progress-fill').style.width = `${percent}%`;
+    document.getElementById('progress-text').textContent = `${reviewed} / ${totalDue}`;
+}
+
+document.getElementById('show-answer').addEventListener('click', () => {
+    document.getElementById('card-answer').style.display = 'block';
+    document.getElementById('review-actions').style.display = 'none';
+    document.getElementById('rating-actions').style.display = 'flex';
+});
+
+document.querySelectorAll('.rating-actions button').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const score = parseInt(btn.dataset.score);
+        const card = cards[currentIndex];
+
+        await fetch(`/api/srs/cards/${card.id}/review`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score })
+        });
+
+        reviewed++;
+        currentIndex++;
+        updateProgress();
+        showCard();
+    });
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+        const showBtn = document.getElementById('show-answer');
+        if (showBtn.offsetParent !== null) {
+            showBtn.click();
+        }
+    }
+    if (e.key >= '1' && e.key <= '4') {
+        const ratingBtns = document.querySelectorAll('.rating-actions button');
+        const idx = parseInt(e.key) - 1;
+        if (ratingBtns[idx] && ratingBtns[idx].offsetParent !== null) {
+            ratingBtns[idx].click();
+        }
+    }
+});
+
+loadDueCards();
+</script>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block nav_notes %}{{ t["nav.notes"] }}{% endblock %}
+{% block nav_search %}{{ t["nav.search"] }}{% endblock %}
+{% block nav_wiki %}{{ t["nav.wiki"] }}{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+{% block footer_text %}{% if lang == "en" %}Knowledge for All{% else %}모두를 위한 지식{% endif %}{% endblock %}
+{% block title %}{{ t["app.name"] }}{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>📚 {{ t["app.name"] }}</h1>
+        <p>{{ t["app.tagline"] }}</p>
+    </div>
+    <div class="stats-bar">
+        <div class="stat">
+            <span class="stat-value">{{ notes_count }}</span>
+            <span class="stat-label">{{ t["home.notes"] }}</span>
+        </div>
+        <div class="stat">
+            <span class="stat-value">🔥 {{ streak }}{{ t["home.day"] }}</span>
+            <span class="stat-label">{{ t["home.streak"] }}</span>
+        </div>
+    </div>
+</section>
+
+<section class="quick-actions">
+    <h2>{{ t["home.quick_start"] }}</h2>
+    <div class="action-grid">
+        <a href="/notes/new" class="action-card">
+            <span class="icon">📝</span>
+            <span>{{ t["home.new_note"] }}</span>
+        </a>
+        <a href="/notes" class="action-card">
+            <span class="icon">📋</span>
+            <span>{{ t["home.note_list"] }}</span>
+        </a>
+        <a href="/notes/split" class="action-card">
+            <span class="icon">📑</span>
+            <span>{{ t["home.split_view"] }}</span>
+        </a>
+        <a href="/srs" class="action-card">
+            <span class="icon">🧠</span>
+            <span>{{ t["home.srs_review"] }}</span>
+        </a>
+        <a href="/search" class="action-card">
+            <span class="icon">🔍</span>
+            <span>{{ t["home.search"] }}</span>
+        </a>
+        <a href="/wiki/manage" class="action-card">
+            <span class="icon">📖</span>
+            <span>{{ t["home.zim_manage"] }}</span>
+        </a>
+        <a href="/security" class="action-card">
+            <span class="icon">🔐</span>
+            <span>{{ t["home.security"] }}</span>
+        </a>
+    </div>
+</section>
+
+<section class="keyboard-hints">
+    <h3>{{ t["home.shortcuts"] }}</h3>
+    <div class="hints-grid">
+        <div class="hint"><kbd>n</kbd> {{ t["home.shortcut.new_note"] }}</div>
+        <div class="hint"><kbd>/</kbd> {{ t["home.shortcut.search"] }}</div>
+        <div class="hint"><kbd>?</kbd> {{ t["home.shortcut.help"] }}</div>
+    </div>
+</section>
+
+<section class="lang-selector">
+    <form action="/api/lang" method="post" style="display: inline;">
+        <button type="submit" name="lang" value="en" class="btn btn-sm {% if lang == "en" %}btn-primary{% else %}btn-secondary{% endif %}">EN</button>
+        <button type="submit" name="lang" value="ko" class="btn btn-sm {% if lang == "ko" %}btn-primary{% else %}btn-secondary{% endif %}">한국어</button>
+    </form>
+</section>
+
+<style>
+.lang-selector {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+}
+</style>
+
+<script>
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.key === 'n') window.location.href = '/notes/new';
+    if (e.key === '/') { e.preventDefault(); window.location.href = '/search'; }
+});
+</script>
+{% endblock %}
