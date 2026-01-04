@@ -20,7 +20,7 @@ Lazarus is a lightweight, offline-capable personal knowledge management system. 
 | Feature | Lazarus | Obsidian/Notion |
 |---------|---------|-----------------|
 | RAM usage (idle) | **~10 MB** | 200-500 MB |
-| Binary size | **6.2 MB** | 150-300 MB |
+| Binary size | **7 MB**  | 150-300 MB |
 | 111GB Wikipedia | ✅ Instant | ❌ Impossible |
 | Offline-first | ✅ Always | ⚠️ Limited |
 | No account needed | ✅ | ❌ |
