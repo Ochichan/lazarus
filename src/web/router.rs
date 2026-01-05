@@ -67,6 +67,10 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/notes/:id", get(handlers::notes::get))
         .route("/api/notes/:id", post(handlers::notes::update_form))
         .route("/api/notes/:id", delete(handlers::notes::delete))
+        .route("/api/notes/:id", delete(handlers::notes::delete))
+        .route("/api/notes/:id/lock", post(handlers::notes::acquire_lock))
+        .route("/api/notes/:id/lock", get(handlers::notes::check_lock))
+        .route("/api/notes/:id/unlock", post(handlers::notes::release_lock))
         .route("/api/search", get(handlers::search::search))
         
         // === 위키 라우트 ===

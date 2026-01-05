@@ -1,5 +1,6 @@
 //! 애플리케이션 상태
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -33,6 +34,8 @@ pub struct AppState {
     pub security: Arc<RwLock<SecurityConfig>>,
     pub crypto: Arc<RwLock<Option<CryptoManager>>>,
     pub lang: Arc<RwLock<Lang>>,
+    /// 편집 중인 노트 락 (note_id -> timestamp)
+    pub edit_locks: Arc<RwLock<HashMap<u64, chrono::DateTime<chrono::Utc>>>>,
 }
 
 impl AppState {
@@ -116,6 +119,7 @@ impl AppState {
 
         Ok(Self {
                     lang: Arc::new(RwLock::new(Lang::En)),
+                    edit_locks: Arc::new(RwLock::new(HashMap::new())),
                     db: Arc::new(RwLock::new(db)),
                     search: Arc::new(RwLock::new(search)),
                     zims: Arc::new(RwLock::new(zims)),

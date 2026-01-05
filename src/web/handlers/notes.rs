@@ -438,3 +438,81 @@ pub async fn compact_db(
     
     Ok(Json(result))
 }
+
+/// POST /api/notes/:id/lock - 편집 락 획득
+pub async fn acquire_lock(
+    State(state): State<AppState>,
+    Path(id): Path<u64>,
+) -> Result<Json<LockResponse>> {
+    let now = chrono::Utc::now();
+    let mut locks = state.edit_locks.write().await;
+    
+    // 기존 락 확인 (5분 이내면 충돌)
+    if let Some(locked_at) = locks.get(&id) {
+        let elapsed = now - *locked_at;
+        if elapsed.num_minutes() < 5 {
+            return Ok(Json(LockResponse {
+                success: false,
+                locked: true,
+                message: "This note is being edited in another tab/window".to_string(),
+            }));
+        }
+    }
+    
+    // 락 획득
+    locks.insert(id, now);
+    
+    Ok(Json(LockResponse {
+        success: true,
+        locked: false,
+        message: "Lock acquired".to_string(),
+    }))
+}
+
+/// POST /api/notes/:id/unlock - 편집 락 해제
+pub async fn release_lock(
+    State(state): State<AppState>,
+    Path(id): Path<u64>,
+) -> Result<Json<LockResponse>> {
+    let mut locks = state.edit_locks.write().await;
+    locks.remove(&id);
+    
+    Ok(Json(LockResponse {
+        success: true,
+        locked: false,
+        message: "Lock released".to_string(),
+    }))
+}
+
+/// GET /api/notes/:id/lock - 락 상태 확인
+pub async fn check_lock(
+    State(state): State<AppState>,
+    Path(id): Path<u64>,
+) -> Result<Json<LockResponse>> {
+    let locks = state.edit_locks.read().await;
+    let now = chrono::Utc::now();
+    
+    if let Some(locked_at) = locks.get(&id) {
+        let elapsed = now - *locked_at;
+        if elapsed.num_minutes() < 5 {
+            return Ok(Json(LockResponse {
+                success: true,
+                locked: true,
+                message: "Note is locked".to_string(),
+            }));
+        }
+    }
+    
+    Ok(Json(LockResponse {
+        success: true,
+        locked: false,
+        message: "Note is not locked".to_string(),
+    }))
+}
+
+#[derive(Serialize)]
+pub struct LockResponse {
+    pub success: bool,
+    pub locked: bool,
+    pub message: String,
+}

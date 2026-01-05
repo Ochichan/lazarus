@@ -324,6 +324,75 @@ import InlineCode from '/static/editorjs-inline-code.js';
 let isDirty = false;
 let isNewNote = {{ is_new }};
 let lastSavedContent = '';
+let noteId = {{ note_id }};
+let hasLock = false;
+
+// 편집 락 획득
+async function acquireLock() {
+    if (isNewNote || noteId === 0) return true;
+    
+    try {
+        const res = await fetch(`/api/notes/${noteId}/lock`, { method: 'POST' });
+        const data = await res.json();
+        
+        if (!data.success || data.locked) {
+            showToast('⚠️ This note is being edited elsewhere!', 'warning');
+            // 경고 배너 표시
+            showLockWarning();
+            return false;
+        }
+        hasLock = true;
+        return true;
+    } catch (e) {
+        console.error('Lock check failed:', e);
+        return true; // 오프라인이면 그냥 진행
+    }
+}
+
+// 락 해제
+async function releaseLock() {
+    if (isNewNote || noteId === 0 || !hasLock) return;
+    
+    try {
+        await fetch(`/api/notes/${noteId}/unlock`, { method: 'POST' });
+    } catch (e) {
+        console.error('Unlock failed:', e);
+    }
+}
+
+// 경고 배너 표시
+function showLockWarning() {
+    const warning = document.createElement('div');
+    warning.id = 'lock-warning';
+    warning.style.cssText = `
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background: #f59e0b;
+        color: #000;
+        padding: 0.75rem;
+        text-align: center;
+        z-index: 1000;
+        font-weight: 500;
+    `;
+    warning.innerHTML = '⚠️ Warning: This note may be open in another tab. Saving could overwrite changes.';
+    document.body.prepend(warning);
+}
+
+// 페이지 로드 시 락 획득
+acquireLock();
+
+// 페이지 떠날 때 락 해제
+window.addEventListener('beforeunload', releaseLock);
+window.addEventListener('pagehide', releaseLock);
+
+// 5분마다 락 갱신
+setInterval(async () => {
+    if (hasLock && !isNewNote && noteId > 0) {
+        await fetch(`/api/notes/${noteId}/lock`, { method: 'POST' });
+    }
+}, 4 * 60 * 1000); // 4분마다
 
 // 토스트 메시지
 function showToast(message, type = 'success') {
