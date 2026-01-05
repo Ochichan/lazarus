@@ -940,15 +940,49 @@ pub async fn add_zim(
 ) -> Result<axum::Json<AddZimResult>> {
     let path = PathBuf::from(&req.path);
 
-    if !path.exists() {
+    // 경로 검증: path traversal 방지
+    let canonical = match path.canonicalize() {
+        Ok(p) => p,
+        Err(_) => {
+            return Ok(axum::Json(AddZimResult {
+                success: false,
+                name: None,
+                error: Some("Invalid path".to_string()),
+            }));
+        }
+    };
+
+    // .zim 확장자 확인
+    if !canonical.to_string_lossy().to_lowercase().ends_with(".zim") {
         return Ok(axum::Json(AddZimResult {
             success: false,
             name: None,
-            error: Some("파일이 존재하지 않습니다".to_string()),
+            error: Some("Only .zim files allowed".to_string()),
         }));
     }
 
-    match state.add_zim(path).await {
+    // 민감한 경로 차단
+    let path_str = canonical.to_string_lossy();
+    let blocked = ["/etc", "/proc", "/sys", "/dev", "/root", "/boot"];
+    for prefix in blocked {
+        if path_str.starts_with(prefix) {
+            return Ok(axum::Json(AddZimResult {
+                success: false,
+                name: None,
+                error: Some("Access denied".to_string()),
+            }));
+        }
+    }
+
+    if !canonical.exists() {
+        return Ok(axum::Json(AddZimResult {
+            success: false,
+            name: None,
+            error: Some("File not found".to_string()),
+        }));
+    }
+
+    match state.add_zim(canonical).await {
         Ok(name) => Ok(axum::Json(AddZimResult {
             success: true,
             name: Some(name),
