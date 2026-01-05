@@ -33,6 +33,24 @@
     </div>
 </div>
 
+</div>
+
+<!-- FSRS 개인화 섹션 -->
+<div class="fsrs-optimize-section">
+    <div class="optimize-header">
+        <h3>🎯 FSRS 개인화</h3>
+        <span class="optimize-status" id="optimize-status">로딩 중...</span>
+    </div>
+    <div class="optimize-info" id="optimize-info">
+        <p>복습 기록을 분석하여 당신만의 최적 학습 간격을 계산합니다.</p>
+    </div>
+    <button class="btn btn-primary" id="optimize-btn" disabled>
+        ⚡ 파라미터 최적화
+    </button>
+    <div class="optimize-result" id="optimize-result" style="display: none;">
+    </div>
+</div>
+
 <div id="review-container">
     <div id="card-display" class="card-display" style="display: none;">
         <div class="card-question" id="card-question"></div>
@@ -72,6 +90,68 @@
 </section>
 
 <style>
+.fsrs-optimize-section {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.optimize-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.optimize-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.optimize-status {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    background: var(--bg-secondary);
+}
+
+.optimize-status.ready {
+    background: #10b981;
+    color: white;
+}
+
+.optimize-status.not-ready {
+    background: #f59e0b;
+    color: white;
+}
+
+.optimize-status.custom {
+    background: #6c5ce7;
+    color: white;
+}
+
+.optimize-info {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.optimize-result {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.optimize-result.success {
+    border-left: 4px solid #10b981;
+}
+
+.optimize-result.error {
+    border-left: 4px solid #ef4444;
+}
 .streak-item {
     background: linear-gradient(135deg, #f59e0b, #ef4444);
     color: white;
@@ -222,6 +302,74 @@ async function loadDueCards() {
 
     updateProgress();
 }
+
+// FSRS 최적화
+async function loadParamsStatus() {
+    try {
+        const res = await fetch('/api/srs/params');
+        const data = await res.json();
+        
+        const status = document.getElementById('optimize-status');
+        const btn = document.getElementById('optimize-btn');
+        const info = document.getElementById('optimize-info');
+        
+        if (data.is_custom) {
+            status.textContent = '✅ 개인화됨';
+            status.className = 'optimize-status custom';
+            info.innerHTML = `<p>개인화된 파라미터 사용 중 (${data.log_count}개 기록 기반)</p>`;
+            btn.disabled = false;
+            btn.textContent = '🔄 다시 최적화';
+        } else if (data.log_count >= data.min_logs_required) {
+            status.textContent = '⚡ 최적화 가능';
+            status.className = 'optimize-status ready';
+            info.innerHTML = `<p>${data.log_count}개의 복습 기록이 있습니다. 최적화를 실행하세요!</p>`;
+            btn.disabled = false;
+        } else {
+            status.textContent = `📊 ${data.log_count}/${data.min_logs_required}`;
+            status.className = 'optimize-status not-ready';
+            info.innerHTML = `<p>최소 ${data.min_logs_required}개의 복습 기록이 필요합니다. (현재: ${data.log_count}개)</p>`;
+            btn.disabled = true;
+        }
+    } catch (e) {
+        console.error('파라미터 로드 실패:', e);
+    }
+}
+
+document.getElementById('optimize-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('optimize-btn');
+    const result = document.getElementById('optimize-result');
+    
+    btn.disabled = true;
+    btn.textContent = '⏳ 최적화 중...';
+    
+    try {
+        const res = await fetch('/api/srs/optimize', { method: 'POST' });
+        const data = await res.json();
+        
+        if (data.success) {
+            result.style.display = 'block';
+            result.className = 'optimize-result success';
+            result.innerHTML = `
+                <strong>✅ 최적화 완료!</strong><br>
+                📊 분석된 기록: ${data.log_count}개<br>
+                🎯 예상 기억률: ${(data.predicted_retention * 100).toFixed(1)}%<br>
+                📉 RMSE: ${data.rmse.toFixed(4)}
+            `;
+            loadParamsStatus();
+        } else {
+            throw new Error(data.message || '최적화 실패');
+        }
+    } catch (e) {
+        result.style.display = 'block';
+        result.className = 'optimize-result error';
+        result.innerHTML = `<strong>❌ 오류:</strong> ${e.message}`;
+    }
+    
+    btn.disabled = false;
+    btn.textContent = '🔄 다시 최적화';
+});
+
+loadParamsStatus();
 
 function showCard() {
     if (currentIndex >= cards.length) {

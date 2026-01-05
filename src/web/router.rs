@@ -38,6 +38,9 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/srs/cards/:id/review", post(handlers::srs::review_card))
         .route("/api/srs/cards/:id", delete(handlers::srs::delete_card))
         .route("/api/srs/extract/:note_id", post(handlers::srs::extract_from_note))
+        .route("/api/srs/extract/:note_id", post(handlers::srs::extract_from_note))
+        .route("/api/srs/optimize", post(handlers::srs::optimize_params))
+        .route("/api/srs/params", get(handlers::srs::get_params))
         // 보안 API
         .route("/security", get(handlers::security::security_page))
         .route("/api/security/status", get(handlers::security::get_status))
@@ -66,7 +69,6 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/notes", post(handlers::notes::create_form))
         .route("/api/notes/:id", get(handlers::notes::get))
         .route("/api/notes/:id", post(handlers::notes::update_form))
-        .route("/api/notes/:id", delete(handlers::notes::delete))
         .route("/api/notes/:id", delete(handlers::notes::delete))
         .route("/api/notes/:id/lock", post(handlers::notes::acquire_lock))
         .route("/api/notes/:id/lock", get(handlers::notes::check_lock))

@@ -241,30 +241,43 @@ pub struct SrsEngine {
     file_path: String,
     pub user_stats: UserStats,
     stats_path: String,
+    /// 복습 로그 (개인화용)
+    review_logs: Vec<ReviewLog>,
+    logs_path: String,
+    /// 개인화된 파라미터 (None이면 기본값)
+    pub custom_params: Option<[f32; 17]>,
+    params_path: String,
 }
 
 impl SrsEngine {
     /// 새 엔진 생성 또는 파일에서 로드
-        pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-            let file_path = path.as_ref().to_string_lossy().to_string();
-            let stats_path = file_path.replace(".jsonl", "_stats.json");
-            
-            let mut engine = Self {
-                cards: HashMap::new(),
-                next_id: 1,
-                file_path,
-                user_stats: UserStats::default(),
-                stats_path,
-            };
-    
-            if path.as_ref().exists() {
-                engine.load()?;
-            }
-            
-            engine.load_stats();
-    
-            Ok(engine)
+    pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
+        let file_path = path.as_ref().to_string_lossy().to_string();
+        let stats_path = file_path.replace(".jsonl", "_stats.json");
+        let logs_path = file_path.replace(".jsonl", "_logs.jsonl");
+        let params_path = file_path.replace(".jsonl", "_params.json");
+        
+        let mut engine = Self {
+            cards: HashMap::new(),
+            next_id: 1,
+            file_path,
+            user_stats: UserStats::default(),
+            stats_path,
+            review_logs: Vec::new(),
+            logs_path,
+            custom_params: None,
+            params_path,
+        };
+        
+        if path.as_ref().exists() {
+            engine.load()?;
         }
+        engine.load_stats();
+        engine.load_logs();
+        engine.load_params();
+        
+        Ok(engine)
+    }
 
     /// 파일에서 로드
     fn load(&mut self) -> Result<()> {
@@ -358,21 +371,24 @@ impl SrsEngine {
         let card = self.cards.get_mut(&card_id)
             .ok_or_else(|| LazarusError::NotFound(format!("카드 ID: {}", card_id)))?;
         
-        let srs = &mut card.srs;
-        let params = FsrsParams::default();
         let rating = match result {
             ReviewResult::Again => 0,
             ReviewResult::Hard => 1,
             ReviewResult::Good => 2,
             ReviewResult::Easy => 3,
         };
-
         let now = Utc::now();
         
-        // 경과 일수 계산
-        let elapsed_days = srs.last_review
+        // 로그용 데이터 저장 (변경 전)
+        let stability_before = card.srs.stability;
+        let difficulty_before = card.srs.difficulty;
+        let state_before = card.srs.state;
+        let elapsed_days = card.srs.last_review
             .map(|lr| (now - lr).num_hours() as f32 / 24.0)
             .unwrap_or(0.0);
+        
+        let srs = &mut card.srs;
+        let params = FsrsParams::default();
 
         match srs.state {
             CardState::New => {
@@ -431,6 +447,18 @@ impl SrsEngine {
         // SM-2 호환 (레거시)
         srs.ease_factor = 1.3 + srs.difficulty * 1.7;  // 1.3 ~ 3.0 매핑
 
+        // 복습 로그 기록 (FSRS 개인화용)
+        let log = ReviewLog {
+            card_id,
+            timestamp: now,
+            rating,
+            stability_before,
+            difficulty_before,
+            elapsed_days,
+            state: state_before,
+        };
+        self.append_log(log)?;
+        
         // 통계 업데이트
         self.user_stats.record_study();
         self.save_stats()?;
@@ -492,6 +520,194 @@ impl SrsEngine {
         Ok(())
     }
     
+    /// 복습 로그 로드
+    fn load_logs(&mut self) {
+        if let Ok(data) = std::fs::read_to_string(&self.logs_path) {
+            for line in data.lines() {
+                if let Ok(log) = serde_json::from_str::<ReviewLog>(line) {
+                    self.review_logs.push(log);
+                }
+            }
+            tracing::info!("FSRS 로그: {}개 로드됨", self.review_logs.len());
+        }
+    }
+    
+    /// 복습 로그 추가
+    fn append_log(&mut self, log: ReviewLog) -> Result<()> {
+        // 메모리에 추가
+        self.review_logs.push(log.clone());
+        
+        // 파일에 추가
+        let mut file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&self.logs_path)
+            .map_err(LazarusError::Io)?;
+        
+        let json = serde_json::to_string(&log)
+            .map_err(|e| LazarusError::Serialize(e.to_string()))?;
+        writeln!(file, "{}", json).map_err(LazarusError::Io)?;
+        
+        Ok(())
+    }
+    
+    /// 개인화 파라미터 로드
+    fn load_params(&mut self) {
+        if let Ok(data) = std::fs::read_to_string(&self.params_path) {
+            if let Ok(params) = serde_json::from_str::<[f32; 17]>(&data) {
+                self.custom_params = Some(params);
+                tracing::info!("FSRS 개인화 파라미터 로드됨");
+            }
+        }
+    }
+    
+    /// 개인화 파라미터 저장
+    pub fn save_params(&self) -> Result<()> {
+        if let Some(params) = &self.custom_params {
+            let json = serde_json::to_string_pretty(params)
+                .map_err(|e| LazarusError::Serialize(e.to_string()))?;
+            std::fs::write(&self.params_path, json).map_err(LazarusError::Io)?;
+        }
+        Ok(())
+    }
+
+    /// 복습 로그 수
+    pub fn log_count(&self) -> usize {
+        self.review_logs.len()
+    }
+    
+    /// FSRS 파라미터 최적화 (경사하강법)
+    pub fn optimize_params(&mut self) -> Result<OptimizationResult> {
+        let logs = &self.review_logs;
+        
+        if logs.len() < 100 {
+            return Err(LazarusError::NotFound(
+                format!("최소 100개의 복습 기록 필요 (현재: {}개)", logs.len())
+            ));
+        }
+        
+        // 기본 파라미터로 시작
+        let mut params = FsrsParams::default().w;
+        let learning_rate = 0.01;
+        let iterations = 100;
+        
+        for _ in 0..iterations {
+            let mut gradients = [0.0f32; 17];
+            let mut total_loss = 0.0f32;
+            let mut count = 0;
+            
+            for log in logs.iter() {
+                // Review 상태의 로그만 사용 (학습 데이터로 의미 있음)
+                if log.state != CardState::Review {
+                    continue;
+                }
+                if log.stability_before <= 0.0 {
+                    continue;
+                }
+                
+                // 예측 검색가능성
+                let predicted_r = (1.0 + log.elapsed_days / (9.0 * log.stability_before)).powf(-1.0);
+                
+                // 실제 결과 (Again=0, 나머지=1)
+                let actual = if log.rating == 0 { 0.0 } else { 1.0 };
+                
+                // 손실 (Binary Cross Entropy 근사)
+                let error = predicted_r - actual;
+                total_loss += error * error;
+                count += 1;
+                
+                // w8 (안정성 증가 기본) 그래디언트
+                gradients[8] += error * 0.1;
+                // w9 (난이도 영향) 그래디언트  
+                gradients[9] += error * log.difficulty_before * 0.1;
+                // w10 (검색가능성 영향) 그래디언트
+                gradients[10] += error * (1.0 - predicted_r) * 0.1;
+            }
+            
+            if count == 0 {
+                break;
+            }
+            
+            // 파라미터 업데이트 (경사하강)
+            for i in 0..17 {
+                params[i] -= learning_rate * gradients[i] / count as f32;
+                // 범위 제한
+                params[i] = params[i].clamp(0.01, 10.0);
+            }
+        }
+        
+        // RMSE 계산
+        let rmse = self.calculate_rmse(&params);
+        
+        // 예상 기억률 계산
+        let predicted_retention = self.calculate_retention(&params);
+        
+        // 저장
+        self.custom_params = Some(params);
+        self.save_params()?;
+        
+        Ok(OptimizationResult {
+            params,
+            log_count: logs.len(),
+            rmse,
+            predicted_retention,
+        })
+    }
+    
+    /// RMSE 계산
+    fn calculate_rmse(&self, params: &[f32; 17]) -> f32 {
+        let mut sum_sq = 0.0f32;
+        let mut count = 0;
+        
+        for log in &self.review_logs {
+            if log.state != CardState::Review || log.stability_before <= 0.0 {
+                continue;
+            }
+            
+            let predicted = (1.0 + log.elapsed_days / (9.0 * log.stability_before)).powf(-1.0);
+            let actual = if log.rating == 0 { 0.0 } else { 1.0 };
+            sum_sq += (predicted - actual).powi(2);
+            count += 1;
+        }
+        
+        if count > 0 {
+            (sum_sq / count as f32).sqrt()
+        } else {
+            0.0
+        }
+    }
+    
+    /// 평균 예상 기억률
+    fn calculate_retention(&self, _params: &[f32; 17]) -> f32 {
+        let mut sum = 0.0f32;
+        let mut count = 0;
+        
+        for card in self.cards.values() {
+            if card.srs.stability > 0.0 {
+                let elapsed = card.srs.last_review
+                    .map(|lr| (Utc::now() - lr).num_hours() as f32 / 24.0)
+                    .unwrap_or(0.0);
+                let r = (1.0 + elapsed / (9.0 * card.srs.stability)).powf(-1.0);
+                sum += r;
+                count += 1;
+            }
+        }
+        
+        if count > 0 {
+            sum / count as f32
+        } else {
+            0.9
+        }
+    }
+    
+    /// 현재 사용 중인 파라미터
+    pub fn current_params(&self) -> FsrsParams {
+        match &self.custom_params {
+            Some(w) => FsrsParams { w: *w },
+            None => FsrsParams::default(),
+        }
+    }
+
     /// 카드 수
     pub fn count(&self) -> usize {
         self.cards.len()
@@ -506,6 +722,38 @@ pub struct SrsStats {
     pub new: usize,
     pub learning: usize,
     pub mature: usize,
+}
+
+/// 복습 로그 (FSRS 개인화용)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ReviewLog {
+    /// 카드 ID
+    pub card_id: u64,
+    /// 복습 시간
+    pub timestamp: DateTime<Utc>,
+    /// 응답 (0=Again, 1=Hard, 2=Good, 3=Easy)
+    pub rating: u8,
+    /// 복습 전 안정성
+    pub stability_before: f32,
+    /// 복습 전 난이도
+    pub difficulty_before: f32,
+    /// 마지막 복습 이후 경과 일수
+    pub elapsed_days: f32,
+    /// 복습 전 상태
+    pub state: CardState,
+}
+
+/// FSRS 최적화 결과
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OptimizationResult {
+    /// 최적화된 파라미터
+    pub params: [f32; 17],
+    /// 총 로그 수
+    pub log_count: usize,
+    /// RMSE (낮을수록 좋음)
+    pub rmse: f32,
+    /// 예상 기억률
+    pub predicted_retention: f32,
 }
 
 /// 사용자 통계 (게이미피케이션)

@@ -290,3 +290,58 @@ pub struct ExtractResponse {
     pub card_ids: Vec<u64>,
     pub message: String,
 }
+
+/// POST /api/srs/optimize - FSRS 파라미터 최적화
+pub async fn optimize_params(
+    State(state): State<AppState>,
+) -> Result<Json<OptimizeResponse>> {
+    let mut srs = state.srs.write().await;
+    
+    let result = srs.optimize_params()?;
+    
+    Ok(Json(OptimizeResponse {
+        success: true,
+        log_count: result.log_count,
+        rmse: result.rmse,
+        predicted_retention: result.predicted_retention,
+        message: format!(
+            "{}개의 복습 기록으로 최적화 완료! 예상 기억률: {:.1}%",
+            result.log_count,
+            result.predicted_retention * 100.0
+        ),
+    }))
+}
+
+/// GET /api/srs/params - 현재 FSRS 파라미터
+pub async fn get_params(
+    State(state): State<AppState>,
+) -> Result<Json<ParamsResponse>> {
+    let srs = state.srs.read().await;
+    let params = srs.current_params();
+    let log_count = srs.log_count();
+    let is_custom = srs.custom_params.is_some();
+    
+    Ok(Json(ParamsResponse {
+        params: params.w.to_vec(),
+        is_custom,
+        log_count,
+        min_logs_required: 100,
+    }))
+}
+
+#[derive(Serialize)]
+pub struct OptimizeResponse {
+    pub success: bool,
+    pub log_count: usize,
+    pub rmse: f32,
+    pub predicted_retention: f32,
+    pub message: String,
+}
+
+#[derive(Serialize)]
+pub struct ParamsResponse {
+    pub params: Vec<f32>,
+    pub is_custom: bool,
+    pub log_count: usize,
+    pub min_logs_required: usize,
+}

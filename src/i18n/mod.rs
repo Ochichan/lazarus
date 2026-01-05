@@ -205,7 +205,7 @@ pub fn ko() -> Translations {
     data.insert("security.pin_not_set", "PIN이 설정되지 않았습니다");
     data.insert("security.pin_enabled", "PIN 활성화됨");
     data.insert("security.locked", "잠금됨 - PIN을 입력하세요");
-    data.insert("security.pin_input", "PIN 입력 (4-8자리)");
+    data.insert("security.pin_input", "PIN 입력 (6-32자리)");
     data.insert("security.set_pin", "PIN 설정");
     data.insert("security.remove_pin", "PIN 제거");
     data.insert("security.lock", "잠금");
@@ -214,7 +214,7 @@ pub fn ko() -> Translations {
     data.insert("security.pin_set_success", "PIN이 설정되었습니다");
     data.insert("security.pin_removed", "PIN이 제거되었습니다");
     data.insert("security.unlocked", "잠금이 해제되었습니다");
-    data.insert("security.pin_min_length", "PIN을 4자리 이상 입력하세요");
+    data.insert("security.pin_min_length", "PIN을 6자리 이상 입력하세요");
     
     // 백업
     data.insert("backup.title", "백업");
@@ -394,7 +394,7 @@ pub fn en() -> Translations {
     data.insert("security.pin_not_set", "PIN not set");
     data.insert("security.pin_enabled", "PIN enabled");
     data.insert("security.locked", "Locked - Enter PIN");
-    data.insert("security.pin_input", "Enter PIN (4-8 digits)");
+    data.insert("security.pin_input", "Enter PIN (6-32 characters)");
     data.insert("security.set_pin", "Set PIN");
     data.insert("security.remove_pin", "Remove PIN");
     data.insert("security.lock", "Lock");
@@ -403,7 +403,7 @@ pub fn en() -> Translations {
     data.insert("security.pin_set_success", "PIN has been set");
     data.insert("security.pin_removed", "PIN has been removed");
     data.insert("security.unlocked", "Unlocked");
-    data.insert("security.pin_min_length", "PIN must be at least 4 digits");
+    data.insert("security.pin_min_length", "PIN must be at least 6 characters");
     
     // Backup
     data.insert("backup.title", "Backup");
