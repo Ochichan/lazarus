@@ -9,6 +9,13 @@
 <form id="note-form" method="post" action="{% if is_new %}/api/notes{% else %}/api/notes/{{ note_id }}{% endif %}">
         <div class="editor-header">
             <input type="text" id="title" name="title" class="title-input" value="{{ note_title }}" placeholder="{{ t["editor.title_placeholder"] }}" required>
+            <div class="note-type-selector">
+                <button type="button" class="type-btn {% if note_type == "note" %}active{% endif %}" data-type="note" title="Note">📝</button>
+                <button type="button" class="type-btn {% if note_type == "journal" %}active{% endif %}" data-type="journal" title="Journal">📔</button>
+                <button type="button" class="type-btn {% if note_type == "review" %}active{% endif %}" data-type="review" title="Review">📖</button>
+                <button type="button" class="type-btn {% if note_type == "idea" %}active{% endif %}" data-type="idea" title="Idea">💡</button>
+                <input type="hidden" name="note_type" id="note-type-input" value="{{ note_type }}">
+            </div>
             <div class="editor-actions">
             	<button type="button" class="btn btn-secondary" id="encrypt-btn" title="{{ t["editor.encrypt"] }}">🔓</button>
                 <button type="button" class="btn btn-secondary" id="focus-mode-btn">🎯 {{ t["editor.focus"] }}</button>
@@ -58,7 +65,30 @@
     padding: 1rem 0;
     border-bottom: 1px solid var(--border);
 }
+.note-type-selector {
+    display: flex;
+    gap: 0.25rem;
+}
 
+.type-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border-color, #333);
+    background: var(--card-bg, #1e1e2e);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+}
+
+.type-btn:hover {
+    background: var(--bg-secondary, #2a2a3e);
+}
+
+.type-btn.active {
+    background: var(--primary, #6c5ce7);
+    border-color: var(--primary, #6c5ce7);
+}
 .title-input {
     flex: 1;
     font-size: 1.75rem;
@@ -677,6 +707,15 @@ encryptBtn.addEventListener('click', async () => {
     encryptBtn.title = isEncrypted ? '암호화됨 (클릭하여 해제)' : '암호화 안됨 (클릭하여 암호화)';
     showToast(isEncrypted ? '🔒 암호화 활성화' : '🔓 암호화 해제', 'success');
     isDirty = true;
+});
+// 노트 타입 선택
+document.querySelectorAll('.type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('note-type-input').value = btn.dataset.type;
+        isDirty = true;
+    });
 });
 
 </script>

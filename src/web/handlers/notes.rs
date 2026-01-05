@@ -21,7 +21,9 @@ pub struct NoteResponse {
     pub created_at: String,
     pub updated_at: String,
     pub tags: Vec<String>,
+    pub note_type: String,
 }
+
 
 impl From<Note> for NoteResponse {
     fn from(note: Note) -> Self {
@@ -32,6 +34,7 @@ impl From<Note> for NoteResponse {
             created_at: note.created_at.to_rfc3339(),
             updated_at: note.updated_at.to_rfc3339(),
             tags: note.tags,
+            note_type: format!("{:?}", note.note_type).to_lowercase(),
         }
     }
 }
@@ -84,7 +87,9 @@ pub async fn create_form(
     State(state): State<AppState>,
     Form(req): Form<CreateNoteFormRequest>,
 ) -> Result<axum::response::Redirect> {
+    tracing::info!("폼 데이터: title={}, note_type={:?}", req.title, req.note_type);
     let mut note = Note::new(0, req.title, req.content);
+
     
     // 쉼표로 구분된 태그 파싱
     note.tags = req.tags
@@ -95,7 +100,16 @@ pub async fn create_form(
     
     // 암호화 여부
     note.encrypted = req.encrypted == "true";
-    
+
+		// 노트 타입
+	    if let Some(ref t) = req.note_type {
+    	    note.note_type = match t.as_str() {
+        	    "journal" => crate::db::note::NoteType::Journal,
+   	         "review" => crate::db::note::NoteType::Review,
+   	         "idea" => crate::db::note::NoteType::Idea,
+   	         _ => crate::db::note::NoteType::Note,
+   	     };
+    }
     let id = {
         let mut db = state.db.write().await;
         if note.encrypted {
@@ -113,7 +127,7 @@ pub async fn create_form(
         search.index_note(id, &note.title, &note.content, &note.tags)?;
     }
     
-	tracing::info!("노트 생성 (Form): id={}, encrypted={}", id, note.encrypted);
+	tracing::info!("노트 생성 (Form): id={}, encrypted={}, type={:?}", id, note.encrypted, note.note_type);
     Ok(axum::response::Redirect::to(&format!("/notes/{}", id)))
 }
 /// GET /api/notes/:id
@@ -177,8 +191,20 @@ pub async fn update_form(
         let mut note = Note::new(id, req.title, req.content);
         note.tags = tags;
         note.created_at = existing.created_at;
-        note.encrypted = encrypted;
+		note.encrypted = encrypted;
         
+   		     // 노트 타입
+   		     if let Some(ref t) = req.note_type {
+   		         note.note_type = match t.as_str() {
+     	           "journal" => crate::db::note::NoteType::Journal,
+     	           "review" => crate::db::note::NoteType::Review,
+      	           "idea" => crate::db::note::NoteType::Idea,
+            	    _ => crate::db::note::NoteType::Note,
+        	    };
+    	    } else {
+            // 기존 타입 유지
+            note.note_type = existing.note_type;
+        }
         if encrypted {
             let crypto = state.crypto.read().await;
             db.save_encrypted(&note, None, crypto.as_ref())?;
@@ -234,6 +260,8 @@ pub struct CreateNoteRequest {
     pub tags: Vec<String>,
     #[serde(default)]
     pub encrypted: bool,
+    #[serde(default)]
+    pub note_type: Option<String>,
 }
 
 /// 노트 생성 요청 (Form)
@@ -245,6 +273,8 @@ pub struct CreateNoteFormRequest {
     pub tags: String,  // 쉼표로 구분된 문자열
     #[serde(default)]
     pub encrypted: String,  // "true" 또는 "false"
+    #[serde(default)]
+    pub note_type: Option<String>,
 }
 
 /// GET /api/notes/duplicates - 중복 노트 찾기

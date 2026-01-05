@@ -176,6 +176,7 @@ impl StorageEngine {
             vector: vector.clone(),
             encrypted: note.encrypted,
             deleted: false,
+            			note_type: note.note_type.to_u8(),
         };
 
         // 직렬화
@@ -248,6 +249,7 @@ impl StorageEngine {
                 vector: vector.clone(),
                 encrypted: is_encrypted,
                 deleted: false,
+            			note_type: note.note_type.to_u8(),
             };
     
             // 직렬화
@@ -337,6 +339,9 @@ impl StorageEngine {
                             .unwrap_or_default()
                             .with_timezone(&chrono::Utc),
                         encrypted: true,
+                        note_type: crate::db::note::NoteType::default(),
+                        rating: None,
+                        mood: None,
                     }));
                 }
             }
@@ -348,9 +353,10 @@ impl StorageEngine {
         let content = String::from_utf8_lossy(&decompressed).to_string();
         match Note::from_markdown(atom.id, &content) {
             Some(mut note) => {
-                note.encrypted = atom.encrypted;
-                Ok(Some(note))
-            }
+                            note.encrypted = atom.encrypted;
+                            note.note_type = crate::db::note::NoteType::from_u8(atom.note_type);
+                            Ok(Some(note))
+                        }
             None => Ok(None),
         }
     }
@@ -406,18 +412,19 @@ impl StorageEngine {
             .map_err(|e| LazarusError::Deserialize(e.to_string()))?;
 
         // Note로 변환
-        let note = Note::from_markdown(id, &markdown)
+        let mut note = Note::from_markdown(id, &markdown)
             .ok_or_else(|| LazarusError::Deserialize("마크다운 파싱 실패".to_string()))?;
-
+        
+        note.note_type = crate::db::note::NoteType::from_u8(archived.note_type);
+        
         Ok(Some(note))
-    }
-
+	}
     /// 노트 삭제 (soft delete)
     pub fn delete(&mut self, id: u64) -> Result<bool> {
         if !self.index.contains_key(&id) {
             return Ok(false);
         }
-
+	
         // 삭제 표시된 NoteAtom 생성
         let atom = NoteAtom {
             id,
@@ -427,6 +434,7 @@ impl StorageEngine {
             vector: None,
             encrypted: false,
             deleted: true,
+            			note_type: 0,
         };
 
         let bytes = rkyv::to_bytes::<_, 256>(&atom)
@@ -499,6 +507,7 @@ impl StorageEngine {
 	                vector: None,
 	                encrypted: note.encrypted,
 	                deleted: false,
+	                  			note_type: note.note_type.to_u8(),
 	            };
 	            
 	            let data = rkyv::to_bytes::<_, 256>(&atom)

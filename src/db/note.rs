@@ -13,25 +13,76 @@ use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 pub struct NoteAtom {
     /// 고유 ID
     pub id: u64,
-    
+
     /// 생성 타임스탬프 (Unix timestamp)
     pub created_at: i64,
-    
+
     /// 수정 타임스탬프 (Unix timestamp)
     pub updated_at: i64,
-    
+
     /// Zstd 압축된 콘텐츠
     #[with(rkyv::with::Raw)]
     pub content: Vec<u8>,
-    
+
     /// 벡터 임베딩 (선택, 검색용)
     pub vector: Option<Vec<i8>>,
-    
+
+	/// 삭제 표시 (soft delete)
+    pub deleted: bool,
+    /// 노트 타입
+    pub note_type: u8,
+	
     /// 암호화 여부
     pub encrypted: bool,
+
+}
+
+/// 노트 타입
+#[derive(Debug, Clone, Copy, SerdeSerialize, SerdeDeserialize, PartialEq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum NoteType {
+    #[default]
+    Note,       // 📝 일반 노트
+    Journal,    // 📔 다이어리/일기
+    Review,     // 📖 독후감/리뷰
+    Idea,       // 💡 아이디어
+}
+
+impl NoteType {
+    pub fn emoji(&self) -> &'static str {
+        match self {
+            NoteType::Note => "📝",
+            NoteType::Journal => "📔",
+            NoteType::Review => "📖",
+            NoteType::Idea => "💡",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            NoteType::Note => "Note",
+            NoteType::Journal => "Journal",
+            NoteType::Review => "Review",
+            NoteType::Idea => "Idea",
+        }
+    }
+	pub fn to_u8(&self) -> u8 {
+        match self {
+            NoteType::Note => 0,
+            NoteType::Journal => 1,
+            NoteType::Review => 2,
+            NoteType::Idea => 3,
+        }
+    }
     
-    /// 삭제 표시 (soft delete)
-    pub deleted: bool,
+    pub fn from_u8(v: u8) -> Self {
+        match v {
+            1 => NoteType::Journal,
+            2 => NoteType::Review,
+            3 => NoteType::Idea,
+            _ => NoteType::Note,
+        }
+    }
 }
 
 /// API 응답용 노트 구조체
@@ -44,6 +95,15 @@ pub struct Note {
     pub updated_at: DateTime<Utc>,
     pub tags: Vec<String>,
     pub encrypted: bool,
+    /// 노트 타입
+    #[serde(default)]
+    pub note_type: NoteType,
+    /// 리뷰용: 별점 (1-5)
+    #[serde(default)]
+    pub rating: Option<u8>,
+    /// 저널용: 기분 이모지
+    #[serde(default)]
+    pub mood: Option<String>,
 }
 
 impl Note {
@@ -58,13 +118,15 @@ impl Note {
             updated_at: now,
             tags: Vec::new(),
             encrypted: false,
-        }
-    }
-
+            note_type: NoteType::default(),
+            rating: None,
+            mood: None,
+		}
+	}
     /// 마크다운 형식으로 직렬화
     pub fn to_markdown(&self) -> String {
         let mut md = String::new();
-        
+
         // YAML 프론트매터
         md.push_str("---\n");
         md.push_str(&format!("id: {}\n", self.id));
@@ -75,10 +137,10 @@ impl Note {
             md.push_str(&format!("tags: [{}]\n", self.tags.join(", ")));
         }
         md.push_str("---\n\n");
-        
+
         // 본문
         md.push_str(&self.content);
-        
+
         md
     }
 
@@ -118,6 +180,9 @@ impl Note {
             updated_at: Utc::now(),
             tags,
             encrypted: false,
+            note_type: NoteType::default(),
+            rating: None,
+            mood: None,
         })
     }
 }
@@ -130,7 +195,7 @@ mod tests {
     fn test_note_to_markdown() {
         let note = Note::new(1, "테스트 제목".to_string(), "본문 내용".to_string());
         let md = note.to_markdown();
-        
+
         assert!(md.contains("title: \"테스트 제목\""));
         assert!(md.contains("본문 내용"));
     }
@@ -144,7 +209,7 @@ tags: [rust, pkm]
 ---
 
 본문입니다."#;
-        
+
         let note = Note::from_markdown(1, md).unwrap();
         assert_eq!(note.title, "테스트");
         assert_eq!(note.tags, vec!["rust", "pkm"]);

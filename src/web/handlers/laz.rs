@@ -131,6 +131,9 @@ pub async fn import_package(
             updated_at: chrono::DateTime::from_timestamp(note_content.updated_at, 0)
                 .unwrap_or_else(chrono::Utc::now),
             encrypted: false,
+            note_type: crate::db::note::NoteType::default(),
+            rating: None,
+            mood: None,
         };
         
         let id = db.save(&note, None)?;

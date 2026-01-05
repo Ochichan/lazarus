@@ -715,3 +715,46 @@ code {
 [dir="rtl"] .search-form {
     flex-direction: row-reverse;
 }
+
+/* ===== 노트 타입 탭 ===== */
+.note-type-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.type-tab {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border-color, #333);
+    background: var(--card-bg, #1e1e2e);
+    color: var(--text-secondary, #aaa);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.type-tab:hover {
+    background: var(--bg-secondary, #2a2a3e);
+    color: var(--text-primary, #fff);
+}
+
+.type-tab.active {
+    background: var(--primary, #6c5ce7);
+    color: white;
+    border-color: var(--primary, #6c5ce7);
+}
+
+.note-type-badge {
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+}
+
+.note-item[data-type] {
+    transition: opacity 0.2s ease;
+}
+
+.note-item.hidden {
+    display: none;
+}

@@ -14,6 +14,26 @@
         <a href="/notes/new" class="btn btn-primary">+ {{ t["home.new_note"] }}</a>
     </div>
 </section>
+
+<!-- 노트 타입 필터 탭 -->
+<div class="note-type-tabs">
+    <button class="type-tab active" data-type="all">
+        📋 All
+    </button>
+    <button class="type-tab" data-type="note">
+        📝 Notes
+    </button>
+    <button class="type-tab" data-type="journal">
+        📔 Journal
+    </button>
+    <button class="type-tab" data-type="review">
+        📖 Review
+    </button>
+    <button class="type-tab" data-type="idea">
+        💡 Ideas
+    </button>
+</div>
+
 {% if notes.is_empty() %}
 <section class="empty-state">
     <p>{{ t["notes.no_notes"] }}</p>
@@ -35,7 +55,8 @@
             <label class="note-checkbox" style="display: none;">
                 <input type="checkbox" name="note_ids" value="{{ note.id }}">
             </label>
-            <a href="/notes/{{ note.id }}">
+            <a href="/notes/{{ note.id }}" data-type="{{ note.note_type }}">
+                <span class="note-type-badge">{{ note.note_type_emoji }}</span>
                 <h3>{{ note.title }}</h3>
                 <p class="preview">{{ note.preview }}</p>
                 <time>{{ note.updated_at }}</time>
@@ -417,5 +438,31 @@ async function handleFile(e) {
 duplicatesModal?.addEventListener('click', (e) => { if (e.target === duplicatesModal) duplicatesModal.classList.remove('show'); });
 exportModal?.addEventListener('click', (e) => { if (e.target === exportModal) exportModal.classList.remove('show'); });
 importModal?.addEventListener('click', (e) => { if (e.target === importModal) importModal.classList.remove('show'); });
+
+// 노트 타입 필터링
+document.querySelectorAll('.type-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        // 활성 탭 변경
+        document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        const type = tab.dataset.type;
+        
+        // 노트 필터링
+        document.querySelectorAll('.note-item').forEach(item => {
+            const link = item.querySelector('a[data-type]');
+            if (!link) return;
+            
+            const itemType = link.dataset.type;
+            
+            if (type === 'all' || itemType === type) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    });
+});
+
 </script>
 {% endblock %}

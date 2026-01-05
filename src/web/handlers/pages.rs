@@ -66,6 +66,8 @@ struct NoteListItem {
     title: String,
     preview: String,
     updated_at: String,
+    note_type: String,
+    note_type_emoji: String,
 }
 
 /// GET /notes
@@ -87,6 +89,8 @@ pub async fn notes_list(State(state): State<AppState>) -> Result<Html<String>> {
                 },
                 preview: note.content.chars().take(100).collect::<String>() + "...",
                 updated_at: note.updated_at.format("%Y-%m-%d %H:%M").to_string(),
+                note_type: format!("{:?}", note.note_type).to_lowercase(),
+                note_type_emoji: note.note_type.emoji().to_string(),
             });
         }
     }
@@ -119,6 +123,7 @@ struct NotesEditTemplate {
     all_tags: Vec<String>,
     lang: &'static str,
     t: HashMap<String, String>,
+    note_type: String,
 }
 
 /// GET /notes/new
@@ -137,6 +142,7 @@ pub async fn notes_new(State(state): State<AppState>) -> Result<Html<String>> {
         all_tags,
         lang: lang.code(),
         t,
+        note_type: "note".to_string(),
     };
     Ok(Html(template.render().map_err(|e| {
         LazarusError::ServerStart(e.to_string())
@@ -216,6 +222,7 @@ pub async fn notes_edit(
         all_tags,
         lang: lang.code(),
         t,
+        note_type: format!("{:?}", note.note_type).to_lowercase(),
     };
     Ok(Html(template.render().map_err(|e| {
         LazarusError::ServerStart(e.to_string())
@@ -325,13 +332,15 @@ pub async fn notes_split(State(state): State<AppState>) -> Result<Html<String>> 
         if let Some(note) = db.get(id)? {
             notes.push(NoteListItem {
                 id: note.id,
-                title: if note.title.is_empty() { 
+                title: if note.title.is_empty() {
                     t.get("notes.no_title").cloned().unwrap_or_else(|| "Untitled".to_string())
-                } else { 
-                    note.title 
+                } else {
+                    note.title
                 },
-                preview: note.content.chars().take(100).collect::<String>(),
-                updated_at: note.updated_at.format("%m/%d").to_string(),
+                preview: note.content.chars().take(100).collect::<String>() + "...",
+                updated_at: note.updated_at.format("%Y-%m-%d %H:%M").to_string(),
+                note_type: format!("{:?}", note.note_type).to_lowercase(),
+                note_type_emoji: note.note_type.emoji().to_string(),
             });
         }
     }
@@ -364,13 +373,15 @@ pub async fn notes_split_with_id(
         if let Some(note) = db.get(nid)? {
             notes.push(NoteListItem {
                 id: note.id,
-                title: if note.title.is_empty() { 
+                title: if note.title.is_empty() {
                     t.get("notes.no_title").cloned().unwrap_or_else(|| "Untitled".to_string())
-                } else { 
-                    note.title 
+                } else {
+                    note.title
                 },
-                preview: note.content.chars().take(100).collect::<String>(),
-                updated_at: note.updated_at.format("%m/%d").to_string(),
+                preview: note.content.chars().take(100).collect::<String>() + "...",
+                updated_at: note.updated_at.format("%Y-%m-%d %H:%M").to_string(),
+                note_type: format!("{:?}", note.note_type).to_lowercase(),
+                note_type_emoji: note.note_type.emoji().to_string(),
             });
         }
     }
