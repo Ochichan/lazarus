@@ -3,11 +3,7 @@
 //! XChaCha20-Poly1305 + Argon2id
 
 use argon2::Argon2;
-use chacha20poly1305::{
-    aead::Aead,
-    XChaCha20Poly1305, XNonce,
-    KeyInit,
-};
+use chacha20poly1305::{aead::Aead, KeyInit, XChaCha20Poly1305, XNonce};
 use rand::RngCore;
 
 use crate::error::{LazarusError, Result};
@@ -29,14 +25,12 @@ impl CryptoManager {
     /// PIN에서 암호화 키 유도
     pub fn from_pin(pin: &str, salt: &[u8]) -> Result<Self> {
         let mut key = [0u8; 32];
-        
+
         let argon2 = Argon2::default();
-        argon2.hash_password_into(
-            pin.as_bytes(),
-            salt,
-            &mut key,
-        ).map_err(|e| LazarusError::Encryption)?;
-        
+        argon2
+            .hash_password_into(pin.as_bytes(), salt, &mut key)
+            .map_err(|e| LazarusError::Encryption)?;
+
         Ok(Self { key })
     }
 
@@ -50,8 +44,8 @@ impl CryptoManager {
     /// 데이터 암호화
     /// 반환: nonce (12 bytes) + ciphertext + tag (16 bytes)
     pub fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>> {
-        let cipher = XChaCha20Poly1305::new_from_slice(&self.key)
-            .map_err(|_| LazarusError::Encryption)?;
+        let cipher =
+            XChaCha20Poly1305::new_from_slice(&self.key).map_err(|_| LazarusError::Encryption)?;
 
         // 랜덤 nonce 생성
         let mut nonce_bytes = [0u8; NONCE_SIZE];
@@ -59,7 +53,8 @@ impl CryptoManager {
         let nonce = XNonce::from_slice(&nonce_bytes);
 
         // 암호화
-        let ciphertext = cipher.encrypt(nonce, plaintext)
+        let ciphertext = cipher
+            .encrypt(nonce, plaintext)
             .map_err(|_| LazarusError::Encryption)?;
 
         // nonce + ciphertext 결합
@@ -77,15 +72,16 @@ impl CryptoManager {
             return Err(LazarusError::Decryption);
         }
 
-        let cipher = XChaCha20Poly1305::new_from_slice(&self.key)
-            .map_err(|_| LazarusError::Decryption)?;
+        let cipher =
+            XChaCha20Poly1305::new_from_slice(&self.key).map_err(|_| LazarusError::Decryption)?;
 
         // nonce와 ciphertext 분리
         let nonce = XNonce::from_slice(&data[..NONCE_SIZE]);
         let ciphertext = &data[NONCE_SIZE..];
 
         // 복호화
-        let plaintext = cipher.decrypt(nonce, ciphertext)
+        let plaintext = cipher
+            .decrypt(nonce, ciphertext)
             .map_err(|_| LazarusError::Decryption)?;
 
         Ok(plaintext)
@@ -114,11 +110,11 @@ impl EncryptedHeader {
     pub fn new(pin: &str) -> Result<Self> {
         let salt = CryptoManager::generate_salt();
         let crypto = CryptoManager::from_pin(pin, &salt)?;
-        
+
         // 검증용 데이터 암호화
         let test_data = b"LAZARUS_PIN_OK";
         let verify_data = crypto.encrypt(test_data)?;
-        
+
         Ok(Self {
             salt: base64_encode(&salt),
             verify_data: base64_encode(&verify_data),
@@ -129,7 +125,7 @@ impl EncryptedHeader {
     pub fn verify(&self, pin: &str) -> Result<bool> {
         let salt = base64_decode(&self.salt)?;
         let verify_data = base64_decode(&self.verify_data)?;
-        
+
         let crypto = CryptoManager::from_pin(pin, &salt)?;
         Ok(crypto.verify_pin(&verify_data, b"LAZARUS_PIN_OK"))
     }
@@ -155,8 +151,7 @@ fn base64_encode(data: &[u8]) -> String {
 fn base64_decode(s: &str) -> Result<Vec<u8>> {
     let mut bytes = Vec::with_capacity(s.len() / 2);
     for i in (0..s.len()).step_by(2) {
-        let byte = u8::from_str_radix(&s[i..i+2], 16)
-            .map_err(|_| LazarusError::Decryption)?;
+        let byte = u8::from_str_radix(&s[i..i + 2], 16).map_err(|_| LazarusError::Decryption)?;
         bytes.push(byte);
     }
     Ok(bytes)
@@ -170,11 +165,11 @@ mod tests {
     fn test_encrypt_decrypt() {
         let salt = CryptoManager::generate_salt();
         let crypto = CryptoManager::from_pin("1234", &salt).unwrap();
-        
+
         let plaintext = b"Hello, Lazarus!";
         let encrypted = crypto.encrypt(plaintext).unwrap();
         let decrypted = crypto.decrypt(&encrypted).unwrap();
-        
+
         assert_eq!(plaintext.to_vec(), decrypted);
     }
 
@@ -183,10 +178,10 @@ mod tests {
         let salt = CryptoManager::generate_salt();
         let crypto1 = CryptoManager::from_pin("1234", &salt).unwrap();
         let crypto2 = CryptoManager::from_pin("5678", &salt).unwrap();
-        
+
         let plaintext = b"Secret data";
         let encrypted = crypto1.encrypt(plaintext).unwrap();
-        
+
         // 다른 PIN으로 복호화 시도 → 실패해야 함
         assert!(crypto2.decrypt(&encrypted).is_err());
     }
@@ -194,7 +189,7 @@ mod tests {
     #[test]
     fn test_header_verify() {
         let header = EncryptedHeader::new("1234").unwrap();
-        
+
         assert!(header.verify("1234").unwrap());
         assert!(!header.verify("5678").unwrap());
     }
@@ -203,10 +198,10 @@ mod tests {
         let salt = CryptoManager::generate_salt();
         let crypto = CryptoManager::from_pin("123456", &salt).unwrap();
         let plaintext = b"Same message";
-        
+
         let encrypted1 = crypto.encrypt(plaintext).unwrap();
         let encrypted2 = crypto.encrypt(plaintext).unwrap();
-        
+
         // 다른 nonce로 다른 결과
         assert_ne!(encrypted1, encrypted2);
     }
@@ -216,10 +211,10 @@ mod tests {
         let salt = CryptoManager::generate_salt();
         let crypto = CryptoManager::from_pin("123456", &salt).unwrap();
         let plaintext = b"";
-        
+
         let encrypted = crypto.encrypt(plaintext).unwrap();
         let decrypted = crypto.decrypt(&encrypted).unwrap();
-        
+
         assert_eq!(plaintext.to_vec(), decrypted);
     }
 
@@ -227,13 +222,13 @@ mod tests {
     fn test_salt_uniqueness() {
         let salt1 = CryptoManager::generate_salt();
         let salt2 = CryptoManager::generate_salt();
-        
+
         assert_ne!(salt1, salt2);
     }
 }
 
-use std::path::Path;
 use std::fs;
+use std::path::Path;
 
 /// 보안 설정 (PIN 잠금)
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -258,18 +253,14 @@ impl SecurityConfig {
         if !path.exists() {
             return Ok(Self::default());
         }
-        let content = fs::read_to_string(path)
-            .map_err(|e| LazarusError::Io(e))?;
-        serde_json::from_str(&content)
-            .map_err(|e| LazarusError::JsonParse(e))
+        let content = fs::read_to_string(path).map_err(|e| LazarusError::Io(e))?;
+        serde_json::from_str(&content).map_err(|e| LazarusError::JsonParse(e))
     }
 
     /// 파일에 저장
     pub fn save(&self, path: &Path) -> Result<()> {
-        let content = serde_json::to_string_pretty(self)
-            .map_err(|e| LazarusError::JsonParse(e))?;
-        fs::write(path, content)
-            .map_err(|e| LazarusError::Io(e))?;
+        let content = serde_json::to_string_pretty(self).map_err(|e| LazarusError::JsonParse(e))?;
+        fs::write(path, content).map_err(|e| LazarusError::Io(e))?;
         Ok(())
     }
 
@@ -303,4 +294,3 @@ impl SecurityConfig {
         }
     }
 }
-

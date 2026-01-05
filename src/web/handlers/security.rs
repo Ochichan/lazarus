@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::crypto::{CryptoManager, SecurityConfig};
 use crate::error::Result;
-use crate::web::state::AppState;
 use crate::i18n::all_translations;
+use crate::web::state::AppState;
 
 /// PIN 상태 응답
 #[derive(Serialize)]
@@ -40,12 +40,10 @@ pub struct ApiResponse {
 }
 
 /// GET /api/security/status - PIN 상태 확인
-pub async fn get_status(
-    State(state): State<AppState>,
-) -> Result<Json<PinStatus>> {
+pub async fn get_status(State(state): State<AppState>) -> Result<Json<PinStatus>> {
     let security = state.security.read().await;
     let crypto = state.crypto.read().await;
-    
+
     Ok(Json(PinStatus {
         enabled: security.pin_enabled,
         locked: security.pin_enabled && crypto.is_none(),
@@ -58,14 +56,14 @@ pub async fn unlock(
     Json(req): Json<PinRequest>,
 ) -> Result<Json<ApiResponse>> {
     let security = state.security.read().await;
-    
+
     if !security.pin_enabled {
         return Ok(Json(ApiResponse {
             success: true,
             message: "PIN이 설정되지 않았습니다".to_string(),
         }));
     }
-    
+
     // PIN 검증
     if !security.verify_pin(&req.pin)? {
         return Ok(Json(ApiResponse {
@@ -73,17 +71,17 @@ pub async fn unlock(
             message: "잘못된 PIN입니다".to_string(),
         }));
     }
-    
+
     // CryptoManager 생성 및 저장
     if let Some(crypto) = security.get_crypto(&req.pin)? {
         // 백업에도 암호화 매니저 연결
         let mut backup = state.backup.write().await;
         backup.set_crypto(Some(crypto.clone()));
-        
+
         let mut crypto_lock = state.crypto.write().await;
         *crypto_lock = Some(crypto);
     }
-    
+
     Ok(Json(ApiResponse {
         success: true,
         message: "잠금이 해제되었습니다".to_string(),
@@ -91,16 +89,14 @@ pub async fn unlock(
 }
 
 /// POST /api/security/lock - 잠금
-pub async fn lock(
-    State(state): State<AppState>,
-) -> Result<Json<ApiResponse>> {
+pub async fn lock(State(state): State<AppState>) -> Result<Json<ApiResponse>> {
     let mut crypto = state.crypto.write().await;
     *crypto = None;
-    
+
     // 백업 암호화도 해제
     let mut backup = state.backup.write().await;
     backup.set_crypto(None);
-    
+
     Ok(Json(ApiResponse {
         success: true,
         message: "잠금되었습니다".to_string(),
@@ -125,9 +121,9 @@ pub async fn set_pin(
             message: "PIN must be alphanumeric only".to_string(),
         }));
     }
-    
+
     let mut security = state.security.write().await;
-    
+
     // 기존 PIN이 있으면 검증
     if security.pin_enabled {
         match &req.current_pin {
@@ -147,20 +143,20 @@ pub async fn set_pin(
             }
         }
     }
-    
+
     // 새 PIN 설정
     security.set_pin(&req.new_pin)?;
-    
+
     // 파일에 저장
     let security_path = state.data_dir.join("security.json");
     security.save(&security_path)?;
-    
+
     // CryptoManager 업데이트
     if let Some(crypto) = security.get_crypto(&req.new_pin)? {
         let mut crypto_lock = state.crypto.write().await;
         *crypto_lock = Some(crypto);
     }
-    
+
     Ok(Json(ApiResponse {
         success: true,
         message: "PIN이 설정되었습니다".to_string(),
@@ -173,14 +169,14 @@ pub async fn remove_pin(
     Json(req): Json<PinRequest>,
 ) -> Result<Json<ApiResponse>> {
     let mut security = state.security.write().await;
-    
+
     if !security.pin_enabled {
         return Ok(Json(ApiResponse {
             success: false,
             message: "PIN이 설정되지 않았습니다".to_string(),
         }));
     }
-    
+
     // PIN 검증
     if !security.verify_pin(&req.pin)? {
         return Ok(Json(ApiResponse {
@@ -188,18 +184,18 @@ pub async fn remove_pin(
             message: "잘못된 PIN입니다".to_string(),
         }));
     }
-    
+
     // PIN 제거
     security.remove_pin();
-    
+
     // 파일에 저장
     let security_path = state.data_dir.join("security.json");
     security.save(&security_path)?;
-    
+
     // CryptoManager 제거
     let mut crypto_lock = state.crypto.write().await;
     *crypto_lock = None;
-    
+
     Ok(Json(ApiResponse {
         success: true,
         message: "PIN이 제거되었습니다".to_string(),
@@ -207,9 +203,7 @@ pub async fn remove_pin(
 }
 
 /// GET /security - 보안 설정 페이지
-pub async fn security_page(
-    State(state): State<AppState>,
-) -> Result<Html<String>> {
+pub async fn security_page(State(state): State<AppState>) -> Result<Html<String>> {
     let security = state.security.read().await;
     let crypto = state.crypto.read().await;
     let lang = state.get_lang().await;
@@ -218,29 +212,42 @@ pub async fn security_page(
     let pin_enabled = security.pin_enabled;
     let is_locked = pin_enabled && crypto.is_none();
 
-    let status_icon = if is_locked { "🔒" } else if pin_enabled { "🔓" } else { "🔐" };
-    let status_text = if is_locked { 
+    let status_icon = if is_locked {
+        "🔒"
+    } else if pin_enabled {
+        "🔓"
+    } else {
+        "🔐"
+    };
+    let status_text = if is_locked {
         t.get("security.locked").cloned().unwrap_or_default()
-    } else if pin_enabled { 
+    } else if pin_enabled {
         t.get("security.pin_enabled").cloned().unwrap_or_default()
-    } else { 
+    } else {
         t.get("security.pin_not_set").cloned().unwrap_or_default()
     };
 
     let buttons = if is_locked {
-        format!(r#"<button class="btn btn-primary" onclick="unlock()">🔓 {}</button>"#,
-            t.get("security.unlock").cloned().unwrap_or_default())
+        format!(
+            r#"<button class="btn btn-primary" onclick="unlock()">🔓 {}</button>"#,
+            t.get("security.unlock").cloned().unwrap_or_default()
+        )
     } else if pin_enabled {
-        format!(r#"<button class="btn btn-secondary" onclick="lockNow()">🔒 {}</button>
+        format!(
+            r#"<button class="btn btn-secondary" onclick="lockNow()">🔒 {}</button>
                <button class="btn btn-danger" onclick="removePin()">{}</button>"#,
             t.get("security.lock").cloned().unwrap_or_default(),
-            t.get("security.remove_pin").cloned().unwrap_or_default())
+            t.get("security.remove_pin").cloned().unwrap_or_default()
+        )
     } else {
-        format!(r#"<button class="btn btn-primary" onclick="setPin()">{}</button>"#,
-            t.get("security.set_pin").cloned().unwrap_or_default())
+        format!(
+            r#"<button class="btn btn-primary" onclick="setPin()">{}</button>"#,
+            t.get("security.set_pin").cloned().unwrap_or_default()
+        )
     };
 
-    let html = format!(r#"
+    let html = format!(
+        r#"
 <!DOCTYPE html>
 <html lang="{}">
 <head>
@@ -486,10 +493,22 @@ pub async fn security_page(
         status_text,
         t.get("security.pin_input").cloned().unwrap_or_default(),
         buttons,
-        if lang.code() == "en" { "btn-primary" } else { "btn-secondary" },
-        if lang.code() == "ko" { "btn-primary" } else { "btn-secondary" },
-        t.get("security.pin_min_length").cloned().unwrap_or_default(),
-        t.get("security.enter_current_pin").cloned().unwrap_or_default(),
+        if lang.code() == "en" {
+            "btn-primary"
+        } else {
+            "btn-secondary"
+        },
+        if lang.code() == "ko" {
+            "btn-primary"
+        } else {
+            "btn-secondary"
+        },
+        t.get("security.pin_min_length")
+            .cloned()
+            .unwrap_or_default(),
+        t.get("security.enter_current_pin")
+            .cloned()
+            .unwrap_or_default(),
     );
     Ok(Html(html))
 }

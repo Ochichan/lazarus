@@ -2,9 +2,9 @@
 //!
 //! Append-only 구조로 데이터 무결성 보장
 
-use std::io::{Read, Write, BufReader};
-use std::fs::File;
 use crc32fast::Hasher;
+use std::fs::File;
+use std::io::{BufReader, Read, Write};
 
 use crate::error::{LazarusError, Result};
 
@@ -35,7 +35,7 @@ impl WalEntry {
         let mut hasher = Hasher::new();
         hasher.update(&data);
         let crc = hasher.finalize();
-        
+
         Self { len, crc, data }
     }
 
@@ -73,7 +73,7 @@ impl WalReader {
         // 매직 바이트 확인
         let mut magic = [0u8; 8];
         reader.read_exact(&mut magic)?;
-        
+
         if &magic != MAGIC_BYTES {
             return Err(LazarusError::DbCorruption {
                 expected: 0x4C415A41, // "LAZA"
@@ -177,9 +177,9 @@ impl WalWriter {
     pub fn append(&mut self, data: Vec<u8>) -> Result<u64> {
         let entry = WalEntry::new(data);
         let bytes = entry.to_bytes();
-        
+
         let entry_offset = self.current_offset + self.buffer.len() as u64;
-        
+
         self.buffer.extend_from_slice(&bytes);
 
         // 버퍼가 차면 플러시
@@ -198,7 +198,7 @@ impl WalWriter {
 
         self.file.write_all(&self.buffer)?;
         self.file.sync_data()?;
-        
+
         self.current_offset += self.buffer.len() as u64;
         self.buffer.clear();
 
@@ -244,13 +244,13 @@ mod tests {
         // 읽기
         {
             let mut reader = WalReader::open(path).unwrap();
-            
+
             let (_, entry1) = reader.next_entry().unwrap().unwrap();
             assert_eq!(entry1.data, b"first entry");
-            
+
             let (_, entry2) = reader.next_entry().unwrap().unwrap();
             assert_eq!(entry2.data, b"second entry");
-            
+
             assert!(reader.next_entry().unwrap().is_none());
         }
     }

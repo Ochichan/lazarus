@@ -15,7 +15,7 @@ pub struct HealthResponse {
 /// GET /health
 pub async fn check(State(state): State<AppState>) -> Json<HealthResponse> {
     let db = state.db.read().await;
-    
+
     Json(HealthResponse {
         status: "ok",
         version: state.version,

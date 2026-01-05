@@ -4,14 +4,10 @@
 
 use axum::{
     middleware,
-    routing::{get, post, delete},
+    routing::{delete, get, post},
     Router,
 };
-use tower_http::{
-    services::ServeDir,
-    trace::TraceLayer,
-    compression::CompressionLayer,
-};
+use tower_http::{compression::CompressionLayer, services::ServeDir, trace::TraceLayer};
 
 use super::handlers;
 use super::middleware::require_unlock;
@@ -20,13 +16,13 @@ use super::state::AppState;
 /// 라우터 생성
 pub fn create_router(state: AppState) -> Router {
     Router::new()
-		//Language
-		.route("/api/lang", post(handlers::lang::set_lang))
-		//Compaction
-		.route("/api/db/compact", post(handlers::notes::compact_db))
-		//백업
-		.route("/api/backup/info", get(handlers::notes::backup_info))
-		.route("/api/backup/now", post(handlers::notes::backup_now))
+        //Language
+        .route("/api/lang", post(handlers::lang::set_lang))
+        //Compaction
+        .route("/api/db/compact", post(handlers::notes::compact_db))
+        //백업
+        .route("/api/backup/info", get(handlers::notes::backup_info))
+        .route("/api/backup/now", post(handlers::notes::backup_now))
         // SRS 페이지
         .route("/srs", get(handlers::srs::review_page))
         .route("/srs/cards", get(handlers::srs::cards_page))
@@ -35,9 +31,15 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/srs/due", get(handlers::srs::get_due_cards))
         .route("/api/srs/cards", get(handlers::srs::get_all_cards))
         .route("/api/srs/cards", post(handlers::srs::add_card))
-        .route("/api/srs/cards/:id/review", post(handlers::srs::review_card))
+        .route(
+            "/api/srs/cards/:id/review",
+            post(handlers::srs::review_card),
+        )
         .route("/api/srs/cards/:id", delete(handlers::srs::delete_card))
-        .route("/api/srs/extract/:note_id", post(handlers::srs::extract_from_note))
+        .route(
+            "/api/srs/extract/:note_id",
+            post(handlers::srs::extract_from_note),
+        )
         .route("/api/srs/optimize", post(handlers::srs::optimize_params))
         .route("/api/srs/params", get(handlers::srs::get_params))
         // 보안 API
@@ -46,10 +48,19 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/security/unlock", post(handlers::security::unlock))
         .route("/api/security/lock", post(handlers::security::lock))
         .route("/api/security/set-pin", post(handlers::security::set_pin))
-        .route("/api/security/remove-pin", post(handlers::security::remove_pin))
+        .route(
+            "/api/security/remove-pin",
+            post(handlers::security::remove_pin),
+        )
         //노트 중복 확인 및 제거, laz
-        .route("/api/notes/duplicates", get(handlers::notes::find_duplicates))
-        .route("/api/notes/duplicates/remove", post(handlers::notes::remove_duplicates))
+        .route(
+            "/api/notes/duplicates",
+            get(handlers::notes::find_duplicates),
+        )
+        .route(
+            "/api/notes/duplicates/remove",
+            post(handlers::notes::remove_duplicates),
+        )
         .route("/api/laz/export", post(handlers::laz::export_package))
         .route("/api/laz/import", post(handlers::laz::import_package))
         .route("/api/laz/verify", post(handlers::laz::verify_package))
@@ -61,8 +72,10 @@ pub fn create_router(state: AppState) -> Router {
         .route("/notes/:id/edit", get(handlers::pages::notes_edit))
         .route("/search", get(handlers::pages::search))
         .route("/notes/split", get(handlers::pages::notes_split))
-        .route("/notes/split/:id", get(handlers::pages::notes_split_with_id))
-        
+        .route(
+            "/notes/split/:id",
+            get(handlers::pages::notes_split_with_id),
+        )
         // === API 라우트 ===
         .route("/api/notes", get(handlers::notes::list))
         .route("/api/notes", post(handlers::notes::create_form))
@@ -73,7 +86,6 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/notes/:id/lock", get(handlers::notes::check_lock))
         .route("/api/notes/:id/unlock", post(handlers::notes::release_lock))
         .route("/api/search", get(handlers::search::search))
-        
         // === 위키 라우트 ===
         .route("/wiki/manage", get(handlers::wiki::manage_zims))
         .route("/wiki/search", get(handlers::wiki::search_wiki))
@@ -89,18 +101,17 @@ pub fn create_router(state: AppState) -> Router {
         // === 동기화 라우트 ===
         .route("/sync/export", post(handlers::sync::export))
         .route("/sync/import", post(handlers::sync::import))
-        
         // === 헬스체크 ===
         .route("/health", get(handlers::health::check))
-        
         // === 정적 파일 ===
         .nest_service("/static", ServeDir::new("static"))
-        
         // === 미들웨어 ===
         .layer(CompressionLayer::new())
         .layer(TraceLayer::new_for_http())
-        .layer(middleware::from_fn_with_state(state.clone(), require_unlock))
-        
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            require_unlock,
+        ))
         // === 상태 주입 ===
         .with_state(state)
 }

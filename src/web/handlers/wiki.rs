@@ -9,13 +9,13 @@ use axum::{
 use serde::Deserialize;
 
 use crate::error::{LazarusError, Result};
-use crate::web::state::AppState;
 use crate::i18n::all_translations;
+use crate::web::state::AppState;
 
 #[derive(Deserialize)]
 pub struct WikiSearchParams {
     pub q: Option<String>,
-    pub zim: Option<String>,  // ZIM 선택
+    pub zim: Option<String>, // ZIM 선택
 }
 
 /// GET /wiki/search
@@ -24,24 +24,28 @@ pub async fn search_wiki(
     Query(params): Query<WikiSearchParams>,
 ) -> Result<Response> {
     let zim_names = state.zim_names().await;
-    
+
     if zim_names.is_empty() {
         return Ok(Html(render_no_zim()).into_response());
     }
 
     // 선택된 ZIM 또는 첫 번째
-    let selected_name = params.zim.clone()
+    let selected_name = params
+        .zim
+        .clone()
         .unwrap_or_else(|| zim_names.first().cloned().unwrap_or_default());
 
-    let selected_zim = state.get_zim_by_name(&selected_name).await
+    let selected_zim = state
+        .get_zim_by_name(&selected_name)
+        .await
         .or(state.get_zim().await)
-        .ok_or_else(|| LazarusError::ZimNotFound { 
-            title: "ZIM 파일이 로드되지 않음".to_string() 
+        .ok_or_else(|| LazarusError::ZimNotFound {
+            title: "ZIM 파일이 로드되지 않음".to_string(),
         })?;
 
     let zim = selected_zim.read().await;
     let query = params.q.clone().unwrap_or_default();
-    
+
     let results = if query.is_empty() {
         zim.list_articles(50)?
     } else {
@@ -83,7 +87,8 @@ fn render_no_zim() -> String {
     </main>
 </body>
 </html>
-"#.to_string()
+"#
+    .to_string()
 }
 
 /// 검색 결과 HTML 렌더링
@@ -94,29 +99,45 @@ fn render_search_results(
     selected_zim: &str,
 ) -> String {
     let zim_selector = if zim_names.len() > 1 {
-        let options: String = zim_names.iter().map(|name| {
-            let selected = if name == selected_zim { " selected" } else { "" };
-            format!(r#"<option value="{}"{}>{}</option>"#, name, selected, name)
-        }).collect();
+        let options: String = zim_names
+            .iter()
+            .map(|name| {
+                let selected = if name == selected_zim {
+                    " selected"
+                } else {
+                    ""
+                };
+                format!(r#"<option value="{}"{}>{}</option>"#, name, selected, name)
+            })
+            .collect();
 
-        format!(r#"
+        format!(
+            r#"
             <select id="zim-select" onchange="changeZim(this.value)" class="zim-selector">
                 {}
             </select>
-        "#, options)
+        "#,
+            options
+        )
     } else {
         String::new()
     };
 
-    let results_html: String = results.iter().map(|entry| {
-        let encoded_url = urlencoding::encode(&entry.url);
-        format!(r#"
+    let results_html: String = results
+        .iter()
+        .map(|entry| {
+            let encoded_url = urlencoding::encode(&entry.url);
+            format!(
+                r#"
             <a href="/wiki/{}?zim={}" class="search-result">
                 <div class="result-title">{}</div>
                 <div class="result-url">{}</div>
             </a>
-        "#, encoded_url, selected_zim, entry.title, entry.url)
-    }).collect();
+        "#,
+                encoded_url, selected_zim, entry.title, entry.url
+            )
+        })
+        .collect();
 
     let result_count = if query.is_empty() {
         "최근 문서".to_string()
@@ -124,7 +145,8 @@ fn render_search_results(
         format!("\"{}\" 검색 결과: {}건", query, results.len())
     };
 
-    format!(r#"
+    format!(
+        r#"
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -224,7 +246,9 @@ fn render_search_results(
     </script>
 </body>
 </html>
-"#, zim_selector, selected_zim, query, result_count, results_html)
+"#,
+        zim_selector, selected_zim, query, result_count, results_html
+    )
 }
 
 /// GET /wiki/*path
@@ -241,13 +265,17 @@ pub async fn get_article(
     }
 
     // 선택된 ZIM 또는 첫 번째
-    let selected_name = params.zim.clone()
+    let selected_name = params
+        .zim
+        .clone()
         .unwrap_or_else(|| zim_names.first().cloned().unwrap_or_default());
 
-    let selected_zim = state.get_zim_by_name(&selected_name).await
+    let selected_zim = state
+        .get_zim_by_name(&selected_name)
+        .await
         .or(state.get_zim().await)
-        .ok_or_else(|| LazarusError::ZimNotFound { 
-            title: "ZIM 파일이 로드되지 않음".to_string() 
+        .ok_or_else(|| LazarusError::ZimNotFound {
+            title: "ZIM 파일이 로드되지 않음".to_string(),
         })?;
 
     let zim = selected_zim.read().await;
@@ -257,7 +285,10 @@ pub async fn get_article(
 
     // 빈 경로면 검색 페이지로 리다이렉트
     if url.is_empty() {
-        return Ok(axum::response::Redirect::to(&format!("/wiki/search?zim={}", selected_name)).into_response());
+        return Ok(
+            axum::response::Redirect::to(&format!("/wiki/search?zim={}", selected_name))
+                .into_response(),
+        );
     }
 
     // URL 디코딩
@@ -279,12 +310,13 @@ pub async fn get_article(
             StatusCode::OK,
             [(header::CONTENT_TYPE, content_type)],
             content,
-        ).into_response());
+        )
+            .into_response());
     }
 
     // 느린 검색으로 폴백
     if let Some(entry) = zim.find_by_url('A', &decoded_url)? {
-            if let Some(content) = zim.get_content('A', &decoded_url)? {
+        if let Some(content) = zim.get_content('A', &decoded_url)? {
             let content_type = guess_mime(&decoded_url);
 
             // HTML이면 네비게이션 추가
@@ -298,14 +330,16 @@ pub async fn get_article(
                 StatusCode::OK,
                 [(header::CONTENT_TYPE, content_type)],
                 content,
-            ).into_response());
+            )
+                .into_response());
         }
     }
 
     // 404
     Ok((
         StatusCode::NOT_FOUND,
-        Html(format!(r#"
+        Html(format!(
+            r#"
 <!DOCTYPE html>
 <html><head><title>404 - Lazarus</title><link rel="stylesheet" href="/static/style.css"></head>
 <body>
@@ -316,27 +350,41 @@ pub async fn get_article(
         <a href="/wiki/search?zim={}" class="btn btn-primary">검색으로 돌아가기</a>
     </main>
 </body></html>
-"#, decoded_url, selected_name)),
-    ).into_response())
+"#,
+            decoded_url, selected_name
+        )),
+    )
+        .into_response())
 }
 
 /// HTML 문서에 네비게이션 추가
 fn wrap_wiki_html(content: &str, title: &str, zim_names: &[String], selected_zim: &str) -> String {
     let zim_selector = if zim_names.len() > 1 {
-        let options: String = zim_names.iter().map(|name| {
-            let selected = if name == selected_zim { " selected" } else { "" };
-            format!(r#"<option value="{}"{}>{}</option>"#, name, selected, name)
-        }).collect();
-        format!(r#"
+        let options: String = zim_names
+            .iter()
+            .map(|name| {
+                let selected = if name == selected_zim {
+                    " selected"
+                } else {
+                    ""
+                };
+                format!(r#"<option value="{}"{}>{}</option>"#, name, selected, name)
+            })
+            .collect();
+        format!(
+            r#"
             <select onchange="changeZim(this.value)" class="zim-select">
                 {}
             </select>
-        "#, options)
+        "#,
+            options
+        )
     } else {
         String::new()
     };
 
-    format!(r#"
+    format!(
+        r#"
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -915,16 +963,12 @@ fn guess_mime(url: &str) -> &'static str {
 }
 
 /// GET /api/wiki/list - ZIM 목록 API
-pub async fn list_zims(
-    State(state): State<AppState>,
-) -> Result<axum::Json<Vec<String>>> {
+pub async fn list_zims(State(state): State<AppState>) -> Result<axum::Json<Vec<String>>> {
     Ok(axum::Json(state.zim_names().await))
 }
 
 /// POST /api/zim/reload - ZIM 디렉토리 새로고침
-pub async fn reload_zims(
-    State(state): State<AppState>,
-) -> Result<axum::Json<ReloadResult>> {
+pub async fn reload_zims(State(state): State<AppState>) -> Result<axum::Json<ReloadResult>> {
     let added = state.reload_zims().await?;
     Ok(axum::Json(ReloadResult {
         success: true,
@@ -1009,9 +1053,7 @@ pub async fn remove_zim(
 }
 
 /// GET /api/zim/dir - ZIM 디렉토리 경로
-pub async fn get_zim_dir(
-    State(state): State<AppState>,
-) -> Result<axum::Json<ZimDirResult>> {
+pub async fn get_zim_dir(State(state): State<AppState>) -> Result<axum::Json<ZimDirResult>> {
     Ok(axum::Json(ZimDirResult {
         path: state.zim_dir.display().to_string(),
     }))
@@ -1048,9 +1090,7 @@ pub struct ZimDirResult {
 }
 
 /// GET /wiki/manage - ZIM 관리 페이지
-pub async fn manage_zims(
-    State(state): State<AppState>,
-) -> Result<Html<String>> {
+pub async fn manage_zims(State(state): State<AppState>) -> Result<Html<String>> {
     let zim_list = state.zim_list().await;
     let zim_dir = state.zim_dir.display().to_string();
     let lang = state.get_lang().await;
@@ -1060,10 +1100,16 @@ pub async fn manage_zims(
     let remove_text = t.get("wiki.remove").cloned().unwrap_or_default();
 
     let zim_rows: String = if zim_list.is_empty() {
-        format!(r#"<tr><td colspan="3" class="empty">{}</td></tr>"#, empty_text)
+        format!(
+            r#"<tr><td colspan="3" class="empty">{}</td></tr>"#,
+            empty_text
+        )
     } else {
-        zim_list.iter().map(|(name, path)| {
-            format!(r#"
+        zim_list
+            .iter()
+            .map(|(name, path)| {
+                format!(
+                    r#"
                 <tr>
                     <td><strong>{}</strong></td>
                     <td class="path">{}</td>
@@ -1071,11 +1117,15 @@ pub async fn manage_zims(
                         <button class="btn btn-danger btn-sm" onclick="removeZim('{}')">{}</button>
                     </td>
                 </tr>
-            "#, name, path, name, remove_text)
-        }).collect()
+            "#,
+                    name, path, name, remove_text
+                )
+            })
+            .collect()
     };
 
-    let html = format!(r#"
+    let html = format!(
+        r#"
 <!DOCTYPE html>
 <html lang="{}">
 <head>
@@ -1387,8 +1437,16 @@ pub async fn manage_zims(
         t.get("wiki.path").cloned().unwrap_or_default(),
         t.get("wiki.action").cloned().unwrap_or_default(),
         zim_rows,
-        if lang.code() == "en" { "btn-primary" } else { "btn-secondary" },
-        if lang.code() == "ko" { "btn-primary" } else { "btn-secondary" },
+        if lang.code() == "en" {
+            "btn-primary"
+        } else {
+            "btn-secondary"
+        },
+        if lang.code() == "ko" {
+            "btn-primary"
+        } else {
+            "btn-secondary"
+        },
         // JS translations
         t.get("wiki.zim_added").cloned().unwrap_or_default(),
         t.get("wiki.no_new_zim").cloned().unwrap_or_default(),

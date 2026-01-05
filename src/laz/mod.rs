@@ -2,8 +2,8 @@
 //!
 //! Lazarus 학습 패키지 - ZIP 기반 오프라인 교육 콘텐츠 포맷
 
-mod writer;
 mod reader;
+mod writer;
 
 pub use reader::VerifyResult;
 use serde::{Deserialize, Serialize};

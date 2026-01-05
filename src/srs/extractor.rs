@@ -43,7 +43,8 @@ fn extract_cloze(note_id: u64, content: &str) -> Vec<Card> {
 
     for line in content.lines() {
         if re.is_match(line) {
-            let answer = re.captures(line)
+            let answer = re
+                .captures(line)
                 .and_then(|c| c.get(1))
                 .map(|m| m.as_str().to_string())
                 .unwrap_or_default();
@@ -79,7 +80,10 @@ fn extract_qa_headers(note_id: u64, content: &str) -> Vec<Card> {
 
     for (i, line) in lines.iter().enumerate() {
         if let Some(caps) = re.captures(line) {
-            let question = caps.get(1).map(|m| m.as_str().trim().to_string()).unwrap_or_default();
+            let question = caps
+                .get(1)
+                .map(|m| m.as_str().trim().to_string())
+                .unwrap_or_default();
 
             // 다음 줄들에서 답변 추출 (다음 헤더 전까지)
             let mut answer_lines = Vec::new();

@@ -2,17 +2,17 @@
 //!
 //! Askama 템플릿을 사용한 서버사이드 렌더링
 
+use crate::error::{LazarusError, Result};
+use crate::i18n::all_translations;
+use crate::web::state::AppState;
+use ammonia::clean;
+use askama::Template;
 use axum::{
     extract::{Path, Query, State},
     response::Html,
 };
-use askama::Template;
 use serde::Deserialize;
-use ammonia::clean;
 use std::collections::HashMap;
-use crate::error::{LazarusError, Result};
-use crate::web::state::AppState;
-use crate::i18n::all_translations;
 
 /// 인덱스 페이지
 #[derive(Template)]
@@ -46,9 +46,11 @@ pub async fn index(State(state): State<AppState>) -> Result<Html<String>> {
         lang: lang.code(),
         t,
     };
-    Ok(Html(template.render().map_err(|e| {
-        LazarusError::ServerStart(e.to_string())
-    })?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 /// 노트 목록 템플릿
@@ -83,7 +85,9 @@ pub async fn notes_list(State(state): State<AppState>) -> Result<Html<String>> {
             notes.push(NoteListItem {
                 id: note.id,
                 title: if note.title.is_empty() {
-                    t.get("notes.no_title").cloned().unwrap_or_else(|| "Untitled".to_string())
+                    t.get("notes.no_title")
+                        .cloned()
+                        .unwrap_or_else(|| "Untitled".to_string())
                 } else {
                     note.title
                 },
@@ -99,15 +103,17 @@ pub async fn notes_list(State(state): State<AppState>) -> Result<Html<String>> {
     notes.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
 
     let template = NotesListTemplate {
-            version: state.version,
-            notes,
-            lang: lang.code(),
-            t,
-        };
+        version: state.version,
+        notes,
+        lang: lang.code(),
+        t,
+    };
 
-    Ok(Html(template.render().map_err(|e| {
-        LazarusError::ServerStart(e.to_string())
-    })?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 /// 노트 작성 템플릿
@@ -131,7 +137,7 @@ pub async fn notes_new(State(state): State<AppState>) -> Result<Html<String>> {
     let all_tags = get_all_tags(&state).await?;
     let lang = state.get_lang().await;
     let t = all_translations(lang);
-    
+
     let template = NotesEditTemplate {
         version: state.version,
         note_id: 0,
@@ -144,9 +150,11 @@ pub async fn notes_new(State(state): State<AppState>) -> Result<Html<String>> {
         t,
         note_type: "note".to_string(),
     };
-    Ok(Html(template.render().map_err(|e| {
-        LazarusError::ServerStart(e.to_string())
-    })?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 /// 노트 보기 템플릿
@@ -174,12 +182,13 @@ pub async fn notes_view(
     Path(id): Path<u64>,
 ) -> Result<Html<String>> {
     let db = state.db.read().await;
-    let note = db.get(id)?
+    let note = db
+        .get(id)?
         .ok_or_else(|| LazarusError::NotFound(format!("Note ID: {}", id)))?;
-    
+
     let lang = state.get_lang().await;
     let t = all_translations(lang);
-    
+
     let template = NotesViewTemplate {
         version: state.version,
         note: NoteViewData {
@@ -193,9 +202,11 @@ pub async fn notes_view(
         lang: lang.code(),
         t,
     };
-    Ok(Html(template.render().map_err(|e| {
-        LazarusError::ServerStart(e.to_string())
-    })?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 /// GET /notes/:id/edit
@@ -204,14 +215,15 @@ pub async fn notes_edit(
     Path(id): Path<u64>,
 ) -> Result<Html<String>> {
     let db = state.db.read().await;
-    let note = db.get(id)?
+    let note = db
+        .get(id)?
         .ok_or_else(|| LazarusError::NotFound(format!("Note ID: {}", id)))?;
     drop(db);
-    
+
     let all_tags = get_all_tags(&state).await?;
     let lang = state.get_lang().await;
     let t = all_translations(lang);
-    
+
     let template = NotesEditTemplate {
         version: state.version,
         note_id: note.id,
@@ -224,9 +236,11 @@ pub async fn notes_edit(
         t,
         note_type: format!("{:?}", note.note_type).to_lowercase(),
     };
-    Ok(Html(template.render().map_err(|e| {
-        LazarusError::ServerStart(e.to_string())
-    })?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 /// 검색 쿼리
@@ -261,7 +275,7 @@ pub async fn search(
 ) -> Result<Html<String>> {
     let lang = state.get_lang().await;
     let t = all_translations(lang);
-    
+
     let mut results = Vec::new();
     if !params.q.is_empty() {
         let search_engine = state.search.read().await;
@@ -282,9 +296,11 @@ pub async fn search(
         lang: lang.code(),
         t,
     };
-    Ok(Html(template.render().map_err(|e| {
-        LazarusError::ServerStart(e.to_string())
-    })?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 /// 모든 태그 목록 가져오기
@@ -325,7 +341,7 @@ pub async fn notes_split(State(state): State<AppState>) -> Result<Html<String>> 
     let db = state.db.read().await;
     let lang = state.get_lang().await;
     let t = all_translations(lang);
-    
+
     let ids = db.list_ids();
     let mut notes: Vec<NoteListItem> = Vec::new();
     for id in ids {
@@ -333,7 +349,9 @@ pub async fn notes_split(State(state): State<AppState>) -> Result<Html<String>> 
             notes.push(NoteListItem {
                 id: note.id,
                 title: if note.title.is_empty() {
-                    t.get("notes.no_title").cloned().unwrap_or_else(|| "Untitled".to_string())
+                    t.get("notes.no_title")
+                        .cloned()
+                        .unwrap_or_else(|| "Untitled".to_string())
                 } else {
                     note.title
                 },
@@ -355,7 +373,11 @@ pub async fn notes_split(State(state): State<AppState>) -> Result<Html<String>> 
         lang: lang.code(),
         t,
     };
-    Ok(Html(template.render().map_err(|e| LazarusError::ServerStart(e.to_string()))?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 /// GET /notes/split/:id
@@ -366,7 +388,7 @@ pub async fn notes_split_with_id(
     let db = state.db.read().await;
     let lang = state.get_lang().await;
     let t = all_translations(lang);
-    
+
     let ids = db.list_ids();
     let mut notes: Vec<NoteListItem> = Vec::new();
     for nid in ids {
@@ -374,7 +396,9 @@ pub async fn notes_split_with_id(
             notes.push(NoteListItem {
                 id: note.id,
                 title: if note.title.is_empty() {
-                    t.get("notes.no_title").cloned().unwrap_or_else(|| "Untitled".to_string())
+                    t.get("notes.no_title")
+                        .cloned()
+                        .unwrap_or_else(|| "Untitled".to_string())
                 } else {
                     note.title
                 },
@@ -386,7 +410,9 @@ pub async fn notes_split_with_id(
         }
     }
     notes.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
-    let selected = db.get(id)?.ok_or_else(|| LazarusError::NotFound(format!("Note ID: {}", id)))?;
+    let selected = db
+        .get(id)?
+        .ok_or_else(|| LazarusError::NotFound(format!("Note ID: {}", id)))?;
     let template = NotesSplitTemplate {
         version: state.version,
         notes,
@@ -397,5 +423,9 @@ pub async fn notes_split_with_id(
         lang: lang.code(),
         t,
     };
-    Ok(Html(template.render().map_err(|e| LazarusError::ServerStart(e.to_string()))?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }

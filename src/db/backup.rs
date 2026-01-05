@@ -7,8 +7,8 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
-use flate2::write::GzEncoder;
 use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
 use flate2::Compression;
 
 use crate::crypto::CryptoManager;
@@ -68,13 +68,18 @@ impl BackupManager {
 
         // 오늘 날짜로 백업 파일명 생성
         let today = chrono::Utc::now().format("%Y%m%d_%H%M%S").to_string();
-        let filename = self.source_path
+        let filename = self
+            .source_path
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("backup");
-        
+
         // 암호화 여부에 따라 확장자 변경
-        let ext = if self.crypto.is_some() { "gz.enc" } else { "gz" };
+        let ext = if self.crypto.is_some() {
+            "gz.enc"
+        } else {
+            "gz"
+        };
         let backup_name = format!("{}_{}.{}", filename, today, ext);
         let backup_path = self.backup_dir.join(&backup_name);
 
@@ -106,7 +111,7 @@ impl BackupManager {
 
         // 파일 저장
         fs::write(&backup_path, final_data).map_err(LazarusError::Io)?;
-        
+
         if self.crypto.is_some() {
             tracing::info!("암호화된 백업 완료: {}", backup_path.display());
         } else {
@@ -187,9 +192,7 @@ impl BackupManager {
     /// 복원
     pub fn restore(&self, backup_path: &Path) -> Result<()> {
         if !backup_path.exists() {
-            return Err(LazarusError::NotFound(
-                backup_path.display().to_string()
-            ));
+            return Err(LazarusError::NotFound(backup_path.display().to_string()));
         }
 
         let backup_data = fs::read(backup_path).map_err(LazarusError::Io)?;
@@ -222,7 +225,7 @@ impl BackupManager {
         let backups = self.list_backups()?;
         let encrypted = self.crypto.is_some();
         let latest = backups.first().cloned();
-        
+
         Ok(BackupInfo {
             backups,
             encrypted,

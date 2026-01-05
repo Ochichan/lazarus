@@ -24,7 +24,6 @@ pub struct NoteResponse {
     pub note_type: String,
 }
 
-
 impl From<Note> for NoteResponse {
     fn from(note: Note) -> Self {
         Self {
@@ -50,7 +49,7 @@ pub struct NotesListResponse {
 pub async fn list(State(state): State<AppState>) -> Result<Json<NotesListResponse>> {
     let db = state.db.read().await;
     let ids = db.list_ids();
-    
+
     let mut notes = Vec::new();
     for id in ids {
         if let Some(note) = db.get(id)? {
@@ -87,28 +86,32 @@ pub async fn create_form(
     State(state): State<AppState>,
     Form(req): Form<CreateNoteFormRequest>,
 ) -> Result<axum::response::Redirect> {
-    tracing::info!("폼 데이터: title={}, note_type={:?}", req.title, req.note_type);
+    tracing::info!(
+        "폼 데이터: title={}, note_type={:?}",
+        req.title,
+        req.note_type
+    );
     let mut note = Note::new(0, req.title, req.content);
 
-    
     // 쉼표로 구분된 태그 파싱
-    note.tags = req.tags
+    note.tags = req
+        .tags
         .split(',')
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
-    
+
     // 암호화 여부
     note.encrypted = req.encrypted == "true";
 
-		// 노트 타입
-	    if let Some(ref t) = req.note_type {
-    	    note.note_type = match t.as_str() {
-        	    "journal" => crate::db::note::NoteType::Journal,
-   	         "review" => crate::db::note::NoteType::Review,
-   	         "idea" => crate::db::note::NoteType::Idea,
-   	         _ => crate::db::note::NoteType::Note,
-   	     };
+    // 노트 타입
+    if let Some(ref t) = req.note_type {
+        note.note_type = match t.as_str() {
+            "journal" => crate::db::note::NoteType::Journal,
+            "review" => crate::db::note::NoteType::Review,
+            "idea" => crate::db::note::NoteType::Idea,
+            _ => crate::db::note::NoteType::Note,
+        };
     }
     let id = {
         let mut db = state.db.write().await;
@@ -120,23 +123,25 @@ pub async fn create_form(
             db.save(&note, None)?
         }
     };
-    
+
     // 검색 인덱스에 추가
     {
         let mut search = state.search.write().await;
         search.index_note(id, &note.title, &note.content, &note.tags)?;
     }
-    
-	tracing::info!("노트 생성 (Form): id={}, encrypted={}, type={:?}", id, note.encrypted, note.note_type);
+
+    tracing::info!(
+        "노트 생성 (Form): id={}, encrypted={}, type={:?}",
+        id,
+        note.encrypted,
+        note.note_type
+    );
     Ok(axum::response::Redirect::to(&format!("/notes/{}", id)))
 }
 /// GET /api/notes/:id
-pub async fn get(
-    State(state): State<AppState>,
-    Path(id): Path<u64>,
-) -> Result<Json<NoteResponse>> {
+pub async fn get(State(state): State<AppState>, Path(id): Path<u64>) -> Result<Json<NoteResponse>> {
     let db = state.db.read().await;
-    
+
     match db.get(id)? {
         Some(note) => Ok(Json(NoteResponse::from(note))),
         None => Err(LazarusError::NotFound(format!("노트 ID: {}", id))),
@@ -152,7 +157,8 @@ pub async fn update(
     let mut db = state.db.write().await;
 
     // 기존 노트 확인
-    let existing = db.get(id)?
+    let existing = db
+        .get(id)?
         .ok_or_else(|| LazarusError::NotFound(format!("노트 ID: {}", id)))?;
 
     let mut note = Note::new(id, req.title, req.content);
@@ -173,35 +179,37 @@ pub async fn update_form(
     Form(req): Form<CreateNoteFormRequest>,
 ) -> Result<axum::response::Redirect> {
     // 태그 파싱
-    let tags: Vec<String> = req.tags
+    let tags: Vec<String> = req
+        .tags
         .split(',')
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
-    
+
     // 암호화 여부
     let encrypted = req.encrypted == "true";
-    
+
     let note = {
         let mut db = state.db.write().await;
         // 기존 노트 확인
-        let existing = db.get(id)?
+        let existing = db
+            .get(id)?
             .ok_or_else(|| LazarusError::NotFound(format!("노트 ID: {}", id)))?;
-        
+
         let mut note = Note::new(id, req.title, req.content);
         note.tags = tags;
         note.created_at = existing.created_at;
-		note.encrypted = encrypted;
-        
-   		     // 노트 타입
-   		     if let Some(ref t) = req.note_type {
-   		         note.note_type = match t.as_str() {
-     	           "journal" => crate::db::note::NoteType::Journal,
-     	           "review" => crate::db::note::NoteType::Review,
-      	           "idea" => crate::db::note::NoteType::Idea,
-            	    _ => crate::db::note::NoteType::Note,
-        	    };
-    	    } else {
+        note.encrypted = encrypted;
+
+        // 노트 타입
+        if let Some(ref t) = req.note_type {
+            note.note_type = match t.as_str() {
+                "journal" => crate::db::note::NoteType::Journal,
+                "review" => crate::db::note::NoteType::Review,
+                "idea" => crate::db::note::NoteType::Idea,
+                _ => crate::db::note::NoteType::Note,
+            };
+        } else {
             // 기존 타입 유지
             note.note_type = existing.note_type;
         }
@@ -213,13 +221,13 @@ pub async fn update_form(
         }
         note
     };
-    
+
     // 검색 인덱스 업데이트
     {
         let mut search = state.search.write().await;
         search.index_note(id, &note.title, &note.content, &note.tags)?;
     }
-    
+
     tracing::info!("노트 수정 (Form): id={}, encrypted={}", id, note.encrypted);
     Ok(axum::response::Redirect::to(&format!("/notes/{}", id)))
 }
@@ -240,13 +248,9 @@ pub async fn delete(
 
     if db.delete(id)? {
         tracing::info!("노트 삭제: id={}", id);
-        
+
         // HTMX 리다이렉트 헤더
-        Ok((
-            StatusCode::OK,
-            [("HX-Redirect", "/notes")],
-            ""
-        ))
+        Ok((StatusCode::OK, [("HX-Redirect", "/notes")], ""))
     } else {
         Err(LazarusError::NotFound(format!("노트 ID: {}", id)))
     }
@@ -270,29 +274,29 @@ pub struct CreateNoteFormRequest {
     pub title: String,
     pub content: String,
     #[serde(default)]
-    pub tags: String,  // 쉼표로 구분된 문자열
+    pub tags: String, // 쉼표로 구분된 문자열
     #[serde(default)]
-    pub encrypted: String,  // "true" 또는 "false"
+    pub encrypted: String, // "true" 또는 "false"
     #[serde(default)]
     pub note_type: Option<String>,
 }
 
 /// GET /api/notes/duplicates - 중복 노트 찾기
-pub async fn find_duplicates(
-    State(state): State<AppState>,
-) -> Result<Json<Vec<DuplicateGroup>>> {
+pub async fn find_duplicates(State(state): State<AppState>) -> Result<Json<Vec<DuplicateGroup>>> {
     let db = state.db.read().await;
     let ids = db.list_ids();
-    
+
     // 제목+내용 해시로 그룹화
-    let mut hash_map: std::collections::HashMap<String, Vec<NoteInfo>> = std::collections::HashMap::new();
-    
+    let mut hash_map: std::collections::HashMap<String, Vec<NoteInfo>> =
+        std::collections::HashMap::new();
+
     for id in ids {
         if let Some(note) = db.get(id)? {
             // 제목과 내용 첫 500자로 해시 생성
             let content_preview = note.content.chars().take(500).collect::<String>();
             // 이스케이프 문자 정규화
-            let clean_title = note.title
+            let clean_title = note
+                .title
                 .trim()
                 .to_lowercase()
                 .replace("\\\"", "")
@@ -305,12 +309,12 @@ pub async fn find_duplicates(
                 .replace("\"", "")
                 .replace("\\", "");
             let hash_input = format!("{}:{}", clean_title, clean_content);
-            
-            use sha2::{Sha256, Digest};
+
+            use sha2::{Digest, Sha256};
             let mut hasher = Sha256::new();
             hasher.update(hash_input.as_bytes());
             let hash = format!("{:x}", hasher.finalize())[..16].to_string();
-            
+
             hash_map.entry(hash).or_default().push(NoteInfo {
                 id: note.id,
                 title: note.title,
@@ -320,7 +324,7 @@ pub async fn find_duplicates(
             });
         }
     }
-    
+
     // 2개 이상인 그룹만 반환
     let duplicates: Vec<DuplicateGroup> = hash_map
         .into_iter()
@@ -335,7 +339,7 @@ pub async fn find_duplicates(
             }
         })
         .collect();
-    
+
     Ok(Json(duplicates))
 }
 
@@ -347,7 +351,7 @@ pub async fn remove_duplicates(
     let mut db = state.db.write().await;
     let mut search = state.search.write().await;
     let mut removed_count = 0;
-    
+
     for group in params.groups {
         // 첫 번째(최신)는 유지, 나머지 삭제
         for note_id in group.note_ids.iter().skip(1) {
@@ -357,7 +361,7 @@ pub async fn remove_duplicates(
             }
         }
     }
-    
+
     Ok(Json(RemoveResult {
         success: true,
         removed_count,
@@ -399,29 +403,31 @@ pub struct RemoveResult {
 }
 
 /// GET /api/backup/info - 백업 정보
-pub async fn backup_info(
-    State(state): State<AppState>,
-) -> Result<Json<BackupInfoResponse>> {
+pub async fn backup_info(State(state): State<AppState>) -> Result<Json<BackupInfoResponse>> {
     let backup = state.backup.read().await;
     let info = backup.info()?;
-    let total_size: u64 = info.backups.iter()
+    let total_size: u64 = info
+        .backups
+        .iter()
         .filter_map(|p| std::fs::metadata(p).ok())
         .map(|m| m.len())
         .sum();
-    
+
     Ok(Json(BackupInfoResponse {
         count: info.backups.len(),
         total_size_kb: total_size / 1024,
         encrypted: info.encrypted,
         latest: info.latest.map(|p| p.display().to_string()),
-        backups: info.backups.iter().map(|p| p.display().to_string()).collect(),
+        backups: info
+            .backups
+            .iter()
+            .map(|p| p.display().to_string())
+            .collect(),
     }))
 }
 
 /// POST /api/backup/now - 수동 백업
-pub async fn backup_now(
-    State(state): State<AppState>,
-) -> Result<Json<BackupResult>> {
+pub async fn backup_now(State(state): State<AppState>) -> Result<Json<BackupResult>> {
     let backup = state.backup.read().await;
     match backup.backup()? {
         Some(path) => Ok(Json(BackupResult {
@@ -454,18 +460,16 @@ pub struct BackupResult {
 }
 
 /// POST /api/db/compact - DB 압축
-pub async fn compact_db(
-    State(state): State<AppState>,
-) -> Result<Json<CompactResult>> {
+pub async fn compact_db(State(state): State<AppState>) -> Result<Json<CompactResult>> {
     // 먼저 백업
     let backup = state.backup.read().await;
     if let Err(e) = backup.backup() {
         tracing::warn!("압축 전 백업 실패: {}", e);
     }
-    
+
     let mut db = state.db.write().await;
     let result = db.compact()?;
-    
+
     Ok(Json(result))
 }
 
@@ -476,7 +480,7 @@ pub async fn acquire_lock(
 ) -> Result<Json<LockResponse>> {
     let now = chrono::Utc::now();
     let mut locks = state.edit_locks.write().await;
-    
+
     // 기존 락 확인 (5분 이내면 충돌)
     if let Some(locked_at) = locks.get(&id) {
         let elapsed = now - *locked_at;
@@ -488,10 +492,10 @@ pub async fn acquire_lock(
             }));
         }
     }
-    
+
     // 락 획득
     locks.insert(id, now);
-    
+
     Ok(Json(LockResponse {
         success: true,
         locked: false,
@@ -506,7 +510,7 @@ pub async fn release_lock(
 ) -> Result<Json<LockResponse>> {
     let mut locks = state.edit_locks.write().await;
     locks.remove(&id);
-    
+
     Ok(Json(LockResponse {
         success: true,
         locked: false,
@@ -521,7 +525,7 @@ pub async fn check_lock(
 ) -> Result<Json<LockResponse>> {
     let locks = state.edit_locks.read().await;
     let now = chrono::Utc::now();
-    
+
     if let Some(locked_at) = locks.get(&id) {
         let elapsed = now - *locked_at;
         if elapsed.num_minutes() < 5 {
@@ -532,7 +536,7 @@ pub async fn check_lock(
             }));
         }
     }
-    
+
     Ok(Json(LockResponse {
         success: true,
         locked: false,

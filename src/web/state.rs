@@ -5,13 +5,13 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-use crate::i18n::{Lang, Translations, get_translations};
-use crate::crypto::{SecurityConfig, CryptoManager};
-use crate::zim::ZimReader;
-use crate::db::{StorageEngine, BackupManager};
+use crate::crypto::{CryptoManager, SecurityConfig};
+use crate::db::{BackupManager, StorageEngine};
+use crate::error::Result;
+use crate::i18n::{get_translations, Lang, Translations};
 use crate::search::SearchEngine;
 use crate::srs::SrsEngine;
-use crate::error::Result;
+use crate::zim::ZimReader;
 
 /// ZIM 정보
 pub struct ZimInfo {
@@ -58,8 +58,15 @@ impl AppState {
         let srs = SrsEngine::open(&srs_path)?;
         let backup = BackupManager::new(&db_path, &backup_dir);
         // 보안 설정 로드
-            let security = SecurityConfig::load(&security_path)?;
-            tracing::info!("보안 설정: PIN {}", if security.pin_enabled { "활성화" } else { "비활성화" });
+        let security = SecurityConfig::load(&security_path)?;
+        tracing::info!(
+            "보안 설정: PIN {}",
+            if security.pin_enabled {
+                "활성화"
+            } else {
+                "비활성화"
+            }
+        );
         // 시작 시 자동 백업
         if let Err(e) = backup.backup() {
             tracing::warn!("시작 시 백업 실패: {}", e);
@@ -71,7 +78,8 @@ impl AppState {
         // CLI에서 지정한 ZIM 파일들
         for path in zim_paths {
             if let Ok(reader) = ZimReader::open(&path) {
-                let name = path.file_stem()
+                let name = path
+                    .file_stem()
                     .and_then(|s| s.to_str())
                     .unwrap_or("unknown")
                     .to_string();
@@ -89,7 +97,8 @@ impl AppState {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.extension().map(|e| e == "zim").unwrap_or(false) {
-                    let name = path.file_stem()
+                    let name = path
+                        .file_stem()
                         .and_then(|s| s.to_str())
                         .unwrap_or("unknown")
                         .to_string();
@@ -118,35 +127,35 @@ impl AppState {
         tracing::info!("SRS 엔진 초기화: {}개의 카드", srs.count());
 
         Ok(Self {
-                    lang: Arc::new(RwLock::new(Lang::En)),
-                    edit_locks: Arc::new(RwLock::new(HashMap::new())),
-                    db: Arc::new(RwLock::new(db)),
-                    search: Arc::new(RwLock::new(search)),
-                    zims: Arc::new(RwLock::new(zims)),
-                    srs: Arc::new(RwLock::new(srs)),
-                    data_dir,
-                    zim_dir,
-                    version: env!("CARGO_PKG_VERSION"),
-                    backup: Arc::new(RwLock::new(backup)),
-                    security: Arc::new(RwLock::new(security)),
-                    crypto: Arc::new(RwLock::new(None)),  // PIN 입력 전까지 None
-                })
+            lang: Arc::new(RwLock::new(Lang::En)),
+            edit_locks: Arc::new(RwLock::new(HashMap::new())),
+            db: Arc::new(RwLock::new(db)),
+            search: Arc::new(RwLock::new(search)),
+            zims: Arc::new(RwLock::new(zims)),
+            srs: Arc::new(RwLock::new(srs)),
+            data_dir,
+            zim_dir,
+            version: env!("CARGO_PKG_VERSION"),
+            backup: Arc::new(RwLock::new(backup)),
+            security: Arc::new(RwLock::new(security)),
+            crypto: Arc::new(RwLock::new(None)), // PIN 입력 전까지 None
+        })
     }
     /// 현재 언어 가져오기
-        pub async fn get_lang(&self) -> Lang {
-            *self.lang.read().await
-        }
-    
-        /// 언어 설정
-        pub async fn set_lang(&self, lang: Lang) {
-            *self.lang.write().await = lang;
-        }
-    
-        /// 번역 가져오기
-        pub async fn translations(&self) -> Translations {
-            get_translations(*self.lang.read().await)
-        }
-        
+    pub async fn get_lang(&self) -> Lang {
+        *self.lang.read().await
+    }
+
+    /// 언어 설정
+    pub async fn set_lang(&self, lang: Lang) {
+        *self.lang.write().await = lang;
+    }
+
+    /// 번역 가져오기
+    pub async fn translations(&self) -> Translations {
+        get_translations(*self.lang.read().await)
+    }
+
     /// 첫 번째 ZIM 리더 가져오기
     pub async fn get_zim(&self) -> Option<Arc<RwLock<ZimReader>>> {
         let zims = self.zims.read().await;
@@ -170,13 +179,16 @@ impl AppState {
     /// ZIM 정보 목록
     pub async fn zim_list(&self) -> Vec<(String, String)> {
         let zims = self.zims.read().await;
-        zims.iter().map(|z| (z.name.clone(), z.path.display().to_string())).collect()
+        zims.iter()
+            .map(|z| (z.name.clone(), z.path.display().to_string()))
+            .collect()
     }
 
     /// ZIM 파일 동적 추가
     pub async fn add_zim(&self, path: PathBuf) -> Result<String> {
         let reader = ZimReader::open(&path)?;
-        let name = path.file_stem()
+        let name = path
+            .file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("unknown")
             .to_string();
@@ -212,7 +224,8 @@ impl AppState {
             for entry in entries.flatten() {
                 let path = entry.path();
                 if path.extension().map(|e| e == "zim").unwrap_or(false) {
-                    let name = path.file_stem()
+                    let name = path
+                        .file_stem()
                         .and_then(|s| s.to_str())
                         .unwrap_or("unknown")
                         .to_string();

@@ -69,7 +69,10 @@ pub fn ko() -> Translations {
     data.insert("notes.package_author", "작성자");
     data.insert("notes.package_author_placeholder", "이름");
     data.insert("notes.package_description", "설명");
-    data.insert("notes.package_description_placeholder", "패키지 설명 (선택)");
+    data.insert(
+        "notes.package_description_placeholder",
+        "패키지 설명 (선택)",
+    );
     data.insert("notes.drop_file", ".laz 파일을 여기에 드롭하세요");
     data.insert("notes.or", "또는");
     data.insert("notes.select_file", "파일 선택");
@@ -80,7 +83,10 @@ pub fn ko() -> Translations {
     data.insert("srs.cards_created", "개 카드가 생성되었습니다");
     data.insert("srs.no_cards_extracted", "추출할 카드가 없습니다");
     data.insert("search.tips", "검색 팁");
-    data.insert("search.tip1", "여러 단어를 입력하면 모두 포함된 결과를 찾습니다");
+    data.insert(
+        "search.tip1",
+        "여러 단어를 입력하면 모두 포함된 결과를 찾습니다",
+    );
     data.insert("search.tip2", "노트와 위키백과를 동시에 검색합니다");
     data.insert("search.tip3", "제목에 일치하는 결과가 먼저 표시됩니다");
     data.insert("split.select_note", "왼쪽에서 노트를 선택하세요");
@@ -93,7 +99,10 @@ pub fn ko() -> Translations {
     data.insert("srs.streak_days", "연속");
     data.insert("srs.start_review", "복습하기");
     data.insert("srs.no_cards_yet", "아직 카드가 없습니다.");
-    data.insert("srs.create_hint", "노트를 열고 \"카드 생성\" 버튼을 클릭하세요.");
+    data.insert(
+        "srs.create_hint",
+        "노트를 열고 \"카드 생성\" 버튼을 클릭하세요.",
+    );
     data.insert("srs.interval", "간격");
     data.insert("srs.days", "일");
     data.insert("srs.delete_card_confirm", "이 카드를 삭제하시겠습니까?");
@@ -114,8 +123,11 @@ pub fn ko() -> Translations {
     data.insert("wiki.remove_confirm", "ZIM을 제거하시겠습니까?");
     data.insert("wiki.zim_removed", "ZIM 제거됨: ");
     data.insert("wiki.remove_failed", "제거 실패");
-    data.insert("wiki.open_folder_msg", "파일 탐색기에서 직접 폴더를 열어주세요:");
-    
+    data.insert(
+        "wiki.open_folder_msg",
+        "파일 탐색기에서 직접 폴더를 열어주세요:",
+    );
+
     // 메인 화면
     data.insert("home.notes", "노트");
     data.insert("home.streak", "연속 학습");
@@ -132,7 +144,7 @@ pub fn ko() -> Translations {
     data.insert("home.shortcut.new_note", "새 노트");
     data.insert("home.shortcut.search", "검색");
     data.insert("home.shortcut.help", "도움말");
-    
+
     // 에디터
     data.insert("editor.title_placeholder", "제목을 입력하세요");
     data.insert("editor.content_placeholder", "여기에 내용을 입력하세요...");
@@ -151,7 +163,7 @@ pub fn ko() -> Translations {
     data.insert("editor.encrypt_off", "🔓 암호화 해제");
     data.insert("editor.pin_required", "먼저 PIN을 설정하세요 (보안 메뉴)");
     data.insert("editor.pin_locked", "PIN 잠금을 해제하세요");
-    
+
     // 노트 목록
     data.insert("notes.title", "노트 목록");
     data.insert("notes.export", "내보내기");
@@ -162,7 +174,7 @@ pub fn ko() -> Translations {
     data.insert("notes.delete", "삭제");
     data.insert("notes.delete_confirm", "정말 삭제하시겠습니까?");
     data.insert("notes.encrypted", "암호화됨");
-    
+
     // 검색
     data.insert("search.title", "검색");
     data.insert("search.placeholder", "검색어 입력...");
@@ -170,14 +182,17 @@ pub fn ko() -> Translations {
     data.insert("search.results", "검색 결과");
     data.insert("search.no_results", "검색 결과가 없습니다");
     data.insert("search.try_different", "다른 검색어를 시도해보세요");
-    
+
     // 위키
     data.insert("wiki.search", "위키 검색");
     data.insert("wiki.manage", "ZIM 관리");
     data.insert("wiki.status", "현황");
     data.insert("wiki.loaded", "개 로드됨");
     data.insert("wiki.directory", "ZIM 디렉토리");
-    data.insert("wiki.directory_hint", "이 폴더에 .zim 파일을 복사 후 새로고침");
+    data.insert(
+        "wiki.directory_hint",
+        "이 폴더에 .zim 파일을 복사 후 새로고침",
+    );
     data.insert("wiki.refresh", "새로고침");
     data.insert("wiki.open_folder", "폴더 열기");
     data.insert("wiki.add", "ZIM 추가");
@@ -185,8 +200,11 @@ pub fn ko() -> Translations {
     data.insert("wiki.loaded_files", "로드된 ZIM 파일");
     data.insert("wiki.remove", "제거");
     data.insert("wiki.no_zim", "ZIM 파일 없음");
-    data.insert("wiki.no_zim_hint", "위키백과를 사용하려면 ZIM 파일을 추가하세요");
-    
+    data.insert(
+        "wiki.no_zim_hint",
+        "위키백과를 사용하려면 ZIM 파일을 추가하세요",
+    );
+
     // SRS
     data.insert("srs.title", "SRS 복습");
     data.insert("srs.cards", "카드 목록");
@@ -199,7 +217,7 @@ pub fn ko() -> Translations {
     data.insert("srs.complete", "🎉 오늘의 복습 완료!");
     data.insert("srs.no_cards", "복습할 카드가 없습니다");
     data.insert("srs.progress", "카드");
-    
+
     // 보안
     data.insert("security.title", "보안 설정");
     data.insert("security.pin_not_set", "PIN이 설정되지 않았습니다");
@@ -215,14 +233,14 @@ pub fn ko() -> Translations {
     data.insert("security.pin_removed", "PIN이 제거되었습니다");
     data.insert("security.unlocked", "잠금이 해제되었습니다");
     data.insert("security.pin_min_length", "PIN을 6자리 이상 입력하세요");
-    
+
     // 백업
     data.insert("backup.title", "백업");
     data.insert("backup.info", "백업 정보");
     data.insert("backup.now", "지금 백업");
     data.insert("backup.complete", "백업 완료");
     data.insert("backup.no_changes", "변경사항 없음 (백업 스킵)");
-    
+
     // 공통 버튼/메시지
     data.insert("common.confirm", "확인");
     data.insert("common.cancel", "취소");
@@ -230,7 +248,7 @@ pub fn ko() -> Translations {
     data.insert("common.loading", "로딩 중...");
     data.insert("common.error", "오류가 발생했습니다");
     data.insert("common.success", "성공");
-    
+
     Translations { data }
 }
 
@@ -258,7 +276,10 @@ pub fn en() -> Translations {
     data.insert("notes.package_author", "Author");
     data.insert("notes.package_author_placeholder", "Your name");
     data.insert("notes.package_description", "Description");
-    data.insert("notes.package_description_placeholder", "Package description (optional)");
+    data.insert(
+        "notes.package_description_placeholder",
+        "Package description (optional)",
+    );
     data.insert("notes.drop_file", "Drop .laz file here");
     data.insert("notes.or", "or");
     data.insert("notes.select_file", "Select File");
@@ -269,7 +290,10 @@ pub fn en() -> Translations {
     data.insert("srs.cards_created", "cards created");
     data.insert("srs.no_cards_extracted", "No cards to extract");
     data.insert("search.tips", "Search Tips");
-    data.insert("search.tip1", "Multiple words search for results containing all terms");
+    data.insert(
+        "search.tip1",
+        "Multiple words search for results containing all terms",
+    );
     data.insert("search.tip2", "Searches both notes and Wikipedia");
     data.insert("search.tip3", "Title matches appear first");
     data.insert("split.select_note", "Select a note from the left");
@@ -282,7 +306,10 @@ pub fn en() -> Translations {
     data.insert("srs.streak_days", "Streak");
     data.insert("srs.start_review", "Start Review");
     data.insert("srs.no_cards_yet", "No cards yet.");
-    data.insert("srs.create_hint", "Open a note and click \"Create Cards\" button.");
+    data.insert(
+        "srs.create_hint",
+        "Open a note and click \"Create Cards\" button.",
+    );
     data.insert("srs.interval", "Interval");
     data.insert("srs.days", " days");
     data.insert("srs.delete_card_confirm", "Delete this card?");
@@ -303,8 +330,11 @@ pub fn en() -> Translations {
     data.insert("wiki.remove_confirm", "Remove this ZIM?");
     data.insert("wiki.zim_removed", "ZIM removed: ");
     data.insert("wiki.remove_failed", "Remove failed");
-    data.insert("wiki.open_folder_msg", "Please open the folder in file explorer:");
-    
+    data.insert(
+        "wiki.open_folder_msg",
+        "Please open the folder in file explorer:",
+    );
+
     // Home
     data.insert("home.notes", "Notes");
     data.insert("home.streak", "Study Streak");
@@ -321,7 +351,7 @@ pub fn en() -> Translations {
     data.insert("home.shortcut.new_note", "New note");
     data.insert("home.shortcut.search", "Search");
     data.insert("home.shortcut.help", "Help");
-    
+
     // Editor
     data.insert("editor.title_placeholder", "Enter title");
     data.insert("editor.content_placeholder", "Start writing here...");
@@ -338,9 +368,12 @@ pub fn en() -> Translations {
     data.insert("editor.save_complete", "💾 Saved!");
     data.insert("editor.encrypt_on", "🔒 Encryption enabled");
     data.insert("editor.encrypt_off", "🔓 Encryption disabled");
-    data.insert("editor.pin_required", "Please set PIN first (Security menu)");
+    data.insert(
+        "editor.pin_required",
+        "Please set PIN first (Security menu)",
+    );
     data.insert("editor.pin_locked", "Please unlock PIN first");
-    
+
     // Notes list
     data.insert("notes.title", "Notes");
     data.insert("notes.export", "Export");
@@ -351,7 +384,7 @@ pub fn en() -> Translations {
     data.insert("notes.delete", "Delete");
     data.insert("notes.delete_confirm", "Are you sure you want to delete?");
     data.insert("notes.encrypted", "Encrypted");
-    
+
     // Search
     data.insert("search.title", "Search");
     data.insert("search.placeholder", "Enter search term...");
@@ -359,14 +392,17 @@ pub fn en() -> Translations {
     data.insert("search.results", "Search Results");
     data.insert("search.no_results", "No results found");
     data.insert("search.try_different", "Try a different search term");
-    
+
     // Wiki
     data.insert("wiki.search", "Wiki Search");
     data.insert("wiki.manage", "ZIM Management");
     data.insert("wiki.status", "Status");
     data.insert("wiki.loaded", "loaded");
     data.insert("wiki.directory", "ZIM Directory");
-    data.insert("wiki.directory_hint", "Copy .zim files to this folder and refresh");
+    data.insert(
+        "wiki.directory_hint",
+        "Copy .zim files to this folder and refresh",
+    );
     data.insert("wiki.refresh", "Refresh");
     data.insert("wiki.open_folder", "Open Folder");
     data.insert("wiki.add", "Add ZIM");
@@ -375,7 +411,7 @@ pub fn en() -> Translations {
     data.insert("wiki.remove", "Remove");
     data.insert("wiki.no_zim", "No ZIM files");
     data.insert("wiki.no_zim_hint", "Add a ZIM file to use Wikipedia");
-    
+
     // SRS
     data.insert("srs.title", "SRS Review");
     data.insert("srs.cards", "Card List");
@@ -388,7 +424,7 @@ pub fn en() -> Translations {
     data.insert("srs.complete", "🎉 Today's review complete!");
     data.insert("srs.no_cards", "No cards to review");
     data.insert("srs.progress", "cards");
-    
+
     // Security
     data.insert("security.title", "Security Settings");
     data.insert("security.pin_not_set", "PIN not set");
@@ -403,15 +439,18 @@ pub fn en() -> Translations {
     data.insert("security.pin_set_success", "PIN has been set");
     data.insert("security.pin_removed", "PIN has been removed");
     data.insert("security.unlocked", "Unlocked");
-    data.insert("security.pin_min_length", "PIN must be at least 6 characters");
-    
+    data.insert(
+        "security.pin_min_length",
+        "PIN must be at least 6 characters",
+    );
+
     // Backup
     data.insert("backup.title", "Backup");
     data.insert("backup.info", "Backup Info");
     data.insert("backup.now", "Backup Now");
     data.insert("backup.complete", "Backup complete");
     data.insert("backup.no_changes", "No changes (backup skipped)");
-    
+
     // Common buttons/messages
     data.insert("common.confirm", "Confirm");
     data.insert("common.cancel", "Cancel");
@@ -419,7 +458,7 @@ pub fn en() -> Translations {
     data.insert("common.loading", "Loading...");
     data.insert("common.error", "An error occurred");
     data.insert("common.success", "Success");
-    
+
     Translations { data }
 }
 
@@ -435,89 +474,200 @@ pub fn get_translations(lang: Lang) -> Translations {
 pub fn all_translations(lang: Lang) -> HashMap<String, String> {
     let tr = get_translations(lang);
     let keys = [
-    	"notes.title", "notes.export", "notes.import", "split.select_note",
-        "notes.no_notes", "notes.create_first", "notes.no_title",
-        "search.tips", "search.tip1", "search.tip2", "search.tip3",
-        "srs.today_review", "srs.new_cards", "srs.learning", "srs.mature",
-        "srs.create_from_notes", "srs.repetitions", "srs.streak_days",
-        "srs.start_review", "srs.no_cards_yet", "srs.create_hint",
-        "srs.interval", "srs.days", "srs.delete_card_confirm", "srs.delete_failed",
+        "notes.title",
+        "notes.export",
+        "notes.import",
+        "split.select_note",
+        "notes.no_notes",
+        "notes.create_first",
+        "notes.no_title",
+        "search.tips",
+        "search.tip1",
+        "search.tip2",
+        "search.tip3",
+        "srs.today_review",
+        "srs.new_cards",
+        "srs.learning",
+        "srs.mature",
+        "srs.create_from_notes",
+        "srs.repetitions",
+        "srs.streak_days",
+        "srs.start_review",
+        "srs.no_cards_yet",
+        "srs.create_hint",
+        "srs.interval",
+        "srs.days",
+        "srs.delete_card_confirm",
+        "srs.delete_failed",
         "security.enter_current_pin",
-        "wiki.no_zim_loaded", "wiki.loaded_zims", "wiki.add_btn", "wiki.add_hint",
-        "wiki.name", "wiki.path", "wiki.action",
-        "wiki.zim_added", "wiki.no_new_zim", "wiki.refresh_failed",
-        "wiki.enter_path", "wiki.add_failed", "wiki.remove_confirm",
-        "wiki.zim_removed", "wiki.remove_failed", "wiki.open_folder_msg",
+        "wiki.no_zim_loaded",
+        "wiki.loaded_zims",
+        "wiki.add_btn",
+        "wiki.add_hint",
+        "wiki.name",
+        "wiki.path",
+        "wiki.action",
+        "wiki.zim_added",
+        "wiki.no_new_zim",
+        "wiki.refresh_failed",
+        "wiki.enter_path",
+        "wiki.add_failed",
+        "wiki.remove_confirm",
+        "wiki.zim_removed",
+        "wiki.remove_failed",
+        "wiki.open_folder_msg",
         // 공통
-        "app.name", "app.tagline",
-        "nav.notes", "nav.search", "nav.wiki",
-
+        "app.name",
+        "app.tagline",
+        "nav.notes",
+        "nav.search",
+        "nav.wiki",
         // 노트 목록
-        "notes.title", "notes.export", "notes.import",
-        "notes.no_notes", "notes.create_first", "notes.no_title",
-        "notes.edit", "notes.delete", "notes.delete_confirm", "notes.encrypted",
-        "notes.find_duplicates", "notes.select_all", "notes.selected",
-        "notes.create_package", "notes.duplicates_title", "notes.no_duplicates",
-        "notes.export_package", "notes.import_package",
-        "notes.package_title", "notes.package_title_placeholder",
-        "notes.package_author", "notes.package_author_placeholder",
-        "notes.package_description", "notes.package_description_placeholder",
-        "notes.drop_file", "notes.or", "notes.select_file",
-        "editor.title_placeholder", "editor.content_placeholder",
-        "editor.tags", "editor.tags_placeholder", "editor.edit_note",
-        "notes.created", "notes.updated",
-        "srs.create_cards", "srs.cards_created", "srs.no_cards_extracted",
-
+        "notes.title",
+        "notes.export",
+        "notes.import",
+        "notes.no_notes",
+        "notes.create_first",
+        "notes.no_title",
+        "notes.edit",
+        "notes.delete",
+        "notes.delete_confirm",
+        "notes.encrypted",
+        "notes.find_duplicates",
+        "notes.select_all",
+        "notes.selected",
+        "notes.create_package",
+        "notes.duplicates_title",
+        "notes.no_duplicates",
+        "notes.export_package",
+        "notes.import_package",
+        "notes.package_title",
+        "notes.package_title_placeholder",
+        "notes.package_author",
+        "notes.package_author_placeholder",
+        "notes.package_description",
+        "notes.package_description_placeholder",
+        "notes.drop_file",
+        "notes.or",
+        "notes.select_file",
+        "editor.title_placeholder",
+        "editor.content_placeholder",
+        "editor.tags",
+        "editor.tags_placeholder",
+        "editor.edit_note",
+        "notes.created",
+        "notes.updated",
+        "srs.create_cards",
+        "srs.cards_created",
+        "srs.no_cards_extracted",
         // 메인 화면
-        "home.notes", "home.streak", "home.day", "home.quick_start",
-        "home.new_note", "home.note_list", "home.split_view",
-        "home.srs_review", "home.search", "home.zim_manage", "home.security",
-        "home.shortcuts", "home.shortcut.new_note", "home.shortcut.search", "home.shortcut.help",
-        
+        "home.notes",
+        "home.streak",
+        "home.day",
+        "home.quick_start",
+        "home.new_note",
+        "home.note_list",
+        "home.split_view",
+        "home.srs_review",
+        "home.search",
+        "home.zim_manage",
+        "home.security",
+        "home.shortcuts",
+        "home.shortcut.new_note",
+        "home.shortcut.search",
+        "home.shortcut.help",
         // 에디터
-        "editor.title_placeholder", "editor.content_placeholder",
-        "editor.tags", "editor.tags_placeholder",
-        "editor.encrypt", "editor.focus", "editor.fullscreen", "editor.save",
-        "editor.saved", "editor.auto_saved", "editor.changed", "editor.words",
-        "editor.save_complete", "editor.encrypt_on", "editor.encrypt_off",
-        "editor.pin_required", "editor.pin_locked",
-        
+        "editor.title_placeholder",
+        "editor.content_placeholder",
+        "editor.tags",
+        "editor.tags_placeholder",
+        "editor.encrypt",
+        "editor.focus",
+        "editor.fullscreen",
+        "editor.save",
+        "editor.saved",
+        "editor.auto_saved",
+        "editor.changed",
+        "editor.words",
+        "editor.save_complete",
+        "editor.encrypt_on",
+        "editor.encrypt_off",
+        "editor.pin_required",
+        "editor.pin_locked",
         // 노트 목록
-        "notes.title", "notes.export", "notes.import",
-        "notes.no_notes", "notes.create_first",
-        "notes.edit", "notes.delete", "notes.delete_confirm", "notes.encrypted",
-        
+        "notes.title",
+        "notes.export",
+        "notes.import",
+        "notes.no_notes",
+        "notes.create_first",
+        "notes.edit",
+        "notes.delete",
+        "notes.delete_confirm",
+        "notes.encrypted",
         // 검색
-        "search.title", "search.placeholder", "search.button",
-        "search.results", "search.no_results", "search.try_different",
-        
+        "search.title",
+        "search.placeholder",
+        "search.button",
+        "search.results",
+        "search.no_results",
+        "search.try_different",
         // 위키
-        "wiki.search", "wiki.manage", "wiki.status", "wiki.loaded",
-        "wiki.directory", "wiki.directory_hint", "wiki.refresh", "wiki.open_folder",
-        "wiki.add", "wiki.add_placeholder", "wiki.loaded_files", "wiki.remove",
-        "wiki.no_zim", "wiki.no_zim_hint",
-        
+        "wiki.search",
+        "wiki.manage",
+        "wiki.status",
+        "wiki.loaded",
+        "wiki.directory",
+        "wiki.directory_hint",
+        "wiki.refresh",
+        "wiki.open_folder",
+        "wiki.add",
+        "wiki.add_placeholder",
+        "wiki.loaded_files",
+        "wiki.remove",
+        "wiki.no_zim",
+        "wiki.no_zim_hint",
         // SRS
-        "srs.title", "srs.cards", "srs.streak", "srs.show_answer",
-        "srs.again", "srs.hard", "srs.good", "srs.easy",
-        "srs.complete", "srs.no_cards", "srs.progress",
-        
+        "srs.title",
+        "srs.cards",
+        "srs.streak",
+        "srs.show_answer",
+        "srs.again",
+        "srs.hard",
+        "srs.good",
+        "srs.easy",
+        "srs.complete",
+        "srs.no_cards",
+        "srs.progress",
         // 보안
-        "security.title", "security.pin_not_set", "security.pin_enabled",
-        "security.locked", "security.pin_input", "security.set_pin",
-        "security.remove_pin", "security.lock", "security.unlock",
-        "security.wrong_pin", "security.pin_set_success", "security.pin_removed",
-        "security.unlocked", "security.pin_min_length",
-        
+        "security.title",
+        "security.pin_not_set",
+        "security.pin_enabled",
+        "security.locked",
+        "security.pin_input",
+        "security.set_pin",
+        "security.remove_pin",
+        "security.lock",
+        "security.unlock",
+        "security.wrong_pin",
+        "security.pin_set_success",
+        "security.pin_removed",
+        "security.unlocked",
+        "security.pin_min_length",
         // 백업
-        "backup.title", "backup.info", "backup.now",
-        "backup.complete", "backup.no_changes",
-        
+        "backup.title",
+        "backup.info",
+        "backup.now",
+        "backup.complete",
+        "backup.no_changes",
         // 공통 버튼
-        "common.confirm", "common.cancel", "common.close",
-        "common.loading", "common.error", "common.success",
+        "common.confirm",
+        "common.cancel",
+        "common.close",
+        "common.loading",
+        "common.error",
+        "common.success",
     ];
-    
+
     let mut map = HashMap::new();
     for key in keys {
         map.insert(key.to_string(), tr.get(key).to_string());

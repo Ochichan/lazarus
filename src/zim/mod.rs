@@ -2,9 +2,9 @@
 //!
 //! 80GB 위키백과를 메모리 효율적으로 읽기 위한 Mmap 기반 리더
 
-use std::path::{Path, PathBuf};
 use memmap2::Mmap;
 use std::fs::File;
+use std::path::{Path, PathBuf};
 
 use crate::error::{LazarusError, Result};
 
@@ -15,8 +15,12 @@ fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     let len1 = s1_chars.len();
     let len2 = s2_chars.len();
 
-    if len1 == 0 { return len2; }
-    if len2 == 0 { return len1; }
+    if len1 == 0 {
+        return len2;
+    }
+    if len2 == 0 {
+        return len1;
+    }
 
     let mut prev_row: Vec<usize> = (0..=len2).collect();
     let mut curr_row: Vec<usize> = vec![0; len2 + 1];
@@ -24,7 +28,11 @@ fn levenshtein_distance(s1: &str, s2: &str) -> usize {
     for i in 1..=len1 {
         curr_row[0] = i;
         for j in 1..=len2 {
-            let cost = if s1_chars[i - 1] == s2_chars[j - 1] { 0 } else { 1 };
+            let cost = if s1_chars[i - 1] == s2_chars[j - 1] {
+                0
+            } else {
+                1
+            };
             curr_row[j] = (prev_row[j] + 1)
                 .min(curr_row[j - 1] + 1)
                 .min(prev_row[j - 1] + cost);
@@ -39,26 +47,30 @@ fn levenshtein_distance(s1: &str, s2: &str) -> usize {
 fn fuzzy_match(query: &str, text: &str, max_distance: usize) -> bool {
     let query_lower = query.to_lowercase();
     let text_lower = text.to_lowercase();
-    
+
     // 정확히 포함하면 바로 true
     if text_lower.contains(&query_lower) {
         return true;
     }
-    
+
     // 단어별로 검사
     for word in text_lower.split(|c: char| !c.is_alphanumeric()) {
-        if word.is_empty() { continue; }
-        
+        if word.is_empty() {
+            continue;
+        }
+
         // 길이가 너무 다르면 스킵
         let len_diff = (word.len() as isize - query_lower.len() as isize).abs() as usize;
-        if len_diff > max_distance { continue; }
-        
+        if len_diff > max_distance {
+            continue;
+        }
+
         // Levenshtein 거리 계산
         if levenshtein_distance(&query_lower, word) <= max_distance {
             return true;
         }
     }
-    
+
     false
 }
 
@@ -93,7 +105,7 @@ impl ZimHeader {
         }
 
         let magic = u32::from_le_bytes([data[0], data[1], data[2], data[3]]);
-        
+
         if magic != ZIM_MAGIC {
             return Err(LazarusError::ZimOpen {
                 path: format!("잘못된 매직 넘버: {:#x}", magic),
@@ -132,7 +144,7 @@ impl ZimReader {
     /// ZIM 파일 열기
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         let path = path.as_ref().to_path_buf();
-        
+
         let file = File::open(&path).map_err(|e| LazarusError::ZimOpen {
             path: format!("{}: {}", path.display(), e),
         })?;
@@ -222,7 +234,7 @@ impl ZimReader {
         let data = &self.mmap[offset..];
 
         let mime_type = u16::from_le_bytes([data[0], data[1]]);
-        
+
         // MIME 타입으로 엔트리 종류 판별
         let entry_type = match mime_type {
             0xFFFF => EntryType::Redirect,
@@ -245,9 +257,7 @@ impl ZimReader {
                 let redirect = u32::from_le_bytes([data[4], data[5], data[6], data[7]]);
                 (None, None, Some(redirect), 8)
             }
-            EntryType::Deleted => {
-                (None, None, None, 4)
-            }
+            EntryType::Deleted => (None, None, None, 4),
         };
 
         // URL 읽기 (null-terminated)
@@ -284,77 +294,81 @@ impl ZimReader {
     }
 
     /// URL로 엔트리 찾기 (이진 탐색)
-        pub fn find_by_url_binary(&self, target_url: &str) -> Result<Option<DirEntry>> {
-            let mut low: u32 = 0;
-            let mut high: u32 = self.header.article_count.saturating_sub(1);
-            
-            while low <= high {
-                let mid = low + (high - low) / 2;
-                
-                let entry = match self.read_dir_entry(mid) {
-                    Ok(e) => e,
-                    Err(_) => {
-                        // 읽기 실패하면 범위 줄이기
-                        if mid == 0 { break; }
-                        high = mid - 1;
-                        continue;
+    pub fn find_by_url_binary(&self, target_url: &str) -> Result<Option<DirEntry>> {
+        let mut low: u32 = 0;
+        let mut high: u32 = self.header.article_count.saturating_sub(1);
+
+        while low <= high {
+            let mid = low + (high - low) / 2;
+
+            let entry = match self.read_dir_entry(mid) {
+                Ok(e) => e,
+                Err(_) => {
+                    // 읽기 실패하면 범위 줄이기
+                    if mid == 0 {
+                        break;
                     }
-                };
-                
-                match target_url.cmp(&entry.url) {
-                    std::cmp::Ordering::Equal => return Ok(Some(entry)),
-                    std::cmp::Ordering::Less => {
-                        if mid == 0 { break; }
-                        high = mid - 1;
+                    high = mid - 1;
+                    continue;
+                }
+            };
+
+            match target_url.cmp(&entry.url) {
+                std::cmp::Ordering::Equal => return Ok(Some(entry)),
+                std::cmp::Ordering::Less => {
+                    if mid == 0 {
+                        break;
                     }
-                    std::cmp::Ordering::Greater => {
-                        low = mid + 1;
-                    }
+                    high = mid - 1;
+                }
+                std::cmp::Ordering::Greater => {
+                    low = mid + 1;
                 }
             }
-            
-            Ok(None)
         }
-    
-        /// URL로 콘텐츠 가져오기 (이진 탐색 버전)
-        pub fn get_content_fast(&self, target_url: &str) -> Result<Option<Vec<u8>>> {
-            // 먼저 이진 탐색으로 시도
-            if let Some(entry) = self.find_by_url_binary(target_url)? {
-                return self.get_content_from_entry(&entry);
+
+        Ok(None)
+    }
+
+    /// URL로 콘텐츠 가져오기 (이진 탐색 버전)
+    pub fn get_content_fast(&self, target_url: &str) -> Result<Option<Vec<u8>>> {
+        // 먼저 이진 탐색으로 시도
+        if let Some(entry) = self.find_by_url_binary(target_url)? {
+            return self.get_content_from_entry(&entry);
+        }
+
+        // 실패하면 여러 네임스페이스에서 선형 탐색
+        for ns in ['C', 'A', '-'] {
+            if let Some(content) = self.get_content(ns, target_url)? {
+                return Ok(Some(content));
             }
-            
-            // 실패하면 여러 네임스페이스에서 선형 탐색
-            for ns in ['C', 'A', '-'] {
-                if let Some(content) = self.get_content(ns, target_url)? {
-                    return Ok(Some(content));
+        }
+
+        Ok(None)
+    }
+
+    /// 엔트리에서 콘텐츠 가져오기
+    fn get_content_from_entry(&self, entry: &DirEntry) -> Result<Option<Vec<u8>>> {
+        match entry.entry_type {
+            EntryType::Redirect => {
+                if let Some(redirect_idx) = entry.redirect_index {
+                    let redirect_entry = self.read_dir_entry(redirect_idx)?;
+                    return self.get_content_from_entry(&redirect_entry);
                 }
+                Ok(None)
             }
-            
-            Ok(None)
-        }
-    
-        /// 엔트리에서 콘텐츠 가져오기
-        fn get_content_from_entry(&self, entry: &DirEntry) -> Result<Option<Vec<u8>>> {
-            match entry.entry_type {
-                EntryType::Redirect => {
-                    if let Some(redirect_idx) = entry.redirect_index {
-                        let redirect_entry = self.read_dir_entry(redirect_idx)?;
-                        return self.get_content_from_entry(&redirect_entry);
-                    }
+            EntryType::Deleted => Ok(None),
+            EntryType::Content => {
+                if let (Some(cluster), Some(blob)) = (entry.cluster_number, entry.blob_number) {
+                    let data = self.read_blob(cluster, blob)?;
+                    Ok(Some(data))
+                } else {
                     Ok(None)
                 }
-                EntryType::Deleted => Ok(None),
-                EntryType::Content => {
-                    if let (Some(cluster), Some(blob)) = (entry.cluster_number, entry.blob_number) {
-                        let data = self.read_blob(cluster, blob)?;
-                        Ok(Some(data))
-                    } else {
-                        Ok(None)
-                    }
-                }
             }
         }
-        
+    }
+
     /// 메인 페이지 가져오기
     pub fn main_page(&self) -> Result<Option<DirEntry>> {
         if self.header.main_page == 0xFFFFFFFF {
@@ -375,7 +389,7 @@ fn read_null_terminated(data: &[u8]) -> String {
 pub enum ClusterCompression {
     None,
     Zstd,
-    Lzma,  // XZ
+    Lzma, // XZ
     Unknown(u8),
 }
 
@@ -383,7 +397,7 @@ impl ZimReader {
     /// 클러스터에서 블롭 데이터 읽기
     pub fn read_blob(&self, cluster_num: u32, blob_num: u32) -> Result<Vec<u8>> {
         let cluster_offset = self.get_cluster_offset(cluster_num) as usize;
-        
+
         // 클러스터 정보 바이트
         let info_byte = self.mmap[cluster_offset];
         let compression = match info_byte & 0x0F {
@@ -392,26 +406,24 @@ impl ZimReader {
             5 => ClusterCompression::Zstd,
             other => ClusterCompression::Unknown(other),
         };
-        
+
         let extended = (info_byte & 0x10) != 0;
         let offset_size: usize = if extended { 8 } else { 4 };
-        
+
         // 다음 클러스터 오프셋으로 클러스터 크기 계산
         let next_cluster_offset = if cluster_num + 1 < self.header.cluster_count {
             self.get_cluster_offset(cluster_num + 1) as usize
         } else {
             self.header.checksum_pos as usize
         };
-        
+
         let cluster_data = &self.mmap[cluster_offset + 1..next_cluster_offset];
-        
+
         // 압축 해제
         let decompressed = match compression {
             ClusterCompression::None => cluster_data.to_vec(),
-            ClusterCompression::Zstd => {
-                zstd::decode_all(std::io::Cursor::new(cluster_data))
-                    .map_err(|e| LazarusError::ZimDecompress)?
-            }
+            ClusterCompression::Zstd => zstd::decode_all(std::io::Cursor::new(cluster_data))
+                .map_err(|e| LazarusError::ZimDecompress)?,
             ClusterCompression::Lzma => {
                 // XZ/LZMA 지원 (나중에 추가)
                 return Err(LazarusError::ZimDecompress);
@@ -421,20 +433,36 @@ impl ZimReader {
                 return Err(LazarusError::ZimDecompress);
             }
         };
-        
+
         // 블롭 오프셋 테이블 읽기
         let blob_offset = if extended {
-            u64::from_le_bytes(decompressed[blob_num as usize * 8..(blob_num as usize + 1) * 8].try_into().unwrap()) as usize
+            u64::from_le_bytes(
+                decompressed[blob_num as usize * 8..(blob_num as usize + 1) * 8]
+                    .try_into()
+                    .unwrap(),
+            ) as usize
         } else {
-            u32::from_le_bytes(decompressed[blob_num as usize * 4..(blob_num as usize + 1) * 4].try_into().unwrap()) as usize
+            u32::from_le_bytes(
+                decompressed[blob_num as usize * 4..(blob_num as usize + 1) * 4]
+                    .try_into()
+                    .unwrap(),
+            ) as usize
         };
-        
+
         let next_blob_offset = if extended {
-            u64::from_le_bytes(decompressed[(blob_num as usize + 1) * 8..(blob_num as usize + 2) * 8].try_into().unwrap()) as usize
+            u64::from_le_bytes(
+                decompressed[(blob_num as usize + 1) * 8..(blob_num as usize + 2) * 8]
+                    .try_into()
+                    .unwrap(),
+            ) as usize
         } else {
-            u32::from_le_bytes(decompressed[(blob_num as usize + 1) * 4..(blob_num as usize + 2) * 4].try_into().unwrap()) as usize
+            u32::from_le_bytes(
+                decompressed[(blob_num as usize + 1) * 4..(blob_num as usize + 2) * 4]
+                    .try_into()
+                    .unwrap(),
+            ) as usize
         };
-        
+
         Ok(decompressed[blob_offset..next_blob_offset].to_vec())
     }
 
@@ -444,7 +472,7 @@ impl ZimReader {
             Some(e) => e,
             None => return Ok(None),
         };
-        
+
         // 리다이렉트 처리
         let entry = match entry.entry_type {
             EntryType::Redirect => {
@@ -457,7 +485,7 @@ impl ZimReader {
             EntryType::Deleted => return Ok(None),
             EntryType::Content => entry,
         };
-        
+
         if let (Some(cluster), Some(blob)) = (entry.cluster_number, entry.blob_number) {
             let data = self.read_blob(cluster, blob)?;
             Ok(Some(data))
@@ -466,15 +494,15 @@ impl ZimReader {
         }
     }
 
-/// 첫 N개 문서 목록 가져오기 (탐색용)
+    /// 첫 N개 문서 목록 가져오기 (탐색용)
     pub fn list_articles(&self, limit: usize) -> Result<Vec<DirEntry>> {
         let mut articles = Vec::new();
         let count = std::cmp::min(self.header.article_count as usize, limit * 50);
-        
+
         for i in 0..count {
             if let Ok(entry) = self.read_dir_entry(i as u32) {
                 // HTML 문서만 필터링
-                if (entry.namespace == 'A' || entry.namespace == 'C') 
+                if (entry.namespace == 'A' || entry.namespace == 'C')
                     && entry.entry_type == EntryType::Content
                     && !entry.url.ends_with(".png")
                     && !entry.url.ends_with(".jpg")
@@ -494,17 +522,17 @@ impl ZimReader {
                 }
             }
         }
-        
+
         Ok(articles)
     }
-   }
+}
 
 impl ZimReader {
     /// 제목으로 검색 (부분 일치)
     pub fn search(&self, query: &str, limit: usize) -> Result<Vec<DirEntry>> {
         let query_lower = query.to_lowercase();
         let mut results = Vec::new();
-        
+
         for i in 0..self.header.article_count {
             if let Ok(entry) = self.read_dir_entry(i) {
                 // HTML 문서만 검색
@@ -517,7 +545,7 @@ impl ZimReader {
                 {
                     let title_lower = entry.title.to_lowercase();
                     let url_lower = entry.url.to_lowercase();
-                    
+
                     if title_lower.contains(&query_lower) || url_lower.contains(&query_lower) {
                         results.push(entry);
                         if results.len() >= limit {
@@ -527,21 +555,21 @@ impl ZimReader {
                 }
             }
         }
-        
+
         Ok(results)
     }
 
-/// Fuzzy 검색 (오타 허용)
+    /// Fuzzy 검색 (오타 허용)
     pub fn search_fuzzy(&self, query: &str, limit: usize) -> Result<Vec<DirEntry>> {
         // 먼저 정확한 검색 시도
         let exact_results = self.search(query, limit)?;
         if !exact_results.is_empty() {
             return Ok(exact_results);
         }
-        
+
         // 결과 없으면 fuzzy 검색
         let mut results = Vec::new();
-        
+
         for i in 0..self.header.article_count {
             if let Ok(entry) = self.read_dir_entry(i) {
                 if (entry.namespace == 'A' || entry.namespace == 'C')
@@ -561,9 +589,7 @@ impl ZimReader {
                 }
             }
         }
-        
+
         Ok(results)
     }
-    
 }
-

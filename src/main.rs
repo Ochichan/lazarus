@@ -1,18 +1,23 @@
-//! Lazarus - 모두를 위한 가벼운 PKM
-//!
-//! 오프라인 환경에서도 작동하는 개인 지식 관리 시스템
+// Temporarily allow warnings for v0.2 release
+// TODO: Clean up dead code in v0.3
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    unused_assignments
+)]
 
+mod crypto;
+mod curriculum;
 mod db;
 mod error;
+mod i18n;
+mod laz;
 mod search;
+mod srs;
+mod sync;
 mod web;
 mod zim;
-mod curriculum;
-mod sync;
-mod laz;
-mod srs;
-mod crypto;
-mod i18n;
 
 use clap::Parser;
 use std::path::PathBuf;
@@ -68,7 +73,7 @@ async fn main() -> Result<()> {
 
     // ZIM 파일 경로 수집
     let mut zim_paths = args.zim.clone();
-    
+
     // --zim-dir 옵션이 있으면 해당 디렉토리의 모든 .zim 파일 추가
     if let Some(ref zim_dir) = args.zim_dir {
         if zim_dir.exists() && zim_dir.is_dir() {

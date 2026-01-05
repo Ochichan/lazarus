@@ -2,9 +2,9 @@
 //!
 //! rkyv를 사용한 제로카피 직렬화
 
+use bytecheck::CheckBytes;
 use chrono::{DateTime, Utc};
 use rkyv::{Archive, Deserialize, Serialize};
-use bytecheck::CheckBytes;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 
 /// 저장되는 노트의 원자 단위
@@ -27,14 +27,13 @@ pub struct NoteAtom {
     /// 벡터 임베딩 (선택, 검색용)
     pub vector: Option<Vec<i8>>,
 
-	/// 삭제 표시 (soft delete)
+    /// 삭제 표시 (soft delete)
     pub deleted: bool,
     /// 노트 타입
     pub note_type: u8,
-	
+
     /// 암호화 여부
     pub encrypted: bool,
-
 }
 
 /// 노트 타입
@@ -42,10 +41,10 @@ pub struct NoteAtom {
 #[serde(rename_all = "snake_case")]
 pub enum NoteType {
     #[default]
-    Note,       // 📝 일반 노트
-    Journal,    // 📔 다이어리/일기
-    Review,     // 📖 독후감/리뷰
-    Idea,       // 💡 아이디어
+    Note, // 📝 일반 노트
+    Journal, // 📔 다이어리/일기
+    Review,  // 📖 독후감/리뷰
+    Idea,    // 💡 아이디어
 }
 
 impl NoteType {
@@ -66,7 +65,7 @@ impl NoteType {
             NoteType::Idea => "Idea",
         }
     }
-	pub fn to_u8(&self) -> u8 {
+    pub fn to_u8(&self) -> u8 {
         match self {
             NoteType::Note => 0,
             NoteType::Journal => 1,
@@ -74,7 +73,7 @@ impl NoteType {
             NoteType::Idea => 3,
         }
     }
-    
+
     pub fn from_u8(v: u8) -> Self {
         match v {
             1 => NoteType::Journal,
@@ -121,8 +120,8 @@ impl Note {
             note_type: NoteType::default(),
             rating: None,
             mood: None,
-		}
-	}
+        }
+    }
     /// 마크다운 형식으로 직렬화
     pub fn to_markdown(&self) -> String {
         let mut md = String::new();

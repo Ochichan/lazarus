@@ -13,18 +13,18 @@ pub struct StatsResponse {
     pub total_days: u32,
 }
 
+use askama::Template;
 use axum::{
     extract::{Path, State},
     response::Html,
     Json,
 };
-use askama::Template;
 use serde::{Deserialize, Serialize};
 
 use crate::error::{LazarusError, Result};
-use crate::srs::{Card, CardType, ReviewResult, SrsStats, extractor};
-use crate::web::state::AppState;
 use crate::i18n::all_translations;
+use crate::srs::{extractor, Card, CardType, ReviewResult, SrsStats};
+use crate::web::state::AppState;
 use std::collections::HashMap;
 
 /// GET /api/srs/stats - 통계
@@ -32,7 +32,7 @@ pub async fn get_stats(State(state): State<AppState>) -> Result<Json<StatsRespon
     let srs = state.srs.read().await;
     let stats = srs.stats();
     let user_stats = &srs.user_stats;
-    
+
     Ok(Json(StatsResponse {
         total: stats.total,
         due: stats.due,
@@ -49,7 +49,8 @@ pub async fn get_stats(State(state): State<AppState>) -> Result<Json<StatsRespon
 /// GET /api/srs/due - 복습할 카드 목록
 pub async fn get_due_cards(State(state): State<AppState>) -> Result<Json<Vec<CardResponse>>> {
     let srs = state.srs.read().await;
-    let cards: Vec<CardResponse> = srs.due_cards()
+    let cards: Vec<CardResponse> = srs
+        .due_cards()
         .into_iter()
         .map(|c| CardResponse::from(c.clone()))
         .collect();
@@ -59,7 +60,8 @@ pub async fn get_due_cards(State(state): State<AppState>) -> Result<Json<Vec<Car
 /// GET /api/srs/cards - 모든 카드
 pub async fn get_all_cards(State(state): State<AppState>) -> Result<Json<Vec<CardResponse>>> {
     let srs = state.srs.read().await;
-    let cards: Vec<CardResponse> = srs.all_cards()
+    let cards: Vec<CardResponse> = srs
+        .all_cards()
         .into_iter()
         .map(|c| CardResponse::from(c.clone()))
         .collect();
@@ -72,7 +74,7 @@ pub async fn add_card(
     Json(params): Json<AddCardParams>,
 ) -> Result<Json<CardResponse>> {
     let mut srs = state.srs.write().await;
-    
+
     let card = Card {
         id: 0,
         card_type: params.card_type.unwrap_or(CardType::Basic),
@@ -85,10 +87,10 @@ pub async fn add_card(
         srs: Default::default(),
         created_at: chrono::Utc::now(),
     };
-    
+
     let id = srs.add_card(card)?;
     let card = srs.get_card(id).unwrap();
-    
+
     Ok(Json(CardResponse::from(card.clone())))
 }
 
@@ -99,12 +101,12 @@ pub async fn review_card(
     Json(params): Json<ReviewParams>,
 ) -> Result<Json<ReviewResponse>> {
     let mut srs = state.srs.write().await;
-    
+
     let result = ReviewResult::from_score(params.score);
     srs.review(id, result)?;
-    
+
     let card = srs.get_card(id).unwrap();
-    
+
     Ok(Json(ReviewResponse {
         success: true,
         next_review: card.srs.next_review.map(|d| d.to_rfc3339()),
@@ -119,10 +121,14 @@ pub async fn delete_card(
 ) -> Result<Json<DeleteResponse>> {
     let mut srs = state.srs.write().await;
     let deleted = srs.delete_card(id)?;
-    
+
     Ok(Json(DeleteResponse {
         success: deleted,
-        message: if deleted { "삭제됨".to_string() } else { "카드를 찾을 수 없음".to_string() },
+        message: if deleted {
+            "삭제됨".to_string()
+        } else {
+            "카드를 찾을 수 없음".to_string()
+        },
     }))
 }
 
@@ -132,20 +138,21 @@ pub async fn extract_from_note(
     Path(note_id): Path<u64>,
 ) -> Result<Json<ExtractResponse>> {
     let db = state.db.read().await;
-    let note = db.get(note_id)?
+    let note = db
+        .get(note_id)?
         .ok_or_else(|| LazarusError::NotFound(format!("노트 ID: {}", note_id)))?;
     drop(db);
-    
+
     let cards = extractor::extract_cards_from_note(note_id, &note.title, &note.content);
-    
+
     let mut srs = state.srs.write().await;
     let mut added_ids = Vec::new();
-    
+
     for card in cards {
         let id = srs.add_card(card)?;
         added_ids.push(id);
     }
-    
+
     Ok(Json(ExtractResponse {
         success: true,
         cards_created: added_ids.len(),
@@ -175,7 +182,7 @@ pub async fn review_page(State(state): State<AppState>) -> Result<Html<String>> 
     let streak = srs.user_stats.streak;
     let lang = state.get_lang().await;
     let t = all_translations(lang);
-    
+
     let template = SrsReviewTemplate {
         version: state.version,
         stats,
@@ -183,9 +190,11 @@ pub async fn review_page(State(state): State<AppState>) -> Result<Html<String>> 
         lang: lang.code(),
         t,
     };
-    Ok(Html(template.render().map_err(|e| {
-        LazarusError::ServerStart(e.to_string())
-    })?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 /// 카드 목록 페이지 템플릿
@@ -203,8 +212,9 @@ pub async fn cards_page(State(state): State<AppState>) -> Result<Html<String>> {
     let srs = state.srs.read().await;
     let lang = state.get_lang().await;
     let t = all_translations(lang);
-    
-    let cards: Vec<CardResponse> = srs.all_cards()
+
+    let cards: Vec<CardResponse> = srs
+        .all_cards()
         .into_iter()
         .map(|c| CardResponse::from(c.clone()))
         .collect();
@@ -214,9 +224,11 @@ pub async fn cards_page(State(state): State<AppState>) -> Result<Html<String>> {
         lang: lang.code(),
         t,
     };
-    Ok(Html(template.render().map_err(|e| {
-        LazarusError::ServerStart(e.to_string())
-    })?))
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 // === DTO ===
@@ -292,13 +304,11 @@ pub struct ExtractResponse {
 }
 
 /// POST /api/srs/optimize - FSRS 파라미터 최적화
-pub async fn optimize_params(
-    State(state): State<AppState>,
-) -> Result<Json<OptimizeResponse>> {
+pub async fn optimize_params(State(state): State<AppState>) -> Result<Json<OptimizeResponse>> {
     let mut srs = state.srs.write().await;
-    
+
     let result = srs.optimize_params()?;
-    
+
     Ok(Json(OptimizeResponse {
         success: true,
         log_count: result.log_count,
@@ -313,14 +323,12 @@ pub async fn optimize_params(
 }
 
 /// GET /api/srs/params - 현재 FSRS 파라미터
-pub async fn get_params(
-    State(state): State<AppState>,
-) -> Result<Json<ParamsResponse>> {
+pub async fn get_params(State(state): State<AppState>) -> Result<Json<ParamsResponse>> {
     let srs = state.srs.read().await;
     let params = srs.current_params();
     let log_count = srs.log_count();
     let is_custom = srs.custom_params.is_some();
-    
+
     Ok(Json(ParamsResponse {
         params: params.w.to_vec(),
         is_custom,

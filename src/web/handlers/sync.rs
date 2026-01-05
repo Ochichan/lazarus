@@ -2,10 +2,7 @@
 //!
 //! 스니커넷 방식의 데이터 동기화
 
-use axum::{
-    extract::State,
-    Json,
-};
+use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
 
 use crate::error::Result;
