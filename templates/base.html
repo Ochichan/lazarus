@@ -20,21 +20,66 @@
     </script>
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="/" class="logo">📚 Lazarus</a>
-            <ul>
-                <li><a href="/notes">{% block nav_notes %}Notes{% endblock %}</a></li>
-                <li><a href="/search">{% block nav_search %}Search{% endblock %}</a></li>
-                <li><a href="/wiki/">{% block nav_wiki %}Wiki{% endblock %}</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-    <footer>
-        <p>Lazarus v{% block version %}0.1.0{% endblock %} - {% block footer_text %}Knowledge for All{% endblock %}</p>
-    </footer>
+    <aside class="sidebar">
+        <div class="sidebar-top">
+            <a href="/" class="sidebar-logo" title="Home">📚</a>
+            <nav class="sidebar-nav">
+                <a href="/notes" class="sidebar-item {% block nav_notes_active %}{% endblock %}" title="Notes">
+                    <span class="sidebar-icon">📝</span>
+                    <span class="sidebar-label">Notes</span>
+                </a>
+                <a href="/wiki/" class="sidebar-item {% block nav_wiki_active %}{% endblock %}" title="Wiki">
+                    <span class="sidebar-icon">📖</span>
+                    <span class="sidebar-label">Wiki</span>
+                </a>
+                <a href="/srs" class="sidebar-item {% block nav_srs_active %}{% endblock %}" title="SRS">
+                    <span class="sidebar-icon">🧠</span>
+                    <span class="sidebar-label">SRS</span>
+                </a>
+                <a href="/search" class="sidebar-item {% block nav_search_active %}{% endblock %}" title="Search">
+                    <span class="sidebar-icon">🔍</span>
+                    <span class="sidebar-label">Search</span>
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-bottom">
+            <a href="/security" class="sidebar-item {% block nav_security_active %}{% endblock %}" title="Security">
+                <span class="sidebar-icon">🔒</span>
+                <span class="sidebar-label">Security</span>
+            </a>
+            <a href="/settings" class="sidebar-item {% block nav_settings_active %}{% endblock %}" title="Settings">
+                <span class="sidebar-icon">⚙️</span>
+                <span class="sidebar-label">Settings</span>
+            </a>
+        </div>
+    </aside>
+    
+    <div class="main-wrapper">
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+        <footer>
+            <p>Lazarus v{% block version %}0.1.0{% endblock %} - {% block footer_text %}Knowledge for All{% endblock %}</p>
+        </footer>
+    </div>
+    
+    <!-- 모바일 하단 네비게이션 -->
+    <nav class="mobile-nav">
+        <a href="/notes" class="mobile-nav-item {% block nav_notes_active_mobile %}{% endblock %}">
+            <span>📝</span>
+        </a>
+        <a href="/wiki/" class="mobile-nav-item {% block nav_wiki_active_mobile %}{% endblock %}">
+            <span>📖</span>
+        </a>
+        <a href="/srs" class="mobile-nav-item {% block nav_srs_active_mobile %}{% endblock %}">
+            <span>🧠</span>
+        </a>
+        <a href="/search" class="mobile-nav-item {% block nav_search_active_mobile %}{% endblock %}">
+            <span>🔍</span>
+        </a>
+        <a href="/security" class="mobile-nav-item {% block nav_security_active_mobile %}{% endblock %}">
+            <span>🔒</span>
+        </a>
+    </nav>
 </body>
 </html>

@@ -1,4 +1,166 @@
-ml lang="ko"/* Lazarus - 경량 High Contrast CSS */
+/* Lazarus - 경량 High Contrast CSS */
+
+/* ===== 사이드바 레이아웃 ===== */
+body {
+    display: flex;
+    min-height: 100vh;
+    margin: 0;
+}
+
+.sidebar {
+    width: 60px;
+    background: var(--card-bg, #1e1e2e);
+    border-right: 1px solid var(--border-color, #333);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 100;
+    transition: width 0.2s ease;
+}
+
+.sidebar:hover {
+    width: 180px;
+}
+
+.sidebar-top, .sidebar-bottom {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-logo {
+    font-size: 1.8rem;
+    padding: 1rem;
+    text-align: center;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-color, #333);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: var(--text-secondary, #aaa);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar-item:hover {
+    background: var(--bg-secondary, #2a2a3e);
+    color: var(--text-primary, #fff);
+}
+
+.sidebar-item.active {
+    background: var(--primary, #6c5ce7);
+    color: white;
+}
+
+.sidebar-icon {
+    font-size: 1.3rem;
+    min-width: 28px;
+    text-align: center;
+}
+
+.sidebar-label {
+    margin-left: 0.75rem;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar:hover .sidebar-label {
+    opacity: 1;
+}
+
+.sidebar-bottom {
+    border-top: 1px solid var(--border-color, #333);
+    padding: 0.5rem 0;
+}
+
+/* 메인 컨텐츠 영역 */
+.main-wrapper {
+    flex: 1;
+    margin-left: 60px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-wrapper main {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.main-wrapper footer {
+    padding: 1rem 2rem;
+    text-align: center;
+    border-top: 1px solid var(--border-color, #333);
+    font-size: 0.85rem;
+    color: var(--text-secondary, #888);
+}
+
+/* 모바일 하단 네비게이션 */
+.mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card-bg, #1e1e2e);
+    border-top: 1px solid var(--border-color, #333);
+    justify-content: space-around;
+    padding: 0.5rem 0;
+    z-index: 100;
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    color: var(--text-secondary, #aaa);
+    text-decoration: none;
+    font-size: 1.5rem;
+}
+
+.mobile-nav-item.active {
+    color: var(--primary, #6c5ce7);
+}
+
+/* 반응형: 모바일 */
+@media (max-width: 768px) {
+    .sidebar {
+        display: none;
+    }
+    
+    .main-wrapper {
+        margin-left: 0;
+        padding-bottom: 70px;
+    }
+    
+    .mobile-nav {
+        display: flex;
+    }
+}
+
+/* 기존 header 숨기기 (사이드바로 대체) */
+body > header {
+    display: none;
+}
 
 /* === CSS 변수 (테마) === */
 :root {

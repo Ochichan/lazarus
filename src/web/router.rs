@@ -38,7 +38,6 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/srs/cards/:id/review", post(handlers::srs::review_card))
         .route("/api/srs/cards/:id", delete(handlers::srs::delete_card))
         .route("/api/srs/extract/:note_id", post(handlers::srs::extract_from_note))
-        .route("/api/srs/extract/:note_id", post(handlers::srs::extract_from_note))
         .route("/api/srs/optimize", post(handlers::srs::optimize_params))
         .route("/api/srs/params", get(handlers::srs::get_params))
         // 보안 API
