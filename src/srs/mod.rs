@@ -59,30 +59,154 @@ impl Default for CardType {
     }
 }
 
-/// SRS 학습 데이터
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+/// SRS 학습 데이터 (FSRS 알고리즘)
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SrsData {
     /// 다음 복습 시간
     pub next_review: Option<DateTime<Utc>>,
+    /// 마지막 복습 시간
+    #[serde(default)]
+    pub last_review: Option<DateTime<Utc>>,
     /// 간격 (일)
     pub interval: u32,
-    /// 난이도 계수 (2.5 기본)
+    /// SM-2 호환 (레거시)
     pub ease_factor: f32,
     /// 복습 횟수
     pub repetitions: u32,
     /// 연속 정답 횟수
     pub streak: u32,
+    /// FSRS: 안정성 (Stability) - 90% 기억 유지 기간 (일)
+    #[serde(default = "default_stability")]
+    pub stability: f32,
+    /// FSRS: 난이도 (Difficulty) - 0.0 ~ 1.0
+    #[serde(default = "default_difficulty")]
+    pub difficulty: f32,
+    /// FSRS: 학습 상태
+    #[serde(default)]
+    pub state: CardState,
 }
 
-impl SrsData {
-    pub fn new() -> Self {
+fn default_stability() -> f32 { 0.0 }
+fn default_difficulty() -> f32 { 0.3 }
+
+/// 카드 학습 상태
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, Default, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum CardState {
+    #[default]
+    New,
+    Learning,
+    Review,
+    Relearning,
+}
+
+impl Default for SrsData {
+    fn default() -> Self {
         Self {
             next_review: Some(Utc::now()),
+            last_review: None,
             interval: 0,
             ease_factor: 2.5,
             repetitions: 0,
             streak: 0,
+            stability: 0.0,
+            difficulty: 0.3,
+            state: CardState::New,
         }
+    }
+}
+
+impl SrsData {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+/// FSRS 파라미터 (기본값 = Anki 커뮤니티 최적화 값)
+pub struct FsrsParams {
+    pub w: [f32; 17],
+}
+
+impl Default for FsrsParams {
+    fn default() -> Self {
+        Self {
+            // FSRS v4 기본 파라미터
+            w: [
+                0.4,    // w0: 초기 안정성 (Again)
+                0.6,    // w1: 초기 안정성 (Hard)
+                2.4,    // w2: 초기 안정성 (Good)
+                5.8,    // w3: 초기 안정성 (Easy)
+                4.93,   // w4: 난이도 기본값
+                0.94,   // w5: 난이도 계수
+                0.86,   // w6: 난이도 변화율
+                0.01,   // w7: 난이도 평균 회귀
+                1.49,   // w8: 안정성 증가 기본
+                0.14,   // w9: 난이도 영향
+                0.94,   // w10: 검색가능성 영향
+                2.18,   // w11: Hard 패널티
+                0.05,   // w12: Easy 보너스
+                0.34,   // w13: 짧은 간격 패널티
+                1.26,   // w14: 긴 간격 패널티
+                0.29,   // w15: Hard 안정성 계수
+                2.61,   // w16: Easy 안정성 계수
+            ],
+        }
+    }
+}
+
+impl FsrsParams {
+    /// 검색가능성 계산 (Retrievability)
+    /// t: 마지막 복습 이후 경과 일수
+    /// s: 안정성
+    pub fn retrievability(&self, t: f32, s: f32) -> f32 {
+        if s <= 0.0 { return 0.0; }
+        (1.0 + t / (9.0 * s)).powf(-1.0)
+    }
+
+    /// 초기 안정성 계산 (새 카드)
+    pub fn initial_stability(&self, rating: u8) -> f32 {
+        self.w[rating as usize]
+    }
+
+    /// 초기 난이도 계산
+    pub fn initial_difficulty(&self, rating: u8) -> f32 {
+        let d = self.w[4] - (rating as f32 - 3.0) * self.w[5];
+        d.clamp(1.0, 10.0) / 10.0  // 0.0 ~ 1.0 정규화
+    }
+
+    /// 난이도 업데이트
+    pub fn next_difficulty(&self, d: f32, rating: u8) -> f32 {
+        let delta = self.w[6] * (rating as f32 - 3.0);
+        let mean_reversion = self.w[7] * (self.w[4] / 10.0 - d);
+        (d + delta + mean_reversion).clamp(0.0, 1.0)
+    }
+
+    /// 안정성 업데이트 (복습 후)
+    pub fn next_stability(&self, s: f32, d: f32, r: f32, rating: u8) -> f32 {
+        if rating == 0 {
+            // Again: 안정성 리셋
+            return self.w[0];
+        }
+
+        let hard_penalty = if rating == 1 { self.w[15] } else { 1.0 };
+        let easy_bonus = if rating == 3 { self.w[16] } else { 1.0 };
+
+        let new_s = s * (
+            self.w[8].exp() *
+            (d * 10.0 + 1.0).powf(-self.w[9]) *
+            ((self.w[10] * (1.0 - r)).exp() - 1.0) *
+            hard_penalty *
+            easy_bonus
+        );
+
+        new_s.max(0.1)  // 최소 안정성
+    }
+
+    /// 다음 간격 계산 (목표 검색가능성 = 90%)
+    pub fn next_interval(&self, s: f32) -> u32 {
+        let target_r = 0.9;  // 90% 기억 유지 목표
+        let interval = 9.0 * s * (1.0 / target_r - 1.0);
+        interval.round().max(1.0) as u32
     }
 }
 
@@ -229,60 +353,89 @@ impl SrsEngine {
             .collect()
     }
 
-    /// 복습 결과 처리 (SM-2 알고리즘)
+    /// 복습 결과 처리 (FSRS 알고리즘)
     pub fn review(&mut self, card_id: u64, result: ReviewResult) -> Result<()> {
         let card = self.cards.get_mut(&card_id)
             .ok_or_else(|| LazarusError::NotFound(format!("카드 ID: {}", card_id)))?;
-
+        
         let srs = &mut card.srs;
+        let params = FsrsParams::default();
+        let rating = match result {
+            ReviewResult::Again => 0,
+            ReviewResult::Hard => 1,
+            ReviewResult::Good => 2,
+            ReviewResult::Easy => 3,
+        };
 
-        match result {
-            ReviewResult::Again => {
-                // 틀림: 간격 초기화
-                srs.interval = 1;
-                srs.streak = 0;
-                srs.ease_factor = (srs.ease_factor - 0.2).max(1.3);
-            }
-            ReviewResult::Hard => {
-                // 어려움: 간격 약간 증가
-                srs.interval = ((srs.interval as f32) * 1.2).ceil() as u32;
-                srs.interval = srs.interval.max(1);
-                srs.streak += 1;
-                srs.ease_factor = (srs.ease_factor - 0.15).max(1.3);
-            }
-            ReviewResult::Good => {
-                // 맞음: 정상 간격 증가
-                if srs.repetitions == 0 {
-                    srs.interval = 1;
-                } else if srs.repetitions == 1 {
-                    srs.interval = 3;
-                } else {
-                    srs.interval = ((srs.interval as f32) * srs.ease_factor).ceil() as u32;
+        let now = Utc::now();
+        
+        // 경과 일수 계산
+        let elapsed_days = srs.last_review
+            .map(|lr| (now - lr).num_hours() as f32 / 24.0)
+            .unwrap_or(0.0);
+
+        match srs.state {
+            CardState::New => {
+                // 새 카드: 초기 안정성/난이도 설정
+                srs.stability = params.initial_stability(rating);
+                srs.difficulty = params.initial_difficulty(rating);
+                srs.state = if rating == 0 { CardState::Learning } else { CardState::Review };
+                if rating >= 2 {
+                    srs.streak = 1;
                 }
-                srs.streak += 1;
             }
-            ReviewResult::Easy => {
-                // 쉬움: 간격 크게 증가
-                if srs.repetitions == 0 {
-                    srs.interval = 4;
+            CardState::Learning | CardState::Relearning => {
+                if rating >= 2 {
+                    // Good/Easy: Review 상태로 전환
+                    srs.stability = params.initial_stability(rating);
+                    srs.state = CardState::Review;
                 } else {
-                    srs.interval = ((srs.interval as f32) * srs.ease_factor * 1.3).ceil() as u32;
+                    // Again/Hard: Learning 유지
+                    srs.stability = params.w[0];
                 }
-                srs.streak += 1;
-                srs.ease_factor += 0.15;
+                srs.difficulty = params.next_difficulty(srs.difficulty, rating);
+            }
+            CardState::Review => {
+                // 검색가능성 계산
+                let r = params.retrievability(elapsed_days, srs.stability);
+                
+                if rating == 0 {
+                    // Again: Relearning으로
+                    srs.stability = params.w[0];
+                    srs.state = CardState::Relearning;
+                    srs.streak = 0;
+                } else {
+                    // Hard/Good/Easy: 안정성 업데이트
+                    srs.stability = params.next_stability(srs.stability, srs.difficulty, r, rating);
+                    srs.streak += 1;
+                }
+                srs.difficulty = params.next_difficulty(srs.difficulty, rating);
             }
         }
 
-        srs.repetitions += 1;
-        srs.next_review = Some(Utc::now() + Duration::days(srs.interval as i64));
+        // 다음 간격 계산
+        srs.interval = if srs.state == CardState::Learning || srs.state == CardState::Relearning {
+            match rating {
+                0 => 0,  // 즉시 다시
+                1 => 0,  // 10분 후 (일 단위라 0)
+                _ => 1,  // 하루
+            }
+        } else {
+            params.next_interval(srs.stability)
+        };
 
-        // 사용자 통계 업데이트
+        srs.next_review = Some(now + Duration::days(srs.interval as i64));
+        srs.last_review = Some(now);
+        srs.repetitions += 1;
+
+        // SM-2 호환 (레거시)
+        srs.ease_factor = 1.3 + srs.difficulty * 1.7;  // 1.3 ~ 3.0 매핑
+
+        // 통계 업데이트
         self.user_stats.record_study();
         self.save_stats()?;
-        
-        // 파일 업데이트
         self.save_all()?;
-
+        
         Ok(())
     }
 
@@ -479,25 +632,22 @@ mod tests {
     #[test]
     fn test_review_again_resets() {
         let mut engine = make_test_engine();
-        
         let card = make_card("Q?", "A!", CardType::Basic);
         let id = engine.add_card(card).unwrap();
         
-        // 몇 번 성공
-        engine.review(id, ReviewResult::Good).unwrap();
-        engine.review(id, ReviewResult::Good).unwrap();
+        // Easy 복습으로 Review 상태로
         engine.review(id, ReviewResult::Easy).unwrap();
         
         let card = engine.get_card(id).unwrap();
-        let old_interval = card.srs.interval;
-        assert!(old_interval > 1);
+        assert_eq!(card.srs.state, CardState::Review);
+        assert!(card.srs.streak > 0);
         
-        // Again → 간격 초기화
+        // Again → Relearning, streak 리셋
         engine.review(id, ReviewResult::Again).unwrap();
         
         let card = engine.get_card(id).unwrap();
-        assert_eq!(card.srs.interval, 1);
         assert_eq!(card.srs.streak, 0);
+        assert_eq!(card.srs.state, CardState::Relearning);
     }
 
     #[test]
