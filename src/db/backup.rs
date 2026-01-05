@@ -1,14 +1,17 @@
 //! 자동 백업 시스템
 //!
 //! Rolling Backup: 최근 3개만 유지
+//! 암호화 지원: PIN 설정 시 백업도 암호화
 
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+
 use flate2::write::GzEncoder;
 use flate2::read::GzDecoder;
 use flate2::Compression;
 
+use crate::crypto::CryptoManager;
 use crate::error::{LazarusError, Result};
 
 /// 백업 관리자
@@ -19,6 +22,8 @@ pub struct BackupManager {
     backup_dir: PathBuf,
     /// 최대 백업 수
     max_backups: usize,
+    /// 암호화 매니저 (옵션)
+    crypto: Option<CryptoManager>,
 }
 
 impl BackupManager {
@@ -28,7 +33,19 @@ impl BackupManager {
             source_path: source_path.as_ref().to_path_buf(),
             backup_dir: backup_dir.as_ref().to_path_buf(),
             max_backups: 3,
+            crypto: None,
         }
+    }
+
+    /// 암호화 매니저 설정
+    pub fn with_crypto(mut self, crypto: CryptoManager) -> Self {
+        self.crypto = Some(crypto);
+        self
+    }
+
+    /// 암호화 매니저 업데이트
+    pub fn set_crypto(&mut self, crypto: Option<CryptoManager>) {
+        self.crypto = crypto;
     }
 
     /// 백업 디렉토리 생성
@@ -55,7 +72,10 @@ impl BackupManager {
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("backup");
-        let backup_name = format!("{}_{}.gz", filename, today);
+        
+        // 암호화 여부에 따라 확장자 변경
+        let ext = if self.crypto.is_some() { "gz.enc" } else { "gz" };
+        let backup_name = format!("{}_{}.{}", filename, today, ext);
         let backup_path = self.backup_dir.join(&backup_name);
 
         // 이미 최근 백업이 있고 내용이 같으면 스킵
@@ -66,15 +86,32 @@ impl BackupManager {
             }
         }
 
-        // gzip 압축하여 백업
+        // 원본 데이터 읽기
         let source_data = fs::read(&self.source_path).map_err(LazarusError::Io)?;
-        
-        let backup_file = File::create(&backup_path).map_err(LazarusError::Io)?;
-        let mut encoder = GzEncoder::new(backup_file, Compression::fast());
-        encoder.write_all(&source_data).map_err(LazarusError::Io)?;
-        encoder.finish().map_err(LazarusError::Io)?;
 
-        tracing::info!("백업 완료: {}", backup_path.display());
+        // gzip 압축
+        let mut compressed = Vec::new();
+        {
+            let mut encoder = GzEncoder::new(&mut compressed, Compression::fast());
+            encoder.write_all(&source_data).map_err(LazarusError::Io)?;
+            encoder.finish().map_err(LazarusError::Io)?;
+        }
+
+        // 암호화 (옵션)
+        let final_data = if let Some(ref crypto) = self.crypto {
+            crypto.encrypt(&compressed)?
+        } else {
+            compressed
+        };
+
+        // 파일 저장
+        fs::write(&backup_path, final_data).map_err(LazarusError::Io)?;
+        
+        if self.crypto.is_some() {
+            tracing::info!("암호화된 백업 완료: {}", backup_path.display());
+        } else {
+            tracing::info!("백업 완료: {}", backup_path.display());
+        }
 
         // 오래된 백업 정리
         self.cleanup_old_backups()?;
@@ -98,85 +135,106 @@ impl BackupManager {
             .map_err(LazarusError::Io)?
             .filter_map(|e| e.ok())
             .map(|e| e.path())
-            .filter(|p| p.extension().map(|e| e == "gz").unwrap_or(false))
+            .filter(|p| {
+                p.extension()
+                    .map(|ext| ext == "gz" || ext == "enc")
+                    .unwrap_or(false)
+            })
             .collect();
 
-        // 최신순 정렬 (파일명에 날짜가 포함되어 있으므로)
+        // 최신순 정렬
         backups.sort_by(|a, b| b.cmp(a));
-
         Ok(backups)
     }
 
     /// 오래된 백업 정리
     fn cleanup_old_backups(&self) -> Result<()> {
         let backups = self.list_backups()?;
-        
         for old_backup in backups.into_iter().skip(self.max_backups) {
             fs::remove_file(&old_backup).map_err(LazarusError::Io)?;
             tracing::debug!("오래된 백업 삭제: {}", old_backup.display());
         }
-
         Ok(())
     }
 
-    /// 내용 비교 (해시 기반)
+    /// 내용 비교 (변경 여부 확인)
     fn is_same_content(&self, backup_path: &Path) -> Result<bool> {
-        use sha2::{Sha256, Digest};
-
-        // 원본 해시
         let source_data = fs::read(&self.source_path).map_err(LazarusError::Io)?;
-        let mut source_hasher = Sha256::new();
-        source_hasher.update(&source_data);
-        let source_hash = source_hasher.finalize();
+        let backup_data = fs::read(backup_path).map_err(LazarusError::Io)?;
 
-        // 백업 해시 (압축 해제 후)
-        let backup_file = File::open(backup_path).map_err(LazarusError::Io)?;
-        let mut decoder = GzDecoder::new(backup_file);
-        let mut backup_data = Vec::new();
-        decoder.read_to_end(&mut backup_data).map_err(LazarusError::Io)?;
-        
-        let mut backup_hasher = Sha256::new();
-        backup_hasher.update(&backup_data);
-        let backup_hash = backup_hasher.finalize();
+        // 암호화된 백업이면 복호화 필요
+        let decompressed = if backup_path.to_string_lossy().ends_with(".enc") {
+            if let Some(ref crypto) = self.crypto {
+                let decrypted = crypto.decrypt(&backup_data)?;
+                let mut decoder = GzDecoder::new(&decrypted[..]);
+                let mut data = Vec::new();
+                decoder.read_to_end(&mut data).map_err(LazarusError::Io)?;
+                data
+            } else {
+                // 암호화된 백업인데 키가 없으면 비교 불가
+                return Ok(false);
+            }
+        } else {
+            let mut decoder = GzDecoder::new(&backup_data[..]);
+            let mut data = Vec::new();
+            decoder.read_to_end(&mut data).map_err(LazarusError::Io)?;
+            data
+        };
 
-        Ok(source_hash == backup_hash)
+        Ok(source_data == decompressed)
     }
 
-    /// 백업에서 복원
+    /// 복원
     pub fn restore(&self, backup_path: &Path) -> Result<()> {
-        let backup_file = File::open(backup_path).map_err(LazarusError::Io)?;
-        let mut decoder = GzDecoder::new(backup_file);
+        if !backup_path.exists() {
+            return Err(LazarusError::NotFound(
+                backup_path.display().to_string()
+            ));
+        }
+
+        let backup_data = fs::read(backup_path).map_err(LazarusError::Io)?;
+
+        // 암호화된 백업이면 복호화
+        let compressed = if backup_path.to_string_lossy().ends_with(".enc") {
+            if let Some(ref crypto) = self.crypto {
+                crypto.decrypt(&backup_data)?
+            } else {
+                return Err(LazarusError::Encryption);
+            }
+        } else {
+            backup_data
+        };
+
+        // gzip 압축 해제
+        let mut decoder = GzDecoder::new(&compressed[..]);
         let mut data = Vec::new();
         decoder.read_to_end(&mut data).map_err(LazarusError::Io)?;
 
+        // 복원
         fs::write(&self.source_path, data).map_err(LazarusError::Io)?;
-        tracing::info!("복원 완료: {} -> {}", backup_path.display(), self.source_path.display());
+        tracing::info!("복원 완료: {}", self.source_path.display());
 
         Ok(())
     }
 
-    /// 백업 정보
+    /// 백업 정보 가져오기
     pub fn info(&self) -> Result<BackupInfo> {
         let backups = self.list_backups()?;
-        let total_size: u64 = backups.iter()
-            .filter_map(|p| fs::metadata(p).ok())
-            .map(|m| m.len())
-            .sum();
-
+        let encrypted = self.crypto.is_some();
+        let latest = backups.first().cloned();
+        
         Ok(BackupInfo {
-            count: backups.len(),
-            total_size,
-            latest: backups.first().cloned(),
             backups,
+            encrypted,
+            latest,
         })
     }
 }
 
 /// 백업 정보
-#[derive(Debug)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct BackupInfo {
-    pub count: usize,
-    pub total_size: u64,
-    pub latest: Option<PathBuf>,
     pub backups: Vec<PathBuf>,
+    pub encrypted: bool,
+    pub latest: Option<PathBuf>,
 }

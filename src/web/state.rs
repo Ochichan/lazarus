@@ -29,7 +29,7 @@ pub struct AppState {
     pub data_dir: PathBuf,
     pub zim_dir: PathBuf,
     pub version: &'static str,
-    pub backup: Arc<BackupManager>,
+    pub backup: Arc<RwLock<BackupManager>>,
     pub security: Arc<RwLock<SecurityConfig>>,
     pub crypto: Arc<RwLock<Option<CryptoManager>>>,
     pub lang: Arc<RwLock<Lang>>,
@@ -123,7 +123,7 @@ impl AppState {
                     data_dir,
                     zim_dir,
                     version: env!("CARGO_PKG_VERSION"),
-                    backup: Arc::new(backup),
+                    backup: Arc::new(RwLock::new(backup)),
                     security: Arc::new(RwLock::new(security)),
                     crypto: Arc::new(RwLock::new(None)),  // PIN 입력 전까지 None
                 })

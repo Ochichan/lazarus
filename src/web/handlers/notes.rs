@@ -372,11 +372,17 @@ pub struct RemoveResult {
 pub async fn backup_info(
     State(state): State<AppState>,
 ) -> Result<Json<BackupInfoResponse>> {
-    let info = state.backup.info()?;
+    let backup = state.backup.read().await;
+    let info = backup.info()?;
+    let total_size: u64 = info.backups.iter()
+        .filter_map(|p| std::fs::metadata(p).ok())
+        .map(|m| m.len())
+        .sum();
     
     Ok(Json(BackupInfoResponse {
-        count: info.count,
-        total_size_kb: info.total_size / 1024,
+        count: info.backups.len(),
+        total_size_kb: total_size / 1024,
+        encrypted: info.encrypted,
         latest: info.latest.map(|p| p.display().to_string()),
         backups: info.backups.iter().map(|p| p.display().to_string()).collect(),
     }))
@@ -386,7 +392,8 @@ pub async fn backup_info(
 pub async fn backup_now(
     State(state): State<AppState>,
 ) -> Result<Json<BackupResult>> {
-    match state.backup.backup()? {
+    let backup = state.backup.read().await;
+    match backup.backup()? {
         Some(path) => Ok(Json(BackupResult {
             success: true,
             message: format!("백업 완료: {}", path.display()),
@@ -404,6 +411,7 @@ pub async fn backup_now(
 pub struct BackupInfoResponse {
     pub count: usize,
     pub total_size_kb: u64,
+    pub encrypted: bool,
     pub latest: Option<String>,
     pub backups: Vec<String>,
 }
@@ -420,7 +428,8 @@ pub async fn compact_db(
     State(state): State<AppState>,
 ) -> Result<Json<CompactResult>> {
     // 먼저 백업
-    if let Err(e) = state.backup.backup() {
+    let backup = state.backup.read().await;
+    if let Err(e) = backup.backup() {
         tracing::warn!("압축 전 백업 실패: {}", e);
     }
     

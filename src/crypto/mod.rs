@@ -19,6 +19,7 @@ const SALT_SIZE: usize = 16;
 const NONCE_SIZE: usize = 24;
 
 /// 암호화 매니저
+#[derive(Clone)]
 pub struct CryptoManager {
     /// 암호화 키 (32 bytes)
     key: [u8; 32],

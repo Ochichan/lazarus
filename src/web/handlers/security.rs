@@ -76,6 +76,10 @@ pub async fn unlock(
     
     // CryptoManager 생성 및 저장
     if let Some(crypto) = security.get_crypto(&req.pin)? {
+        // 백업에도 암호화 매니저 연결
+        let mut backup = state.backup.write().await;
+        backup.set_crypto(Some(crypto.clone()));
+        
         let mut crypto_lock = state.crypto.write().await;
         *crypto_lock = Some(crypto);
     }
@@ -92,6 +96,10 @@ pub async fn lock(
 ) -> Result<Json<ApiResponse>> {
     let mut crypto = state.crypto.write().await;
     *crypto = None;
+    
+    // 백업 암호화도 해제
+    let mut backup = state.backup.write().await;
+    backup.set_crypto(None);
     
     Ok(Json(ApiResponse {
         success: true,
