@@ -3,6 +3,7 @@
 //! 모든 엔드포인트 정의
 
 use axum::{
+    middleware,
     routing::{get, post, delete},
     Router,
 };
@@ -13,6 +14,7 @@ use tower_http::{
 };
 
 use super::handlers;
+use super::middleware::require_unlock;
 use super::state::AppState;
 
 /// 라우터 생성
@@ -92,6 +94,7 @@ pub fn create_router(state: AppState) -> Router {
         // === 미들웨어 ===
         .layer(CompressionLayer::new())
         .layer(TraceLayer::new_for_http())
+        .layer(middleware::from_fn_with_state(state.clone(), require_unlock))
         
         // === 상태 주입 ===
         .with_state(state)
