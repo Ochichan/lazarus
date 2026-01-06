@@ -1,7 +1,7 @@
 //! Bengali (বাংলা) translations
 
-use std::collections::HashMap;
 use super::Translations;
+use std::collections::HashMap;
 
 pub fn translations() -> Translations {
     let mut data = HashMap::new();
@@ -76,7 +76,10 @@ pub fn translations() -> Translations {
     data.insert("notes.package_author", "লেখক");
     data.insert("notes.package_author_placeholder", "আপনার নাম");
     data.insert("notes.package_description", "বিবরণ");
-    data.insert("notes.package_description_placeholder", "প্যাকেজ বিবরণ (ঐচ্ছিক)");
+    data.insert(
+        "notes.package_description_placeholder",
+        "প্যাকেজ বিবরণ (ঐচ্ছিক)",
+    );
     data.insert("notes.drop_file", ".laz ফাইল এখানে ড্রপ করুন");
     data.insert("notes.or", "অথবা");
     data.insert("notes.select_file", "ফাইল নির্বাচন");
@@ -99,7 +102,10 @@ pub fn translations() -> Translations {
     data.insert("wiki.status", "অবস্থা");
     data.insert("wiki.loaded", "লোড হয়েছে");
     data.insert("wiki.directory", "ZIM ডিরেক্টরি");
-    data.insert("wiki.directory_hint", "এই ফোল্ডারে .zim ফাইল কপি করে রিফ্রেশ করুন");
+    data.insert(
+        "wiki.directory_hint",
+        "এই ফোল্ডারে .zim ফাইল কপি করে রিফ্রেশ করুন",
+    );
     data.insert("wiki.refresh", "রিফ্রেশ");
     data.insert("wiki.open_folder", "ফোল্ডার খুলুন");
     data.insert("wiki.add", "ZIM যোগ করুন");
@@ -149,7 +155,10 @@ pub fn translations() -> Translations {
     data.insert("srs.streak_days", "ধারা");
     data.insert("srs.start_review", "পর্যালোচনা শুরু");
     data.insert("srs.no_cards_yet", "এখনো কোনো কার্ড নেই।");
-    data.insert("srs.create_hint", "একটি নোট খুলুন এবং \"কার্ড তৈরি\" বোতাম ক্লিক করুন।");
+    data.insert(
+        "srs.create_hint",
+        "একটি নোট খুলুন এবং \"কার্ড তৈরি\" বোতাম ক্লিক করুন।",
+    );
     data.insert("srs.interval", "ব্যবধান");
     data.insert("srs.days", " দিন");
     data.insert("srs.delete_card_confirm", "এই কার্ড মুছবেন?");

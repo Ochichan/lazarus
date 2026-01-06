@@ -1,7 +1,7 @@
 //! Turkish (Türkçe) translations
 
-use std::collections::HashMap;
 use super::Translations;
+use std::collections::HashMap;
 
 pub fn translations() -> Translations {
     let mut data = HashMap::new();
@@ -47,7 +47,10 @@ pub fn translations() -> Translations {
     data.insert("editor.save_complete", "💾 Kaydedildi!");
     data.insert("editor.encrypt_on", "🔒 Şifreleme etkin");
     data.insert("editor.encrypt_off", "🔓 Şifreleme devre dışı");
-    data.insert("editor.pin_required", "Önce PIN ayarlayın (Güvenlik menüsü)");
+    data.insert(
+        "editor.pin_required",
+        "Önce PIN ayarlayın (Güvenlik menüsü)",
+    );
     data.insert("editor.pin_locked", "Önce PIN ile kilidi açın");
 
     // Notes list
@@ -59,7 +62,10 @@ pub fn translations() -> Translations {
     data.insert("notes.no_title", "Başlıksız");
     data.insert("notes.edit", "Düzenle");
     data.insert("notes.delete", "Sil");
-    data.insert("notes.delete_confirm", "Silmek istediğinizden emin misiniz?");
+    data.insert(
+        "notes.delete_confirm",
+        "Silmek istediğinizden emin misiniz?",
+    );
     data.insert("notes.encrypted", "Şifreli");
     data.insert("notes.created", "Oluşturuldu");
     data.insert("notes.updated", "Güncellendi");
@@ -76,7 +82,10 @@ pub fn translations() -> Translations {
     data.insert("notes.package_author", "Yazar");
     data.insert("notes.package_author_placeholder", "Adınız");
     data.insert("notes.package_description", "Açıklama");
-    data.insert("notes.package_description_placeholder", "Paket açıklaması (isteğe bağlı)");
+    data.insert(
+        "notes.package_description_placeholder",
+        "Paket açıklaması (isteğe bağlı)",
+    );
     data.insert("notes.drop_file", ".laz dosyasını buraya bırakın");
     data.insert("notes.or", "veya");
     data.insert("notes.select_file", "Dosya Seç");
@@ -89,7 +98,10 @@ pub fn translations() -> Translations {
     data.insert("search.no_results", "Sonuç bulunamadı");
     data.insert("search.try_different", "Farklı bir terim deneyin");
     data.insert("search.tips", "Arama İpuçları");
-    data.insert("search.tip1", "Birden fazla kelime tüm terimleri içeren sonuçları arar");
+    data.insert(
+        "search.tip1",
+        "Birden fazla kelime tüm terimleri içeren sonuçları arar",
+    );
     data.insert("search.tip2", "Hem notlarda hem Vikipedi'de arar");
     data.insert("search.tip3", "Başlık eşleşmeleri önce gösterilir");
 
@@ -99,7 +111,10 @@ pub fn translations() -> Translations {
     data.insert("wiki.status", "Durum");
     data.insert("wiki.loaded", "yüklendi");
     data.insert("wiki.directory", "ZIM Dizini");
-    data.insert("wiki.directory_hint", "Bu klasöre .zim dosyalarını kopyalayın ve yenileyin");
+    data.insert(
+        "wiki.directory_hint",
+        "Bu klasöre .zim dosyalarını kopyalayın ve yenileyin",
+    );
     data.insert("wiki.refresh", "Yenile");
     data.insert("wiki.open_folder", "Klasörü Aç");
     data.insert("wiki.add", "ZIM Ekle");
@@ -107,7 +122,10 @@ pub fn translations() -> Translations {
     data.insert("wiki.loaded_files", "Yüklenen ZIM Dosyaları");
     data.insert("wiki.remove", "Kaldır");
     data.insert("wiki.no_zim", "ZIM dosyası yok");
-    data.insert("wiki.no_zim_hint", "Vikipedi kullanmak için ZIM dosyası ekleyin");
+    data.insert(
+        "wiki.no_zim_hint",
+        "Vikipedi kullanmak için ZIM dosyası ekleyin",
+    );
     data.insert("wiki.no_zim_loaded", "ZIM dosyası yüklenmedi");
     data.insert("wiki.loaded_zims", "Yüklenen ZIM'ler");
     data.insert("wiki.add_btn", "Ekle");
@@ -149,10 +167,16 @@ pub fn translations() -> Translations {
     data.insert("srs.streak_days", "Seri");
     data.insert("srs.start_review", "Tekrara Başla");
     data.insert("srs.no_cards_yet", "Henüz kart yok.");
-    data.insert("srs.create_hint", "Bir not açın ve \"Kart Oluştur\" düğmesine tıklayın.");
+    data.insert(
+        "srs.create_hint",
+        "Bir not açın ve \"Kart Oluştur\" düğmesine tıklayın.",
+    );
     data.insert("srs.interval", "Aralık");
     data.insert("srs.days", " gün");
-    data.insert("srs.delete_card_confirm", "Bu kartı silmek istiyor musunuz?");
+    data.insert(
+        "srs.delete_card_confirm",
+        "Bu kartı silmek istiyor musunuz?",
+    );
     data.insert("srs.delete_failed", "Silme başarısız");
 
     // Security

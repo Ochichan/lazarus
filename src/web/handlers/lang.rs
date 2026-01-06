@@ -1,15 +1,11 @@
 //! 언어 변경 핸들러
 
-use axum::{
-    extract::State,
-    response::Redirect,
-    Form,
-};
+use axum::{extract::State, response::Redirect, Form};
 use serde::Deserialize;
 
+use crate::error::Result;
 use crate::i18n::Lang;
 use crate::web::state::AppState;
-use crate::error::Result;
 
 #[derive(Deserialize)]
 pub struct LangForm {
