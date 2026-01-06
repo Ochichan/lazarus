@@ -10,3 +10,4 @@ pub mod security;
 pub mod srs;
 pub mod sync;
 pub mod wiki;
+pub mod graph;

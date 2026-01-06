@@ -2,6 +2,7 @@
 // TODO: Clean up dead code in v0.3
 #![allow(dead_code, unused_imports, unused_variables, unused_assignments)]
 
+mod links;
 mod crypto;
 mod curriculum;
 mod db;
@@ -85,6 +86,9 @@ async fn main() -> Result<()> {
     }
 
     let state = web::state::AppState::new(args.data.clone(), zim_paths).await?;
+
+    // 링크 인덱스 빌드 (이거 추가!)
+    state.build_link_index().await?;
 
     // 라우터 생성
     let app = web::router::create_router(state);

@@ -5,6 +5,7 @@ use axum::{
     http::StatusCode,
     Json,
 };
+use axum::response::{Redirect, IntoResponse};
 use serde::{Deserialize, Serialize};
 
 use crate::db::CompactResult;
@@ -129,6 +130,12 @@ pub async fn create_form(
         let mut search = state.search.write().await;
         search.index_note(id, &note.title, &note.content, &note.tags)?;
     }
+	//링크 인덱스 업데이트
+    {
+        let mut index = state.link_index.write().await;
+        index.register_note(id, &note.title);
+        index.update_links(id, &note.content);
+    }
 
     tracing::info!(
         "노트 생성 (Form): id={}, encrypted={}, type={:?}",
@@ -138,6 +145,7 @@ pub async fn create_form(
     );
     Ok(axum::response::Redirect::to(&format!("/notes/{}", id)))
 }
+    
 /// GET /api/notes/:id
 pub async fn get(State(state): State<AppState>, Path(id): Path<u64>) -> Result<Json<NoteResponse>> {
     let db = state.db.read().await;
@@ -549,4 +557,31 @@ pub struct LockResponse {
     pub success: bool,
     pub locked: bool,
     pub message: String,
+}
+
+/// 제목으로 노트 조회 (링크 클릭 시)
+pub async fn get_by_title(
+    State(state): State<AppState>,
+    Path(title): Path<String>,
+) -> impl IntoResponse {
+    // URL 디코딩 (실패하면 원본 사용)
+    let decoded_title = urlencoding::decode(&title)
+        .map(|s| s.to_string())
+        .unwrap_or(title);
+    
+    // 링크 인덱스에서 ID 찾기
+    let note_id = {
+        let index = state.link_index.read().await;
+        index.get_id_by_title(&decoded_title)
+    };
+    
+    match note_id {
+        Some(id) => {
+            Redirect::to(&format!("/notes/{}", id))
+        }
+        None => {
+            let encoded = urlencoding::encode(&decoded_title);
+            Redirect::to(&format!("/notes/new?title={}", encoded))
+        }
+    }
 }

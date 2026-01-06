@@ -23,6 +23,9 @@ pub fn create_router(state: AppState) -> Router {
         //백업
         .route("/api/backup/info", get(handlers::notes::backup_info))
         .route("/api/backup/now", post(handlers::notes::backup_now))
+        // 그래프 라우트 추가
+        .route("/graph", get(handlers::pages::graph_view))
+        .route("/api/graph", get(handlers::graph::get_graph_data))
         // SRS 페이지
         .route("/srs", get(handlers::srs::review_page))
         .route("/srs/cards", get(handlers::srs::cards_page))
@@ -76,6 +79,8 @@ pub fn create_router(state: AppState) -> Router {
             "/notes/split/:id",
             get(handlers::pages::notes_split_with_id),
         )
+        // === 링크 라우트 ===
+        .route("/notes/by-title/:title", get(handlers::notes::get_by_title))
         // === API 라우트 ===
         .route("/api/notes", get(handlers::notes::list))
         .route("/api/notes", post(handlers::notes::create_form))

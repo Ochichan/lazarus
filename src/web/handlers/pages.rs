@@ -5,6 +5,8 @@
 use crate::error::{LazarusError, Result};
 use crate::i18n::all_translations;
 use crate::web::state::AppState;
+use crate::links;
+
 use ammonia::clean;
 use askama::Template;
 use axum::{
@@ -70,6 +72,35 @@ struct NoteListItem {
     updated_at: String,
     note_type: String,
     note_type_emoji: String,
+}
+
+// 템플릿 구조체 추가
+#[derive(Template)]
+#[template(path = "graph.html")]
+struct GraphTemplate {
+    version: &'static str,
+    lang: &'static str,
+    t: HashMap<String, String>,
+}
+
+/// GET /graph
+pub async fn graph_view(
+    State(state): State<AppState>,
+) -> Result<Html<String>> {
+    let lang = state.get_lang().await;
+    let t = all_translations(lang);
+    
+    let template = GraphTemplate {
+        version: state.version,
+        lang: lang.code(),
+        t,
+    };
+    
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
 }
 
 /// GET /notes
@@ -165,6 +196,7 @@ struct NotesViewTemplate {
     note: NoteViewData,
     lang: &'static str,
     t: HashMap<String, String>,
+    backlinks: Vec<BacklinkInfo>, 
 }
 
 struct NoteViewData {
@@ -174,6 +206,11 @@ struct NoteViewData {
     created_at: String,
     updated_at: String,
     tags: Vec<String>,
+}
+
+struct BacklinkInfo {
+    id: u64,
+    title: String,
 }
 
 /// GET /notes/:id
@@ -186,6 +223,25 @@ pub async fn notes_view(
         .get(id)?
         .ok_or_else(|| LazarusError::NotFound(format!("Note ID: {}", id)))?;
 
+    // 백링크 조회
+    let backlinks: Vec<BacklinkInfo> = {
+        let index = state.link_index.read().await;
+        let backlink_ids = index.get_backlinks(&note.title);
+        
+        backlink_ids.iter()
+            .filter_map(|bid| {
+                index.get_title_by_id(*bid).map(|title| BacklinkInfo {
+                    id: *bid,
+                    title: title.to_string(),
+                })
+            })
+            .collect()
+    };
+
+    // [[링크]] → HTML로 렌더링
+    let existing_titles = state.link_index.read().await.existing_titles();
+    let rendered_content = links::render_links(&note.content, Some(&existing_titles));
+
     let lang = state.get_lang().await;
     let t = all_translations(lang);
 
@@ -194,13 +250,14 @@ pub async fn notes_view(
         note: NoteViewData {
             id: note.id,
             title: note.title,
-            content: clean(&note.content),
+            content: clean(&rendered_content),
             created_at: note.created_at.format("%Y-%m-%d %H:%M").to_string(),
             updated_at: note.updated_at.format("%Y-%m-%d %H:%M").to_string(),
             tags: note.tags,
         },
         lang: lang.code(),
         t,
+        backlinks,
     };
     Ok(Html(
         template

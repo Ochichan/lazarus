@@ -21,8 +21,22 @@
         {% endif %}
     </header>
     <div class="note-content">
-        {{ note.content }}
+        {{ note.content|safe }}
     </div>
+    
+    {% if !backlinks.is_empty() %}
+    <section class="backlinks">
+        <h3>🔗 Backlinks ({{ backlinks.len() }})</h3>
+        <ul>
+            {% for link in backlinks %}
+            <li>
+                <a href="/notes/{{ link.id }}">{{ link.title }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+    
     <footer class="note-actions">
         <a href="/notes/{{ note.id }}/edit" class="btn">✏️ {{ t["notes.edit"] }}</a>
         <button class="btn btn-accent" id="extract-cards" data-note-id="{{ note.id }}">
@@ -49,36 +63,43 @@
     max-width: 800px;
     margin: 0 auto;
 }
+
 .note-header {
     margin-bottom: 2rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border);
 }
+
 .note-header h1 {
     margin-bottom: 0.5rem;
 }
+
 .note-meta {
     color: var(--text-secondary);
     font-size: 0.9rem;
     display: flex;
     gap: 1rem;
 }
+
 .note-tags {
     margin-top: 1rem;
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
 }
+
 .tag {
     background: var(--bg-secondary);
     padding: 0.25rem 0.75rem;
     border-radius: 1rem;
     font-size: 0.875rem;
 }
+
 .note-content {
     line-height: 1.8;
     white-space: pre-wrap;
 }
+
 .note-actions {
     margin-top: 2rem;
     padding-top: 1rem;
@@ -86,15 +107,61 @@
     display: flex;
     gap: 0.5rem;
 }
+
+.backlinks {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 0.5rem;
+}
+
+.backlinks h3 {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.backlinks ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.backlinks li {
+    padding: 0.25rem 0;
+}
+
+.backlinks a {
+    color: var(--accent);
+}
+
+/* 노트 링크 */
+.note-link {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--accent);
+}
+
+.note-link:hover {
+    border-bottom-style: solid;
+}
+
+.note-link-missing {
+    color: #e17055;
+    border-bottom-color: #e17055;
+}
+
 .lang-selector {
     position: fixed;
     bottom: 1rem;
     right: 1rem;
 }
+
 .btn-sm {
     padding: 0.25rem 0.75rem;
     font-size: 0.875rem;
 }
+
 </style>
 
 <script>
