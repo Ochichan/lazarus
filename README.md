@@ -120,8 +120,7 @@ Lazarus is a lightweight, offline-capable personal knowledge management system b
 | Metric | Value |
 |--------|-------|
 | Binary size | **7 MB** |
-| Idle RAM (no ZIM) | **~10 MB** |
-| Idle RAM (111GB ZIM) | **3.6 MB** |
+| Idle RAM | **~4 MB** |
 | Cold start | **< 100ms** |
 | Search (notes) | **< 50ms** |
 | Search (111GB Wikipedia) | **< 300ms** |
@@ -397,7 +396,7 @@ data/
 
 ### v0.3 - Feature Expansion
 - [ ] Additional languages (Arabic, French, Spanish, Swahili)
-- [ ] FSRS personalization (parameter optimization)
+- [x] FSRS personalization (parameter optimization)
 - [ ] Note linking (`[[note title]]`)
 - [ ] Graph view (note connections)
 
