@@ -1,11 +1,6 @@
 // Temporarily allow warnings for v0.2 release
 // TODO: Clean up dead code in v0.3
-#![allow(
-    dead_code,
-    unused_imports,
-    unused_variables,
-    unused_assignments
-)]
+#![allow(dead_code, unused_imports, unused_variables, unused_assignments)]
 
 mod crypto;
 mod curriculum;
