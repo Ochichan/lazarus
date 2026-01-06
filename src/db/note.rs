@@ -48,7 +48,7 @@ pub enum NoteType {
 }
 
 impl NoteType {
-    pub fn emoji(&self) -> &'static str {
+    pub fn emoji(self) -> &'static str {
         match self {
             NoteType::Note => "📝",
             NoteType::Journal => "📔",
@@ -65,7 +65,7 @@ impl NoteType {
             NoteType::Idea => "Idea",
         }
     }
-    pub fn to_u8(&self) -> u8 {
+    pub fn to_u8(self) -> u8 {
         match self {
             NoteType::Note => 0,
             NoteType::Journal => 1,
