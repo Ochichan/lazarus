@@ -302,7 +302,7 @@ pub async fn get_article(
         // HTML이면 네비게이션 추가
         if content_type.contains("html") {
             let html = String::from_utf8_lossy(&content);
-            let title = decoded_url.split('/').last().unwrap_or(&decoded_url);
+            let title = decoded_url.split('/').next_back().unwrap_or(&decoded_url);
             let wrapped = wrap_wiki_html(&html, title, &zim_names, &selected_name);
             return Ok(Html(wrapped).into_response());
         }

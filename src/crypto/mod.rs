@@ -253,14 +253,14 @@ impl SecurityConfig {
         if !path.exists() {
             return Ok(Self::default());
         }
-        let content = fs::read_to_string(path).map_err(|e| LazarusError::Io(e))?;
-        serde_json::from_str(&content).map_err(|e| LazarusError::JsonParse(e))
+        let content = fs::read_to_string(path).map_err(LazarusError::Io)?;
+        serde_json::from_str(&content).map_err(LazarusError::JsonParse)
     }
 
     /// 파일에 저장
     pub fn save(&self, path: &Path) -> Result<()> {
-        let content = serde_json::to_string_pretty(self).map_err(|e| LazarusError::JsonParse(e))?;
-        fs::write(path, content).map_err(|e| LazarusError::Io(e))?;
+        let content = serde_json::to_string_pretty(self).map_err(LazarusError::JsonParse)?;
+        fs::write(path, content).map_err(LazarusError::Io)?;
         Ok(())
     }
 

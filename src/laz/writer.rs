@@ -13,7 +13,7 @@ use crate::error::{LazarusError, Result};
 impl LazPackage {
     /// .laz 파일로 내보내기
     pub fn export<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
-        let file = File::create(path.as_ref()).map_err(|e| LazarusError::Io(e))?;
+        let file = File::create(path.as_ref()).map_err(LazarusError::Io)?;
 
         let mut zip = ZipWriter::new(file);
         let mut manifest_files = std::collections::HashMap::new();
@@ -23,7 +23,7 @@ impl LazPackage {
 
         zip.start_file("mimetype", options_store).map_err(zip_err)?;
         zip.write_all(MIMETYPE.as_bytes())
-            .map_err(|e| LazarusError::Io(e))?;
+            .map_err(LazarusError::Io)?;
         manifest_files.insert("mimetype".to_string(), hash_bytes(MIMETYPE.as_bytes()));
 
         // 2. meta.json
@@ -67,7 +67,7 @@ impl LazPackage {
         zip.start_file("manifest.json", options_deflate)
             .map_err(zip_err)?;
         zip.write_all(manifest_json.as_bytes())
-            .map_err(|e| LazarusError::Io(e))?;
+            .map_err(LazarusError::Io)?;
 
         zip.finish().map_err(zip_err)?;
 
@@ -100,7 +100,7 @@ impl LazPackage {
 
         let zip_path = format!("assets/{}", filename);
         zip.start_file(&zip_path, options).map_err(zip_err)?;
-        zip.write_all(&data).map_err(|e| LazarusError::Io(e))?;
+        zip.write_all(&data).map_err(LazarusError::Io)?;
 
         manifest.insert(zip_path, hash_bytes(&data));
         Ok(())
@@ -118,7 +118,7 @@ fn write_json(
 
     zip.start_file(path, options).map_err(zip_err)?;
     zip.write_all(content.as_bytes())
-        .map_err(|e| LazarusError::Io(e))?;
+        .map_err(LazarusError::Io)?;
 
     manifest.insert(path.to_string(), hash_bytes(content.as_bytes()));
     Ok(())
