@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.75+-orange)](https://www.rust-lang.org/)
 ![Binary](https://img.shields.io/badge/Binary-7.4MB-blue)
-![RAM](https://img.shields.io/badge/RAM-5MB-brightgreen)
+![RAM](https://img.shields.io/badge/RAM-8MB-brightgreen)
 ![Efficiency](https://img.shields.io/badge/Efficiency-Insane-red)
 
 ---
