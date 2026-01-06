@@ -23,7 +23,7 @@
 open http://127.0.0.1:8080
 ```
 
-**7.4MB binary** · **5MB RAM** · **4ms cold start** · **115GB Wikipedia** · **17 languages** · **Fully offline**
+**7.4MB binary** · **4MB RAM** · **4ms cold start** · **115GB Wikipedia** · **17 languages** · **Fully offline**
 
 ---
 
