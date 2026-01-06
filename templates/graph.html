@@ -68,6 +68,17 @@
     pointer-events: none;
 }
 
+/* 외톨이 노드 (연결 없음) */
+.node.orphan circle {
+    fill: #636e72;
+    stroke: #e17055;
+    stroke-dasharray: 4 2;
+}
+
+.node.orphan text {
+    fill: #b2bec3;
+}
+
 .link {
     stroke: var(--border);
     stroke-opacity: 0.6;
@@ -105,14 +116,14 @@ function renderGraph(data) {
     
     // 기존 SVG 제거
     d3.select('#graph svg').remove();
-    
+
     const svg = d3.select('#graph')
         .append('svg')
         .attr('width', width)
         .attr('height', height);
     
     const g = svg.append('g');
-    
+
     // 줌 설정
     const zoom = d3.zoom()
         .scaleExtent([0.1, 4])
@@ -132,6 +143,16 @@ function renderGraph(data) {
     document.getElementById('reset').onclick = () => {
         svg.transition().call(zoom.transform, d3.zoomIdentity);
     };
+
+    // 노드별 연결 수 계산 (외톨이 감지용)
+    const connectionCount = {};
+    data.nodes.forEach(n => connectionCount[n.id] = 0);
+    data.edges.forEach(e => {
+        const sourceId = e.source.id !== undefined ? e.source.id : e.source;
+        const targetId = e.target.id !== undefined ? e.target.id : e.target;
+        connectionCount[sourceId]++;
+        connectionCount[targetId]++;
+    });
     
     // Force simulation
     const simulation = d3.forceSimulation(data.nodes)
@@ -150,13 +171,13 @@ function renderGraph(data) {
         .append('line')
         .attr('class', 'link');
     
-    // 노드 그리기
+    // 노드 그리기 (외톨이는 다른 스타일)
     const node = g.append('g')
         .selectAll('g')
         .data(data.nodes)
         .enter()
         .append('g')
-        .attr('class', 'node')
+        .attr('class', d => connectionCount[d.id] === 0 ? 'node orphan' : 'node')
         .call(d3.drag()
             .on('start', dragstarted)
             .on('drag', dragged)

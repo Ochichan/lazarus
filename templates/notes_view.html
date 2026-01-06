@@ -5,50 +5,72 @@
 {% block version %}{{ version }}{% endblock %}
 {% block title %}{{ note.title }} - Lazarus{% endblock %}
 {% block content %}
-<article class="note-view">
-    <header class="note-header">
-        <h1>{{ note.title }}</h1>
-        <div class="note-meta">
-            <time>{{ t["notes.created"] }}: {{ note.created_at }}</time>
-            <time>{{ t["notes.updated"] }}: {{ note.updated_at }}</time>
+<div class="note-layout">
+    <article class="note-view">
+        <header class="note-header">
+            <h1>{{ note.title }}</h1>
+            <div class="note-meta">
+                <time>{{ t["notes.created"] }}: {{ note.created_at }}</time>
+                <time>{{ t["notes.updated"] }}: {{ note.updated_at }}</time>
+            </div>
+            {% if !note.tags.is_empty() %}
+            <div class="note-tags">
+                {% for tag in note.tags %}
+                <span class="tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </header>
+        <div class="note-content">
+            {{ note.content|safe }}
         </div>
-        {% if !note.tags.is_empty() %}
-        <div class="note-tags">
-            {% for tag in note.tags %}
-            <span class="tag">{{ tag }}</span>
-            {% endfor %}
-        </div>
+        
+        <footer class="note-actions">
+            <a href="/notes/{{ note.id }}/edit" class="btn">✏️ {{ t["notes.edit"] }}</a>
+            <button class="btn btn-accent" id="extract-cards" data-note-id="{{ note.id }}">
+                🧠 {{ t["srs.create_cards"] }}
+            </button>
+            <button
+                class="btn btn-danger"
+                hx-delete="/api/notes/{{ note.id }}"
+                hx-confirm="{{ t["notes.delete_confirm"] }}"
+            >🗑️ {{ t["notes.delete"] }}</button>
+        </footer>
+    </article>
+    
+    <!-- 연결된 노트 사이드바 -->
+    <aside class="note-sidebar">
+        {% if !outgoing_links.is_empty() %}
+        <section class="link-section">
+            <h3>📤 Links ({{ outgoing_links.len() }})</h3>
+            <ul>
+                {% for link in outgoing_links %}
+                <li><a href="/notes/{{ link.id }}">{{ link.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </section>
         {% endif %}
-    </header>
-    <div class="note-content">
-        {{ note.content|safe }}
-    </div>
-    
-    {% if !backlinks.is_empty() %}
-    <section class="backlinks">
-        <h3>🔗 Backlinks ({{ backlinks.len() }})</h3>
-        <ul>
-            {% for link in backlinks %}
-            <li>
-                <a href="/notes/{{ link.id }}">{{ link.title }}</a>
-            </li>
-            {% endfor %}
-        </ul>
-    </section>
-    {% endif %}
-    
-    <footer class="note-actions">
-        <a href="/notes/{{ note.id }}/edit" class="btn">✏️ {{ t["notes.edit"] }}</a>
-        <button class="btn btn-accent" id="extract-cards" data-note-id="{{ note.id }}">
-            🧠 {{ t["srs.create_cards"] }}
-        </button>
-        <button
-            class="btn btn-danger"
-            hx-delete="/api/notes/{{ note.id }}"
-            hx-confirm="{{ t["notes.delete_confirm"] }}"
-        >🗑️ {{ t["notes.delete"] }}</button>
-    </footer>
-</article>
+        
+        {% if !backlinks.is_empty() %}
+        <section class="link-section">
+            <h3>📥 Backlinks ({{ backlinks.len() }})</h3>
+            <ul>
+                {% for link in backlinks %}
+                <li><a href="/notes/{{ link.id }}">{{ link.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
+        
+        {% if outgoing_links.is_empty() && backlinks.is_empty() %}
+        <section class="link-section empty">
+            <p>🔗 [[링크]]로 다른 노트와 연결해보세요!</p>
+        </section>
+        {% endif %}
+        
+        <a href="/graph" class="graph-link">🕸️ 그래프에서 보기</a>
+    </aside>
+</div>
 
 <!-- 언어 선택 -->
 <section class="lang-selector">
@@ -59,9 +81,16 @@
 </section>
 
 <style>
-.note-view {
-    max-width: 800px;
+.note-layout {
+    display: grid;
+    grid-template-columns: 1fr 250px;
+    gap: 2rem;
+    max-width: 1200px;
     margin: 0 auto;
+}
+
+.note-view {
+    min-width: 0;
 }
 
 .note-header {
@@ -106,33 +135,67 @@
     border-top: 1px solid var(--border);
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
-.backlinks {
-    margin-top: 2rem;
-    padding: 1rem;
+/* 사이드바 */
+.note-sidebar {
+    position: sticky;
+    top: 1rem;
+    height: fit-content;
+}
+
+.link-section {
     background: var(--bg-secondary);
     border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
 }
 
-.backlinks h3 {
+.link-section h3 {
+    font-size: 0.85rem;
     color: var(--text-secondary);
-    font-size: 0.9rem;
     margin-bottom: 0.5rem;
 }
 
-.backlinks ul {
+.link-section ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.backlinks li {
+.link-section li {
     padding: 0.25rem 0;
 }
 
-.backlinks a {
+.link-section a {
     color: var(--accent);
+    text-decoration: none;
+}
+
+.link-section a:hover {
+    text-decoration: underline;
+}
+
+.link-section.empty {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.graph-link {
+    display: block;
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: 0.5rem;
+    color: var(--accent);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.graph-link:hover {
+    background: var(--accent);
+    color: white;
 }
 
 /* 노트 링크 */
@@ -151,6 +214,18 @@
     border-bottom-color: #e17055;
 }
 
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .note-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .note-sidebar {
+        position: static;
+        order: -1;
+    }
+}
+
 .lang-selector {
     position: fixed;
     bottom: 1rem;
@@ -161,7 +236,6 @@
     padding: 0.25rem 0.75rem;
     font-size: 0.875rem;
 }
-
 </style>
 
 <script>

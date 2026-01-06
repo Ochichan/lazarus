@@ -195,6 +195,7 @@ struct NotesViewTemplate {
     lang: &'static str,
     t: HashMap<String, String>,
     backlinks: Vec<BacklinkInfo>,
+    outgoing_links: Vec<BacklinkInfo>,
 }
 
 struct NoteViewData {
@@ -236,6 +237,20 @@ pub async fn notes_view(
             })
             .collect()
     };
+    
+    let outgoing_links: Vec<BacklinkInfo> = {
+    let index = state.link_index.read().await;
+    let titles = index.get_outgoing_links(id);
+    
+    titles.iter()
+        .filter_map(|title| {
+            index.get_id_by_title(title).map(|id| BacklinkInfo {
+                id,
+                title: title.clone(),
+            })
+        })
+        .collect()
+};
 
     // [[링크]] → HTML로 렌더링
     let existing_titles = state.link_index.read().await.existing_titles();
@@ -257,6 +272,7 @@ pub async fn notes_view(
         lang: lang.code(),
         t,
         backlinks,
+        outgoing_links,
     };
     Ok(Html(
         template
