@@ -19,7 +19,7 @@
 open http://127.0.0.1:8080
 ```
 
-**7MB binary** · **10MB RAM** · **111GB Wikipedia instant load** · **Fully offline**
+**7MB binary** · **4MB RAM** · **111GB Wikipedia instant load** · **Fully offline**
 
 ---
 
@@ -44,9 +44,9 @@ Lazarus is a lightweight, offline-capable personal knowledge management system b
 
 | Feature | Lazarus | Others |
 |---------|---------|--------|
-| RAM usage (idle) | **~10 MB** | 200-500 MB |
+| RAM usage (idle) | **~4 MB** | 200-500 MB |
 | Binary size | **7 MB** | 150-300 MB |
-| 111GB Wikipedia | ✅ 5MB RAM | ❌ Impossible |
+| 115GB ZIM loaded | ✅ 4.3MB RAM | ❌ Impossible |
 | Offline-first | ✅ Always | ⚠️ Limited |
 | No account needed | ✅ | ❌ |
 | Self-contained binary | ✅ | ❌ |
@@ -65,7 +65,7 @@ Lazarus is a lightweight, offline-capable personal knowledge management system b
 - **Note types**: 📝 Note · 📔 Journal · 📖 Review · 💡 Idea
 
 ### 📚 Wikipedia Integration (ZIM Reader)
-- Load **entire Wikipedia** (111GB) with **3.6MB RAM**
+- Load **entire Wikipedia** (115GB) with **4.3MB RAM** (measured)
 - Memory-mapped I/O — no loading, instant access
 - Fuzzy search across millions of articles < 1 second
 - Multiple ZIM files simultaneously (English + Korean + Medical, etc.)
@@ -124,7 +124,7 @@ Lazarus is a lightweight, offline-capable personal knowledge management system b
 | Metric | Value |
 |--------|-------|
 | Binary size | **7 MB** |
-| Idle RAM | **~4 MB** |
+| Idle RAM (Private_Dirty) | **~4 MB** |
 | Cold start | **< 100ms** |
 | Search (notes) | **< 50ms** |
 | Search (111GB Wikipedia) | **< 300ms** |
