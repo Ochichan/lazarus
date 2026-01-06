@@ -44,19 +44,11 @@ pub struct Card {
 /// 카드 타입
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum CardType {
     /// 기본 Q&A
-    Basic,
-    /// 빈칸 채우기
-    Cloze,
-    /// 정의
-    Definition,
-}
-
-impl Default for CardType {
-    fn default() -> Self {
-        Self::Basic
-    }
+    #[default]
+    Basic, Cloze, Multiplechoice, Image
 }
 
 /// SRS 학습 데이터 (FSRS 알고리즘)

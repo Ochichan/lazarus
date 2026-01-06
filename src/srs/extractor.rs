@@ -87,11 +87,11 @@ fn extract_qa_headers(note_id: u64, content: &str) -> Vec<Card> {
 
             // 다음 줄들에서 답변 추출 (다음 헤더 전까지)
             let mut answer_lines = Vec::new();
-            for j in (i + 1)..lines.len() {
-                if lines[j].starts_with('#') {
+            for line in lines.iter().skip(i + 1) {
+                if line.starts_with('#') {
                     break;
                 }
-                let trimmed = lines[j].trim();
+                let trimmed = line.trim();
                 if !trimmed.is_empty() {
                     answer_lines.push(trimmed);
                 }

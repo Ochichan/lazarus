@@ -128,21 +128,11 @@ pub struct SrsData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum CardType {
     /// 기본 Q&A
-    Basic,
-    /// 빈칸 채우기
-    Cloze,
-    /// 객관식
-    MultipleChoice,
-    /// 이미지 기반
-    Image,
-}
-
-impl Default for CardType {
-    fn default() -> Self {
-        Self::Basic
-    }
+    #[default]
+    Basic, Cloze, Multiplechoice, Image
 }
 
 /// 노트 콘텐츠
