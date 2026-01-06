@@ -1,11 +1,15 @@
-//! 언어 설정 핸들러
+//! 언어 변경 핸들러
 
-use axum::{extract::State, response::Redirect, Form};
+use axum::{
+    extract::State,
+    response::Redirect,
+    Form,
+};
 use serde::Deserialize;
 
-use crate::error::Result;
 use crate::i18n::Lang;
 use crate::web::state::AppState;
+use crate::error::Result;
 
 #[derive(Deserialize)]
 pub struct LangForm {
@@ -24,16 +28,19 @@ pub async fn set_lang(
         "sw" => Lang::Sw,
         "id" => Lang::Id,
         "hi" => Lang::Hi,
+        "bn" => Lang::Bn,
         "es" => Lang::Es,
         "pt" => Lang::Pt,
         "fr" => Lang::Fr,
         "ru" => Lang::Ru,
+        "tr" => Lang::Tr,
         "ja" => Lang::Ja,
         "zh-CN" => Lang::ZhCn,
         "zh-TW" => Lang::ZhTw,
         "yue" => Lang::Yue,
         _ => Lang::En,
     };
+
     state.set_lang(lang).await;
     tracing::info!("언어 변경: {:?}", lang);
 

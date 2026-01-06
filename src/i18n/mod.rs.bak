@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 
 mod ar;
-mod bn;
 mod en;
 mod es;
 mod fr;
@@ -14,8 +13,9 @@ mod ko;
 mod pt;
 mod ru;
 mod sw;
-mod tr;
 mod yue;
+mod bn;
+mod tr;
 mod zh_cn;
 mod zh_tw;
 
@@ -29,18 +29,18 @@ pub enum Lang {
     Sw,   // 스와힐리어
     Id,   // 인도네시아어
     Hi,   // 힌디어
-    Bn,   // 벵갈어
     Es,   // 스페인어
     Pt,   // 포르투갈어
     Fr,   // 불어
     Ru,   // 러시아어
-    Tr,   // 터키어
     Ja,   // 일본어
     ZhCn, // 중국어 간체
     ZhTw, // 중국어 번체
     Yue,  // 광둥어
-}
-
+    Bn,   // 벵갈어
+    Tr,   // 터키어
+    Bn,   // 벵갈어
+    Tr,   // 터키어
 impl Lang {
     /// Accept-Language 헤더에서 언어 감지
     pub fn from_accept_language(header: Option<&str>) -> Self {
@@ -59,8 +59,6 @@ impl Lang {
             Self::Id
         } else if header.starts_with("hi") || header.contains("hi-") || header.contains("hi,") {
             Self::Hi
-        } else if header.starts_with("bn") || header.contains("bn-") || header.contains("bn,") {
-            Self::Bn
         } else if header.starts_with("es") || header.contains("es-") || header.contains("es,") {
             Self::Es
         } else if header.starts_with("pt") || header.contains("pt-") || header.contains("pt,") {
@@ -69,10 +67,16 @@ impl Lang {
             Self::Fr
         } else if header.starts_with("ru") || header.contains("ru-") || header.contains("ru,") {
             Self::Ru
-        } else if header.starts_with("tr") || header.contains("tr-") || header.contains("tr,") {
-            Self::Tr
         } else if header.starts_with("ja") || header.contains("ja-") || header.contains("ja,") {
             Self::Ja
+        } else if header.starts_with("bn") || header.contains("bn-") || header.contains("bn,") {
+            Self::Bn
+        } else if header.starts_with("tr") || header.contains("tr-") || header.contains("tr,") {
+            Self::Tr
+        } else if header.starts_with("bn") || header.contains("bn-") || header.contains("bn,") {
+            Self::Bn
+        } else if header.starts_with("tr") || header.contains("tr-") || header.contains("tr,") {
+            Self::Tr
         } else if header.starts_with("yue") || header.contains("yue-") || header.contains("yue,") {
             Self::Yue
         } else if header.starts_with("zh-tw") || header.starts_with("zh-hant") {
@@ -93,16 +97,18 @@ impl Lang {
             Self::Sw => "sw",
             Self::Id => "id",
             Self::Hi => "hi",
-            Self::Bn => "bn",
             Self::Es => "es",
             Self::Pt => "pt",
             Self::Fr => "fr",
             Self::Ru => "ru",
-            Self::Tr => "tr",
             Self::Ja => "ja",
             Self::ZhCn => "zh-CN",
             Self::ZhTw => "zh-TW",
             Self::Yue => "yue",
+            Self::Bn => "bn",
+            Self::Tr => "tr",
+            Self::Bn => "bn",
+            Self::Tr => "tr",
         }
     }
 
@@ -120,16 +126,16 @@ impl Lang {
             Self::Sw => "Kiswahili",
             Self::Id => "Bahasa Indonesia",
             Self::Hi => "हिन्दी",
-            Self::Bn => "বাংলা",
             Self::Es => "Español",
             Self::Pt => "Português",
             Self::Fr => "Français",
             Self::Ru => "Русский",
-            Self::Tr => "Türkçe",
             Self::Ja => "日本語",
             Self::ZhCn => "简体中文",
             Self::ZhTw => "繁體中文",
             Self::Yue => "廣東話",
+            Self::Bn => "বাংলা",
+            Self::Tr => "Türkçe",
         }
     }
 
@@ -142,16 +148,16 @@ impl Lang {
             Self::Sw,
             Self::Id,
             Self::Hi,
-            Self::Bn,
             Self::Es,
             Self::Pt,
             Self::Fr,
             Self::Ru,
-            Self::Tr,
             Self::Ja,
             Self::ZhCn,
             Self::ZhTw,
             Self::Yue,
+            Self::Bn,
+            Self::Tr,
         ]
     }
 }
@@ -180,16 +186,16 @@ pub fn get_translations(lang: Lang) -> Translations {
         Lang::Sw => sw::translations(),
         Lang::Id => id::translations(),
         Lang::Hi => hi::translations(),
-        Lang::Bn => bn::translations(),
         Lang::Es => es::translations(),
         Lang::Pt => pt::translations(),
         Lang::Fr => fr::translations(),
         Lang::Ru => ru::translations(),
-        Lang::Tr => tr::translations(),
         Lang::Ja => ja::translations(),
         Lang::ZhCn => zh_cn::translations(),
         Lang::ZhTw => zh_tw::translations(),
         Lang::Yue => yue::translations(),
+        Lang::Bn => bn::translations(),
+        Lang::Tr => tr::translations(),
     }
 }
 
@@ -230,8 +236,6 @@ fn translation_keys() -> &'static [&'static str] {
         "home.shortcut.new_note",
         "home.shortcut.search",
         "home.shortcut.help",
-        "home.knowledge_graph",
-        "app.footer",
         // 에디터
         "editor.title_placeholder",
         "editor.content_placeholder",
@@ -391,5 +395,11 @@ fn translation_keys() -> &'static [&'static str] {
         "settings.version",
         "settings.storage",
         "settings.about",
+        // Knowledge Graph & Footer
+        "home.knowledge_graph",
+        "app.footer",
+        // Knowledge Graph & Footer
+        "home.knowledge_graph",
+        "app.footer",
     ]
 }
