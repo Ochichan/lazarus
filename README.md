@@ -206,9 +206,9 @@ pmap -x $(pgrep lazarus) | tail -n 1
 | Tier | Languages |
 |------|-----------|
 | **Base** | 🇺🇸 English, 🇰🇷 Korean |
-| **    ** | 🇸🇦 Arabic (RTL), 🇮🇷 Persian (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi, 🇧🇩 Bengali |
-| **    ** | 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian, 🇹🇷 Turkish |
-| **    ** | 🇯🇵 Japanese, 🇨🇳 简体中文, 🇹🇼 繁體中文, 🇭🇰 廣東話 |
+|          | 🇸🇦 Arabic (RTL), 🇮🇷 Persian (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi, 🇧🇩 Bengali |
+|          | 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian, 🇹🇷 Turkish |
+|          | 🇯🇵 Japanese, 🇨🇳 简体中文, 🇹🇼 繁體中文, 🇭🇰 廣東話 |
 
 - **Full RTL support** for Arabic and Persian
 - **170+ translation keys** per language
@@ -227,7 +227,7 @@ pmap -x $(pgrep lazarus) | tail -n 1
 |--------|-------|-------|
 | Binary size | **7.4 MB** | Single executable |
 | Cold start | **< 5 ms** | Measured: 4.28ms |
-| Idle RAM | **4 MB** | Dirty memory |
+| Idle RAM | **8 MB** | Dirty memory |
 | +115GB ZIM | **+1 MB** | Yes, one megabyte |
 | Heavy usage | **35 MB** | Search + browse |
 | Note search | **< 50ms** | Tantivy |
