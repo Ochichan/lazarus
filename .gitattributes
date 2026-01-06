@@ -1,0 +1,5 @@
+# Vendor libraries (exclude from language stats)
+static/js/editorjs/*.js linguist-vendored
+static/js/lib/*.js linguist-vendored
+static/*.js linguist-vendored
+*.min.js linguist-vendored
