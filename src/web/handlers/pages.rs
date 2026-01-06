@@ -237,20 +237,21 @@ pub async fn notes_view(
             })
             .collect()
     };
-    
+
     let outgoing_links: Vec<BacklinkInfo> = {
-    let index = state.link_index.read().await;
-    let titles = index.get_outgoing_links(id);
-    
-    titles.iter()
-        .filter_map(|title| {
-            index.get_id_by_title(title).map(|id| BacklinkInfo {
-                id,
-                title: title.clone(),
+        let index = state.link_index.read().await;
+        let titles = index.get_outgoing_links(id);
+
+        titles
+            .iter()
+            .filter_map(|title| {
+                index.get_id_by_title(title).map(|id| BacklinkInfo {
+                    id,
+                    title: title.clone(),
+                })
             })
-        })
-        .collect()
-};
+            .collect()
+    };
 
     // [[링크]] → HTML로 렌더링
     let existing_titles = state.link_index.read().await.existing_titles();
