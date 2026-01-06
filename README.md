@@ -102,11 +102,11 @@ Lazarus is a lightweight, offline-capable personal knowledge management system b
 - SHA-256 integrity verification
 - Drag-and-drop import
 
-### 🌍 Internationalization (14 Languages)
+### 🌍 Globalization (14 Languages)
 - **Base**: 🇺🇸 English, 🇰🇷 Korean
-- **Tier 1**: 🇸🇦 Arabic (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi
-- **Tier 2**: 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian
-- **Tier 3**: 🇯🇵 Japanese, 🇨🇳 Chinese Simplified, 🇹🇼 Chinese Traditional, 🇭🇰 Cantonese
+- **Group 1**: 🇸🇦 Arabic (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi
+- **Group 2**: 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian
+- **Group 3**: 🇯🇵 Japanese, 🇨🇳 Chinese Simplified, 🇹🇼 Chinese Traditional, 🇭🇰 Cantonese
 - **Full RTL support** for Arabic (right-to-left layout)
 - **Settings page** with language dropdown selector
 - Modular i18n architecture (170+ translation keys)
