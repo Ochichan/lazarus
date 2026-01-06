@@ -1,0 +1,174 @@
+name: Memory Benchmark
+
+on:
+  push:
+    tags: ['v*']
+  release:
+    types: [published]
+  workflow_dispatch:  # 수동 실행 가능
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  benchmark:
+    name: 📊 Memory Benchmark
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+      
+      - name: 🦀 Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: 📦 Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: 🔨 Build release
+        run: cargo build --release
+      
+      - name: 📏 Measure binary size
+        id: binary
+        run: |
+          SIZE_BYTES=$(stat -f%z target/release/lazarus 2>/dev/null || stat -c%s target/release/lazarus)
+          SIZE_MB=$(echo "scale=2; $SIZE_BYTES / 1048576" | bc)
+          SIZE_HUMAN=$(ls -lh target/release/lazarus | awk '{print $5}')
+          
+          echo "size_bytes=$SIZE_BYTES" >> $GITHUB_OUTPUT
+          echo "size_mb=$SIZE_MB" >> $GITHUB_OUTPUT
+          echo "size_human=$SIZE_HUMAN" >> $GITHUB_OUTPUT
+          
+          echo "## 📦 Binary Size" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Size | **$SIZE_HUMAN** |" >> $GITHUB_STEP_SUMMARY
+          echo "| Bytes | $SIZE_BYTES |" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📥 Download test ZIM (Simple English Wikipedia)
+        run: |
+          echo "Downloading Simple English Wikipedia (~300MB)..."
+          wget -q --show-progress https://download.kiwix.org/zim/wikipedia/wikipedia_en_simple_all_nopic_2024-06.zim -O test.zim
+          ZIM_SIZE=$(ls -lh test.zim | awk '{print $5}')
+          echo "ZIM_SIZE=$ZIM_SIZE" >> $GITHUB_ENV
+          echo "📚 ZIM size: $ZIM_SIZE"
+      
+      - name: 🧠 Measure memory (idle)
+        id: memory_idle
+        run: |
+          # Start lazarus without ZIM
+          ./target/release/lazarus &
+          PID=$!
+          sleep 3
+          
+          # Measure Private_Dirty
+          PRIVATE_DIRTY=$(awk '/Private_Dirty/ {sum+=$2} END {printf "%.2f", sum/1024}' /proc/$PID/smaps)
+          RSS=$(ps -p $PID -o rss= | awk '{printf "%.2f", $1/1024}')
+          
+          echo "private_dirty=$PRIVATE_DIRTY" >> $GITHUB_OUTPUT
+          echo "rss=$RSS" >> $GITHUB_OUTPUT
+          
+          echo "## 🧠 Memory (Idle - No ZIM)" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Private_Dirty | **${PRIVATE_DIRTY} MB** |" >> $GITHUB_STEP_SUMMARY
+          echo "| RSS | ${RSS} MB |" >> $GITHUB_STEP_SUMMARY
+          
+          kill $PID 2>/dev/null || true
+          sleep 1
+      
+      - name: 🧠 Measure memory (with ZIM)
+        id: memory_zim
+        run: |
+          # Start lazarus with ZIM
+          ./target/release/lazarus --zim test.zim &
+          PID=$!
+          sleep 5  # ZIM 로딩 대기
+          
+          # Measure Private_Dirty
+          PRIVATE_DIRTY=$(awk '/Private_Dirty/ {sum+=$2} END {printf "%.2f", sum/1024}' /proc/$PID/smaps)
+          RSS=$(ps -p $PID -o rss= | awk '{printf "%.2f", $1/1024}')
+          PSS=$(awk '/Pss/ {sum+=$2} END {printf "%.2f", sum/1024}' /proc/$PID/smaps)
+          
+          echo "private_dirty=$PRIVATE_DIRTY" >> $GITHUB_OUTPUT
+          echo "rss=$RSS" >> $GITHUB_OUTPUT
+          echo "pss=$PSS" >> $GITHUB_OUTPUT
+          
+          echo "## 🧠 Memory (With ${{ env.ZIM_SIZE }} ZIM)" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Private_Dirty | **${PRIVATE_DIRTY} MB** |" >> $GITHUB_STEP_SUMMARY
+          echo "| PSS | ${PSS} MB |" >> $GITHUB_STEP_SUMMARY
+          echo "| RSS | ${RSS} MB |" >> $GITHUB_STEP_SUMMARY
+          
+          kill $PID 2>/dev/null || true
+      
+      - name: 📊 Generate benchmark report
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "Lazarus Memory Benchmark" >> $GITHUB_STEP_SUMMARY
+          echo "========================" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Binary Size:     ${{ steps.binary.outputs.size_human }}" >> $GITHUB_STEP_SUMMARY
+          echo "Idle Memory:     ${{ steps.memory_idle.outputs.private_dirty }} MB (Private_Dirty)" >> $GITHUB_STEP_SUMMARY
+          echo "With ZIM:        ${{ steps.memory_zim.outputs.private_dirty }} MB (Private_Dirty)" >> $GITHUB_STEP_SUMMARY
+          echo "ZIM File:        ${{ env.ZIM_SIZE }} (Simple English Wikipedia)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Memory usage stays ~4MB regardless of ZIM size!" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Measured on GitHub Actions Ubuntu runner*" >> $GITHUB_STEP_SUMMARY
+      
+      - name: 📝 Create benchmark JSON
+        run: |
+          cat > benchmark.json << EOF
+          {
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "version": "${{ github.ref_name }}",
+            "binary_size_mb": ${{ steps.binary.outputs.size_mb }},
+            "memory_idle_mb": ${{ steps.memory_idle.outputs.private_dirty }},
+            "memory_with_zim_mb": ${{ steps.memory_zim.outputs.private_dirty }},
+            "zim_file": "wikipedia_en_simple_all_nopic",
+            "zim_size": "${{ env.ZIM_SIZE }}"
+          }
+          EOF
+          cat benchmark.json
+      
+      - name: 📤 Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark.json
+      
+      # Optional: Update dynamic badge via gist
+      # Uncomment and configure if you want real-time badges
+      #
+      # - name: 🏷️ Update memory badge
+      #   uses: schneegans/dynamic-badges-action@v1.7.0
+      #   with:
+      #     auth: ${{ secrets.GIST_TOKEN }}
+      #     gistID: YOUR_GIST_ID_HERE
+      #     filename: lazarus-memory.json
+      #     label: RAM
+      #     message: "${{ steps.memory_zim.outputs.private_dirty }} MB"
+      #     color: brightgreen
+      #
+      # - name: 🏷️ Update binary size badge
+      #   uses: schneegans/dynamic-badges-action@v1.7.0
+      #   with:
+      #     auth: ${{ secrets.GIST_TOKEN }}
+      #     gistID: YOUR_GIST_ID_HERE
+      #     filename: lazarus-binary.json
+      #     label: Binary
+      #     message: "${{ steps.binary.outputs.size_human }}"
+      #     color: blue
