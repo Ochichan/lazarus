@@ -397,8 +397,8 @@ data/
 ### v0.3 - Feature Expansion
 - [ ] Additional languages (Arabic, French, Spanish, Swahili)
 - [x] FSRS personalization (parameter optimization)
-- [ ] Note linking (`[[note title]]`)
-- [ ] Graph view (note connections)
+- [x] Note linking (`[[note title]]`)
+- [x] Graph view (note connections)
 
 ### v0.4 - USB Community
 - [ ] USB auto-detection
