@@ -49,8 +49,8 @@ Lazarus is a lightweight, offline-capable personal knowledge management system b
 | Feature | Lazarus | Electron Apps |
 |---------|---------|---------------|
 | Cold start | **4 ms** | 2-5 seconds |
-| RAM usage (idle) | **5 MB** | 200-500 MB |
-| Binary size | **7.4 MB** | 150-300 MB |
+| RAM usage (idle) | **4-8 MB** | 200-500 MB |
+| Binary size | **7-8 MB** | 150-300 MB |
 | 115GB Wikipedia | ✅ **+1MB RAM** | ❌ **Impossible** |
 | Multiple ZIM files | ✅ Simultaneous | ❌ N/A |
 | Offline-first | ✅ Always | ⚠️ Limited |
@@ -64,9 +64,9 @@ Lazarus is a lightweight, offline-capable personal knowledge management system b
 
 ---
 
-## 📸 Proof: Real Measurements
+## 📸 Proof: Real Measurements(On my machine)
 
-> *"115GB with 5MB RAM? 4ms startup? You're lying."*
+> *"115GB with less than 10MB RAM? 4ms startup? You're lying."*
 
 We're not. Here's the actual measurements:
 
@@ -93,7 +93,7 @@ total kB         2655596   11656    4064
 # After loading 115GB ZIM (Wikipedia + TED Talks)
 $ pmap -x $(pgrep lazarus) | tail -n 1
 total kB         119768512   12852    5132
-#                ↑ 114GB      ↑ RSS   ↑ Dirty (5MB)
+#                ↑ Virtual      ↑ RSS   ↑ Dirty (5MB)
 ```
 
 ### The Numbers
