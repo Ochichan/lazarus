@@ -60,7 +60,7 @@ fn fuzzy_match(query: &str, text: &str, max_distance: usize) -> bool {
         }
 
         // 길이가 너무 다르면 스킵
-        let len_diff = (word.len() as isize - query_lower.len() as isize)..unsigned_abs();
+        let len_diff = (word.len() as isize - query_lower.len() as isize).unsigned_abs();
         if len_diff > max_distance {
             continue;
         }
