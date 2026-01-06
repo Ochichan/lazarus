@@ -4,8 +4,8 @@
 
 use crate::error::{LazarusError, Result};
 use crate::i18n::all_translations;
-use crate::web::state::AppState;
 use crate::links;
+use crate::web::state::AppState;
 
 use ammonia::clean;
 use askama::Template;
@@ -84,18 +84,16 @@ struct GraphTemplate {
 }
 
 /// GET /graph
-pub async fn graph_view(
-    State(state): State<AppState>,
-) -> Result<Html<String>> {
+pub async fn graph_view(State(state): State<AppState>) -> Result<Html<String>> {
     let lang = state.get_lang().await;
     let t = all_translations(lang);
-    
+
     let template = GraphTemplate {
         version: state.version,
         lang: lang.code(),
         t,
     };
-    
+
     Ok(Html(
         template
             .render()
@@ -196,7 +194,7 @@ struct NotesViewTemplate {
     note: NoteViewData,
     lang: &'static str,
     t: HashMap<String, String>,
-    backlinks: Vec<BacklinkInfo>, 
+    backlinks: Vec<BacklinkInfo>,
 }
 
 struct NoteViewData {
@@ -227,8 +225,9 @@ pub async fn notes_view(
     let backlinks: Vec<BacklinkInfo> = {
         let index = state.link_index.read().await;
         let backlink_ids = index.get_backlinks(&note.title);
-        
-        backlink_ids.iter()
+
+        backlink_ids
+            .iter()
             .filter_map(|bid| {
                 index.get_title_by_id(*bid).map(|title| BacklinkInfo {
                     id: *bid,

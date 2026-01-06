@@ -9,10 +9,10 @@ use crate::crypto::{CryptoManager, SecurityConfig};
 use crate::db::{BackupManager, StorageEngine};
 use crate::error::Result;
 use crate::i18n::{get_translations, Lang, Translations};
+use crate::links::LinkIndex;
 use crate::search::SearchEngine;
 use crate::srs::SrsEngine;
 use crate::zim::ZimReader;
-use crate::links::LinkIndex;
 
 /// ZIM 정보
 pub struct ZimInfo {
@@ -218,23 +218,23 @@ impl AppState {
         zims.retain(|z| z.name != name);
         zims.len() < before
     }
-	//시작 시 모든 노트의 링크 인덱스 빌드
-	pub async fn build_link_index(&self) -> Result<()> {
-	    let db = self.db.read().await;
-	    let note_ids = db.list_ids();
-	    let mut index = self.link_index.write().await;
-	    
-	    for id in note_ids {
-	        if let Ok(Some(note)) = db.get(id) {
-	            index.register_note(id, &note.title);
-	            index.update_links(id, &note.content);
-	        }
-	    }
-	    
-	    tracing::info!("링크 인덱스 빌드 완료: {}개 노트", index.all_titles().len());
-	    Ok(())
-	}
-	
+    //시작 시 모든 노트의 링크 인덱스 빌드
+    pub async fn build_link_index(&self) -> Result<()> {
+        let db = self.db.read().await;
+        let note_ids = db.list_ids();
+        let mut index = self.link_index.write().await;
+
+        for id in note_ids {
+            if let Ok(Some(note)) = db.get(id) {
+                index.register_note(id, &note.title);
+                index.update_links(id, &note.content);
+            }
+        }
+
+        tracing::info!("링크 인덱스 빌드 완료: {}개 노트", index.all_titles().len());
+        Ok(())
+    }
+
     /// ZIM 디렉토리 새로고침
     pub async fn reload_zims(&self) -> Result<Vec<String>> {
         let mut added = Vec::new();

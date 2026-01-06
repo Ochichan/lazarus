@@ -2,13 +2,13 @@
 // TODO: Clean up dead code in v0.3
 #![allow(dead_code, unused_imports, unused_variables, unused_assignments)]
 
-mod links;
 mod crypto;
 mod curriculum;
 mod db;
 mod error;
 mod i18n;
 mod laz;
+mod links;
 mod search;
 mod srs;
 mod sync;
