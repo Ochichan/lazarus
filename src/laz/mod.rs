@@ -132,7 +132,7 @@ pub struct SrsData {
 pub enum CardType {
     /// 기본 Q&A
     #[default]
-    Basic, Cloze, Multiplechoice, Image
+    Basic, Cloze, Multiplechoice, Image, Definition
 }
 
 /// 노트 콘텐츠

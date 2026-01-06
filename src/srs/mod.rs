@@ -48,7 +48,7 @@ pub struct Card {
 pub enum CardType {
     /// 기본 Q&A
     #[default]
-    Basic, Cloze, Multiplechoice, Image
+    Basic, Cloze, Multiplechoice, Image, Definition,
 }
 
 /// SRS 학습 데이터 (FSRS 알고리즘)
