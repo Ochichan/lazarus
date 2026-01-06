@@ -398,10 +398,6 @@ A: Yes! Use `--zim` multiple times or `--zim-dir`. Load Wikipedia + TED + Medica
 
 A: Run `time ./lazarus --help` yourself. No JavaScript VM to initialize, no Chromium to load.
 
-**Q: How is a 5-month programmer building this?**
-
-A: Coffee, Claude AI pair programming, and Rust's compiler being a great teacher.
-
 ---
 
 ## 📜 License
