@@ -1,66 +1,64 @@
 {% extends "base.html" %}
+
 {% block nav_settings_active %}active{% endblock %}
 {% block version %}{{ version }}{% endblock %}
 {% block title %}{{ t["settings.title"] }} - Lazarus{% endblock %}
+
 {% block content %}
 <div class="settings-container">
     <h1>⚙️ {{ t["settings.title"] }}</h1>
-    
+
     <section class="settings-section">
         <h2>🌍 {{ t["settings.language"] }}</h2>
         <p class="settings-desc">{{ t["settings.language_desc"] }}</p>
-        
+
         <div class="lang-select-wrapper">
             <form action="/api/lang" method="post" id="langForm">
                 <select name="lang" id="langSelect" class="lang-select" onchange="this.form.submit()">
+                    <!-- Base -->
                     <option value="en" {% if lang == "en" %}selected{% endif %}>🇺🇸 English</option>
                     <option value="ko" {% if lang == "ko" %}selected{% endif %}>🇰🇷 한국어</option>
-                    <optgroup label="─────────────">
+                    <!-- Tier 1 -->
                     <option value="ar" {% if lang == "ar" %}selected{% endif %}>🇸🇦 العربية</option>
+                    <option value="fa" {% if lang == "fa" %}selected{% endif %}>🇮🇷 فارسی</option>
                     <option value="sw" {% if lang == "sw" %}selected{% endif %}>🇰🇪 Kiswahili</option>
                     <option value="id" {% if lang == "id" %}selected{% endif %}>🇮🇩 Bahasa Indonesia</option>
                     <option value="hi" {% if lang == "hi" %}selected{% endif %}>🇮🇳 हिन्दी</option>
                     <option value="bn" {% if lang == "bn" %}selected{% endif %}>🇧🇩 বাংলা</option>
-                    </optgroup>
-                    <optgroup label="─────────────">
+                    <!-- Tier 2 -->
                     <option value="es" {% if lang == "es" %}selected{% endif %}>🇪🇸 Español</option>
                     <option value="pt" {% if lang == "pt" %}selected{% endif %}>🇧🇷 Português</option>
                     <option value="fr" {% if lang == "fr" %}selected{% endif %}>🇫🇷 Français</option>
                     <option value="ru" {% if lang == "ru" %}selected{% endif %}>🇷🇺 Русский</option>
                     <option value="tr" {% if lang == "tr" %}selected{% endif %}>🇹🇷 Türkçe</option>
-                    </optgroup>
-                    <optgroup label="─────────────">
+                    <!-- Tier 3 -->
                     <option value="ja" {% if lang == "ja" %}selected{% endif %}>🇯🇵 日本語</option>
                     <option value="zh-CN" {% if lang == "zh-CN" %}selected{% endif %}>🇨🇳 简体中文</option>
                     <option value="zh-TW" {% if lang == "zh-TW" %}selected{% endif %}>🇹🇼 繁體中文</option>
                     <option value="yue" {% if lang == "yue" %}selected{% endif %}>🇭🇰 廣東話</option>
-                    </optgroup>
                 </select>
             </form>
         </div>
     </section>
-    
+
     <section class="settings-section">
         <h2>📊 {{ t["settings.stats"] }}</h2>
         <div class="stats-grid">
             <div class="stat-item">
                 <span class="stat-label">{{ t["settings.version"] }}</span>
-                <span class="stat-value">v{{ version }}</span>
+                <span class="stat-value">{{ version }}</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">{{ t["settings.storage"] }}</span>
-                <span class="stat-value">IndexedDB</span>
+                <span class="stat-value">WAL + rkyv + zstd</span>
             </div>
         </div>
     </section>
-    
+
     <section class="settings-section">
         <h2>ℹ️ {{ t["settings.about"] }}</h2>
-        <p class="about-text">
-            <strong>Lazarus</strong> - Offline Personal Knowledge Management<br>
-            Built for education in developing countries and conflict zones.<br>
-            <a href="https://github.com/anthropics/lazarus" target="_blank">GitHub</a>
-        </p>
+        <p>Lazarus - Offline Personal Knowledge Management</p>
+        <p><a href="https://github.com/Ochichan/lazarus" target="_blank">GitHub</a></p>
     </section>
 </div>
 
@@ -71,27 +69,20 @@
     padding: 2rem;
 }
 
-.settings-container h1 {
-    margin-bottom: 2rem;
-    font-size: 1.75rem;
-}
-
 .settings-section {
-    background: var(--bg-secondary);
-    border-radius: 0.75rem;
+    background: var(--surface);
+    border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1.5rem;
 }
 
 .settings-section h2 {
-    font-size: 1.1rem;
-    margin-bottom: 0.5rem;
-    color: var(--text);
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
 }
 
 .settings-desc {
     color: var(--text-secondary);
-    font-size: 0.9rem;
     margin-bottom: 1rem;
 }
 
@@ -101,15 +92,15 @@
 
 .lang-select {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
     font-size: 1rem;
     border: 1px solid var(--border);
-    border-radius: 0.5rem;
+    border-radius: 8px;
     background: var(--bg);
     color: var(--text);
     cursor: pointer;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 1rem center;
 }
@@ -121,63 +112,41 @@
 .lang-select:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
-}
-
-.lang-select option {
-    padding: 0.5rem;
-    background: var(--bg);
-    color: var(--text);
-}
-
-.lang-select optgroup {
-    font-weight: normal;
-    color: var(--text-secondary);
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
 }
 
 .stat-item {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
 }
 
 .stat-label {
-    font-size: 0.85rem;
     color: var(--text-secondary);
 }
 
 .stat-value {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--accent);
+    font-weight: 500;
 }
 
-.about-text {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    line-height: 1.6;
+/* RTL Support */
+[dir="rtl"] .settings-container {
+    text-align: right;
 }
 
-.about-text a {
-    color: var(--accent);
-    text-decoration: none;
-}
-
-.about-text a:hover {
-    text-decoration: underline;
-}
-
-/* RTL 지원 */
 [dir="rtl"] .lang-select {
     background-position: left 1rem center;
-    padding-right: 1rem;
-    padding-left: 2.5rem;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+}
+
+[dir="rtl"] .stat-item {
+    flex-direction: row-reverse;
 }
 </style>
 {% endblock %}

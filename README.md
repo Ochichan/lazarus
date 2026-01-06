@@ -102,12 +102,12 @@ Lazarus is a lightweight, offline-capable personal knowledge management system b
 - SHA-256 integrity verification
 - Drag-and-drop import
 
-### 🌍 Globalization (16 Languages)
+### 🌍 Globalization (17 Languages)
 - **Base**: 🇺🇸 English, 🇰🇷 Korean
-- **Group 1**: 🇸🇦 Arabic (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi, 🇧🇩 Bengali
+- **Group 1**: 🇸🇦 Arabic (RTL), 🇮🇷 Persian (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi, 🇧🇩 Bengali
 - **Group 2**: 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian, 🇹🇷 Turkish
 - **Group 3**: 🇯🇵 Japanese, 🇨🇳 Chinese Simplified, 🇹🇼 Chinese Traditional, 🇭🇰 Cantonese
-- **Full RTL support** for Arabic (right-to-left layout)
+- **Full RTL support** for Arabic and Persian (right-to-left layout)
 - **Settings page** with language dropdown selector
 - Modular i18n architecture (170+ translation keys)
 
@@ -399,7 +399,7 @@ data/
 - [x] Concurrent edit locks
 
 ### v0.3 - Feature Expansion ✅
-- [x] 16 languages (EN, KO, AR, SW, ID, HI, BN, ES, PT, FR, RU, TR, JA, ZH-CN, ZH-TW, YUE)
+- [x] 17 languages (EN, KO, AR, FA, SW, ID, HI, BN, ES, PT, FR, RU, TR, JA, ZH-CN, ZH-TW, YUE)
 - [x] Full RTL support (Arabic)
 - [x] Settings page with language selector
 - [x] FSRS personalization (parameter optimization)

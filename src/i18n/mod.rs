@@ -6,6 +6,7 @@ mod ar;
 mod bn;
 mod en;
 mod es;
+mod fa;
 mod fr;
 mod hi;
 mod id;
@@ -30,6 +31,7 @@ pub enum Lang {
     Id,   // 인도네시아어
     Hi,   // 힌디어
     Bn,   // 벵갈어
+    Fa,   // 페르시아어 (RTL)
     Es,   // 스페인어
     Pt,   // 포르투갈어
     Fr,   // 불어
@@ -94,6 +96,7 @@ impl Lang {
             Self::Id => "id",
             Self::Hi => "hi",
             Self::Bn => "bn",
+            Self::Fa => "fa",
             Self::Es => "es",
             Self::Pt => "pt",
             Self::Fr => "fr",
@@ -108,7 +111,7 @@ impl Lang {
 
     /// RTL (오른쪽→왼쪽) 언어인지
     pub fn is_rtl(&self) -> bool {
-        matches!(self, Self::Ar)
+        matches!(self, Self::Ar | Self::Fa)
     }
 
     /// 언어 이름 (해당 언어로)
@@ -121,6 +124,7 @@ impl Lang {
             Self::Id => "Bahasa Indonesia",
             Self::Hi => "हिन्दी",
             Self::Bn => "বাংলা",
+            Self::Fa => "فارسی",
             Self::Es => "Español",
             Self::Pt => "Português",
             Self::Fr => "Français",
@@ -143,6 +147,7 @@ impl Lang {
             Self::Id,
             Self::Hi,
             Self::Bn,
+            Self::Fa,
             Self::Es,
             Self::Pt,
             Self::Fr,
@@ -181,6 +186,7 @@ pub fn get_translations(lang: Lang) -> Translations {
         Lang::Id => id::translations(),
         Lang::Hi => hi::translations(),
         Lang::Bn => bn::translations(),
+        Lang::Fa => fa::translations(),
         Lang::Es => es::translations(),
         Lang::Pt => pt::translations(),
         Lang::Fr => fr::translations(),
