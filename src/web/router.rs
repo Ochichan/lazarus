@@ -79,6 +79,8 @@ pub fn create_router(state: AppState) -> Router {
             "/notes/split/:id",
             get(handlers::pages::notes_split_with_id),
         )
+        // === 설정 ===
+        .route("/settings", get(handlers::pages::settings_view))
         // === 링크 라우트 ===
         .route("/notes/by-title/:title", get(handlers::notes::get_by_title))
         // === API 라우트 ===

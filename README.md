@@ -3,7 +3,7 @@
 **Offline-first Personal Knowledge Management for the Rest of Us**
 
 [![CI](https://github.com/Ochichan/lazarus/actions/workflows/ci.yml/badge.svg)](https://github.com/Ochichan/lazarus/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.2.0-blue)](https://github.com/Ochichan/lazarus/releases)
+[![Version](https://img.shields.io/badge/version-0.3.5-blue)](https://github.com/Ochichan/lazarus/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.75+-orange)](https://www.rust-lang.org/)
 
@@ -102,10 +102,14 @@ Lazarus is a lightweight, offline-capable personal knowledge management system b
 - SHA-256 integrity verification
 - Drag-and-drop import
 
-### 🌍 Internationalization
-- English and Korean UI
-- Easy to add more languages
-- RTL support ready
+### 🌍 Internationalization (14 Languages)
+- **Base**: 🇺🇸 English, 🇰🇷 Korean
+- **Tier 1**: 🇸🇦 Arabic (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi
+- **Tier 2**: 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian
+- **Tier 3**: 🇯🇵 Japanese, 🇨🇳 Chinese Simplified, 🇹🇼 Chinese Traditional, 🇭🇰 Cantonese
+- **Full RTL support** for Arabic (right-to-left layout)
+- **Settings page** with language dropdown selector
+- Modular i18n architecture (170+ translation keys)
 
 ### 💾 Data Safety
 - **Write-Ahead Log (WAL)** for crash recovery
@@ -394,8 +398,10 @@ data/
 - [x] Encrypted backups
 - [x] Concurrent edit locks
 
-### v0.3 - Feature Expansion
-- [ ] Additional languages (Arabic, French, Spanish, Swahili)
+### v0.3 - Feature Expansion ✅
+- [x] 14 languages (EN, KO, AR, SW, ID, HI, ES, PT, FR, RU, JA, ZH-CN, ZH-TW, YUE)
+- [x] Full RTL support (Arabic)
+- [x] Settings page with language selector
 - [x] FSRS personalization (parameter optimization)
 - [x] Note linking (`[[note title]]`)
 - [x] Graph view (note connections)

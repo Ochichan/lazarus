@@ -145,6 +145,33 @@ pub async fn notes_list(State(state): State<AppState>) -> Result<Html<String>> {
     ))
 }
 
+// 템플릿 구조체 추가
+#[derive(Template)]
+#[template(path = "settings.html")]
+struct SettingsTemplate {
+    version: &'static str,
+    lang: &'static str,
+    t: HashMap<String, String>,
+}
+
+/// GET /settings
+pub async fn settings_view(State(state): State<AppState>) -> Result<Html<String>> {
+    let lang = state.get_lang().await;
+    let t = all_translations(lang);
+
+    let template = SettingsTemplate {
+        version: state.version,
+        lang: lang.code(),
+        t,
+    };
+
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
+}
+
 /// 노트 작성 템플릿
 #[derive(Template)]
 #[template(path = "notes_edit.html")]

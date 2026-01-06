@@ -20,9 +20,20 @@ pub async fn set_lang(
     let lang = match form.lang.as_str() {
         "en" => Lang::En,
         "ko" => Lang::Ko,
+        "ar" => Lang::Ar,
+        "sw" => Lang::Sw,
+        "id" => Lang::Id,
+        "hi" => Lang::Hi,
+        "es" => Lang::Es,
+        "pt" => Lang::Pt,
+        "fr" => Lang::Fr,
+        "ru" => Lang::Ru,
+        "ja" => Lang::Ja,
+        "zh-CN" => Lang::ZhCn,
+        "zh-TW" => Lang::ZhTw,
+        "yue" => Lang::Yue,
         _ => Lang::En,
     };
-
     state.set_lang(lang).await;
     tracing::info!("언어 변경: {:?}", lang);
 

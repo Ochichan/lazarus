@@ -3,7 +3,7 @@
 {% block nav_search %}{{ t["nav.search"] }}{% endblock %}
 {% block nav_wiki %}{{ t["nav.wiki"] }}{% endblock %}
 {% block version %}{{ version }}{% endblock %}
-{% block footer_text %}{% if lang == "en" %}Knowledge for All{% else %}모두를 위한 지식{% endif %}{% endblock %}
+{% block footer_text %}{{ t["app.footer"] }}{% endblock %}
 {% block title %}{{ t["app.name"] }}{% endblock %}
 {% block content %}
 <section class="hero">
@@ -52,7 +52,7 @@
         </a>
         <a href="/graph" class="action-card">
             <span class="icon">🕸️</span>
-            <span>{% if lang == "en" %}Knowledge Graph{% else %}지식 그래프{% endif %}</span>
+            <span>{{ t["home.knowledge_graph"] }}</span>
         </a>
         <a href="/security" class="action-card">
             <span class="icon">🔐</span>
@@ -68,13 +68,6 @@
         <div class="hint"><kbd>/</kbd> {{ t["home.shortcut.search"] }}</div>
         <div class="hint"><kbd>?</kbd> {{ t["home.shortcut.help"] }}</div>
     </div>
-</section>
-
-<section class="lang-selector">
-    <form action="/api/lang" method="post" style="display: inline;">
-        <button type="submit" name="lang" value="en" class="btn btn-sm {% if lang == "en" %}btn-primary{% else %}btn-secondary{% endif %}">EN</button>
-        <button type="submit" name="lang" value="ko" class="btn btn-sm {% if lang == "ko" %}btn-primary{% else %}btn-secondary{% endif %}">한국어</button>
-    </form>
 </section>
 
 <style>

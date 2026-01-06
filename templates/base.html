@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="{{ lang }}" dir="{% if lang == "ar" %}rtl{% else %}ltr{% endif %}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -85,5 +85,19 @@
             <span>🔒</span>
         </a>
     </nav>
+    <script>
+    // 언어 드롭다운
+    const langDropdown = document.querySelector('.lang-dropdown');
+    const langToggle = document.getElementById('langToggle');
+    if (langToggle) {
+        langToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            langDropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', () => {
+            langDropdown.classList.remove('open');
+        });
+    }
+    </script>
 </body>
 </html>
