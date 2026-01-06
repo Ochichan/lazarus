@@ -57,7 +57,7 @@ impl NoteType {
         }
     }
 
-    pub fn label(&self) -> &'static str {
+    pub fn label(self) -> &'static str {
         match self {
             NoteType::Note => "Note",
             NoteType::Journal => "Journal",

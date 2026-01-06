@@ -154,8 +154,5 @@ fn is_media_file(filename: &str) -> bool {
 
 /// ZIP 에러 변환
 fn zip_err(e: zip::result::ZipError) -> LazarusError {
-    LazarusError::Io(std::io::Error::new(
-        std::io::ErrorKind::Other,
-        e.to_string(),
-    ))
+    LazarusError::Io(std::io::Error::other(e.to_string()))
 }

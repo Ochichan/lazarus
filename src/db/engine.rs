@@ -529,11 +529,7 @@ impl StorageEngine {
 
         let after_size = std::fs::metadata(&self.path).map(|m| m.len()).unwrap_or(0);
 
-        let saved = if before_size > after_size {
-            before_size - after_size
-        } else {
-            0
-        };
+        let saved = before_size.saturating_sub(after_size);
 
         tracing::info!(
             "Compaction 완료: {} -> {} ({} 절약, {}개 레코드)",
