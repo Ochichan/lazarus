@@ -113,6 +113,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "Rechercher Wiki");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "Gérer ZIM");
     data.insert("wiki.status", "État");
     data.insert("wiki.loaded", "chargés");
@@ -249,5 +250,34 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "Graphe de Connaissances");
     data.insert("app.footer", "Le Savoir pour Tous");
 
+    // === USB ===
+    data.insert("usb.title", "Synchronisation USB");
+    data.insert("usb.scan", "Scanner");
+    data.insert("usb.scanning", "Recherche de périphériques USB");
+    data.insert("usb.no_usb", "Aucun USB Lazarus détecté");
+    data.insert(
+        "usb.no_usb_hint",
+        "Insérez une clé USB avec lazarus.sync ou initialisez-en une",
+    );
+    data.insert("usb.error", "Échec du scan");
+    data.insert("usb.init_title", "Initialiser USB");
+    data.insert(
+        "usb.init_desc",
+        "Créer une nouvelle clé USB Lazarus pour le partage hors ligne",
+    );
+    data.insert("usb.init_btn", "Initialiser");
+    data.insert("usb.init_error", "Échec de initialisation");
+    data.insert("usb.enter_path", "Entrez le chemin USB");
+    data.insert("usb.notes", "Notes");
+    data.insert("usb.posts", "Publications");
+    data.insert("usb.packages", "Paquets");
+    data.insert("usb.sync", "Synchroniser");
+    data.insert("usb.export", "Exporter");
+    data.insert("usb.import", "Importer");
+    data.insert("home.usb_sync", "Sync USB");
+    data.insert("home.shortcut.wiki", "Wiki");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "Graphe");
+    data.insert("home.shortcut.review", "Réviser");
     Translations::new(data)
 }

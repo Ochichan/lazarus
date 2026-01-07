@@ -107,6 +107,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "Wiki Ara");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "ZIM Yönetimi");
     data.insert("wiki.status", "Durum");
     data.insert("wiki.loaded", "yüklendi");
@@ -227,5 +228,34 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "Bilgi Grafiği");
     data.insert("app.footer", "Herkes İçin Bilgi");
 
+    // === USB ===
+    data.insert("usb.title", "USB Senkronizasyonu");
+    data.insert("usb.scan", "Tara");
+    data.insert("usb.scanning", "USB cihazları aranıyor");
+    data.insert("usb.no_usb", "Lazarus USB algılanmadı");
+    data.insert(
+        "usb.no_usb_hint",
+        "lazarus.sync dosyalı USB takın veya aşağıda başlatın",
+    );
+    data.insert("usb.error", "Tarama başarısız");
+    data.insert("usb.init_title", "USB Başlat");
+    data.insert(
+        "usb.init_desc",
+        "Çevrimdışı paylaşım için yeni Lazarus USB oluştur",
+    );
+    data.insert("usb.init_btn", "Başlat");
+    data.insert("usb.init_error", "Başlatma başarısız");
+    data.insert("usb.enter_path", "USB yolunu girin");
+    data.insert("usb.notes", "Notlar");
+    data.insert("usb.posts", "Gönderiler");
+    data.insert("usb.packages", "Paketler");
+    data.insert("usb.sync", "Senkronize");
+    data.insert("usb.export", "Dışa Aktar");
+    data.insert("usb.import", "İçe Aktar");
+    data.insert("home.usb_sync", "USB Senkronizasyonu");
+    data.insert("home.shortcut.wiki", "Wiki");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "Grafik");
+    data.insert("home.shortcut.review", "Gözden Geçir");
     Translations::new(data)
 }

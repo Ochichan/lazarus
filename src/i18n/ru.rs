@@ -104,6 +104,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "Поиск в Вики");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "Управление ZIM");
     data.insert("wiki.status", "Статус");
     data.insert("wiki.loaded", "загружено");
@@ -228,5 +229,34 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "Граф знаний");
     data.insert("app.footer", "Знания для всех");
 
+    // === USB ===
+    data.insert("usb.title", "Синхронизация USB");
+    data.insert("usb.scan", "Сканировать");
+    data.insert("usb.scanning", "Поиск USB устройств");
+    data.insert("usb.no_usb", "Lazarus USB не обнаружен");
+    data.insert(
+        "usb.no_usb_hint",
+        "Вставьте USB с lazarus.sync или инициализируйте ниже",
+    );
+    data.insert("usb.error", "Ошибка сканирования");
+    data.insert("usb.init_title", "Инициализировать USB");
+    data.insert(
+        "usb.init_desc",
+        "Создать новый Lazarus USB для офлайн обмена",
+    );
+    data.insert("usb.init_btn", "Инициализировать");
+    data.insert("usb.init_error", "Ошибка инициализации");
+    data.insert("usb.enter_path", "Введите путь USB");
+    data.insert("usb.notes", "Заметки");
+    data.insert("usb.posts", "Посты");
+    data.insert("usb.packages", "Пакеты");
+    data.insert("usb.sync", "Синхронизировать");
+    data.insert("usb.export", "Экспорт");
+    data.insert("usb.import", "Импорт");
+    data.insert("home.usb_sync", "Синхронизация USB");
+    data.insert("home.shortcut.wiki", "Вики");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "Граф");
+    data.insert("home.shortcut.review", "Повторение");
     Translations::new(data)
 }

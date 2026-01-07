@@ -101,6 +101,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "بحث ويكي");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "إدارة ZIM");
     data.insert("wiki.status", "الحالة");
     data.insert("wiki.loaded", "تم التحميل");
@@ -222,5 +223,31 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "خريطة المعرفة");
     data.insert("app.footer", "المعرفة للجميع");
 
+    // === USB ===
+    data.insert("usb.title", "مزامنة USB");
+    data.insert("usb.scan", "مسح");
+    data.insert("usb.scanning", "جارٍ البحث عن أجهزة USB");
+    data.insert("usb.no_usb", "لم يتم اكتشاف Lazarus USB");
+    data.insert(
+        "usb.no_usb_hint",
+        "أدخل USB مع ملف lazarus.sync أو قم بالتهيئة أدناه",
+    );
+    data.insert("usb.error", "فشل المسح");
+    data.insert("usb.init_title", "تهيئة USB");
+    data.insert("usb.init_desc", "إنشاء Lazarus USB جديد للمشاركة دون اتصال");
+    data.insert("usb.init_btn", "تهيئة");
+    data.insert("usb.init_error", "فشل التهيئة");
+    data.insert("usb.enter_path", "أدخل مسار USB");
+    data.insert("usb.notes", "ملاحظات");
+    data.insert("usb.posts", "منشورات");
+    data.insert("usb.packages", "حزم");
+    data.insert("usb.sync", "مزامنة");
+    data.insert("usb.export", "تصدير");
+    data.insert("usb.import", "استيراد");
+    data.insert("home.usb_sync", "مزامنة USB");
+    data.insert("home.shortcut.wiki", "ويكي");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "رسم بياني");
+    data.insert("home.shortcut.review", "مراجعة");
     Translations::new(data)
 }

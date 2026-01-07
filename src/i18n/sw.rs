@@ -104,6 +104,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "Tafuta Wiki");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "Simamia ZIM");
     data.insert("wiki.status", "Hali");
     data.insert("wiki.loaded", "zimepakiwa");
@@ -231,5 +232,34 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "Grafu ya Maarifa");
     data.insert("app.footer", "Maarifa kwa Wote");
 
+    // === USB ===
+    data.insert("usb.title", "Usawazishaji wa USB");
+    data.insert("usb.scan", "Changanua");
+    data.insert("usb.scanning", "Kutafuta vifaa vya USB");
+    data.insert("usb.no_usb", "Hakuna Lazarus USB iliyogunduliwa");
+    data.insert(
+        "usb.no_usb_hint",
+        "Ingiza USB yenye lazarus.sync au anzisha hapa chini",
+    );
+    data.insert("usb.error", "Imeshindwa kuchanganua");
+    data.insert("usb.init_title", "Anzisha USB");
+    data.insert(
+        "usb.init_desc",
+        "Unda Lazarus USB mpya kwa kushiriki nje ya mtandao",
+    );
+    data.insert("usb.init_btn", "Anzisha");
+    data.insert("usb.init_error", "Imeshindwa kuanzisha");
+    data.insert("usb.enter_path", "Ingiza njia ya USB");
+    data.insert("usb.notes", "Vidokezo");
+    data.insert("usb.posts", "Machapisho");
+    data.insert("usb.packages", "Vifurushi");
+    data.insert("usb.sync", "Sawazisha");
+    data.insert("usb.export", "Hamisha nje");
+    data.insert("usb.import", "Ingiza");
+    data.insert("home.usb_sync", "Usawazishaji USB");
+    data.insert("home.shortcut.wiki", "Wiki");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "Grafu");
+    data.insert("home.shortcut.review", "Kagua");
     Translations::new(data)
 }

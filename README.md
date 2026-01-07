@@ -201,6 +201,22 @@ pmap -x $(pgrep lazarus) | tail -n 1
 - SHA-256 integrity verification
 - Drag-and-drop import
 
+### 🔌 USB Sync
+- USB device scanning and detection
+- Initialize Lazarus USB for offline sharing
+- Sync notes across air-gapped devices
+- Works completely offline
+
+### ⌨️ Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| `n` | New note |
+| `/` | Search |
+| `w` | Wiki |
+| `u` | USB Sync |
+| `g` | Graph view |
+| `r` | SRS Review |
+
 ### 🌍 Internationalization (17 Languages)
 
 | Tier | Languages |
@@ -374,6 +390,7 @@ Browser ←HTTP→ Axum Server
 
 ### v0.4 - USB Community
 - [ ] USB auto-detection
+- [x] USB Sync page
 - [ ] Offline bulletin board
 - [ ] Package hub
 

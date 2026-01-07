@@ -95,6 +95,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "維基搵嘢");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "ZIM管理");
     data.insert("wiki.status", "狀態");
     data.insert("wiki.loaded", "已載入");
@@ -210,5 +211,28 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "知識圖譜");
     data.insert("app.footer", "知識屬於每個人");
 
+    // === USB ===
+    data.insert("usb.title", "USB同步");
+    data.insert("usb.scan", "掃描");
+    data.insert("usb.scanning", "搵緊USB裝置");
+    data.insert("usb.no_usb", "搵唔到Lazarus USB");
+    data.insert("usb.no_usb_hint", "插入有lazarus.sync嘅USB或者喺下面初始化");
+    data.insert("usb.error", "掃描失敗");
+    data.insert("usb.init_title", "初始化USB");
+    data.insert("usb.init_desc", "建立新嘅Lazarus USB用嚟離線分享");
+    data.insert("usb.init_btn", "初始化");
+    data.insert("usb.init_error", "初始化失敗");
+    data.insert("usb.enter_path", "輸入USB路徑");
+    data.insert("usb.notes", "筆記");
+    data.insert("usb.posts", "帖子");
+    data.insert("usb.packages", "套件");
+    data.insert("usb.sync", "同步");
+    data.insert("usb.export", "匯出");
+    data.insert("usb.import", "匯入");
+    data.insert("home.usb_sync", "USB同步");
+    data.insert("home.shortcut.wiki", "維基");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "圖表");
+    data.insert("home.shortcut.review", "複習");
     Translations::new(data)
 }

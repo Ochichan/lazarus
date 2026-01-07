@@ -1,7 +1,4 @@
 {% extends "base.html" %}
-{% block nav_notes %}{{ t["nav.notes"] }}{% endblock %}
-{% block nav_search %}{{ t["nav.search"] }}{% endblock %}
-{% block nav_wiki %}{{ t["nav.wiki"] }}{% endblock %}
 {% block version %}{{ version }}{% endblock %}
 {% block footer_text %}{{ t["app.footer"] }}{% endblock %}
 {% block title %}{{ t["app.name"] }}{% endblock %}
@@ -58,6 +55,10 @@
             <span class="icon">🔐</span>
             <span>{{ t["home.security"] }}</span>
         </a>
+        <a href="/usb" class="action-card">
+            <span class="icon">🔌</span>
+            <span>{{ t["home.usb_sync"] }}</span>
+        </a>
     </div>
 </section>
 
@@ -66,6 +67,10 @@
     <div class="hints-grid">
         <div class="hint"><kbd>n</kbd> {{ t["home.shortcut.new_note"] }}</div>
         <div class="hint"><kbd>/</kbd> {{ t["home.shortcut.search"] }}</div>
+        <div class="hint"><kbd>w</kbd> {{ t["home.shortcut.wiki"] }}</div>
+        <div class="hint"><kbd>u</kbd> {{ t["home.shortcut.usb"] }}</div>
+        <div class="hint"><kbd>g</kbd> {{ t["home.shortcut.graph"] }}</div>
+        <div class="hint"><kbd>r</kbd> {{ t["home.shortcut.review"] }}</div>
         <div class="hint"><kbd>?</kbd> {{ t["home.shortcut.help"] }}</div>
     </div>
 </section>
@@ -89,6 +94,10 @@ document.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     if (e.key === 'n') window.location.href = '/notes/new';
     if (e.key === '/') { e.preventDefault(); window.location.href = '/search'; }
+    if (e.key === 'w') window.location.href = '/wiki/';
+    if (e.key === 'u') window.location.href = '/usb';
+    if (e.key === 'g') window.location.href = '/graph';
+    if (e.key === 'r') window.location.href = '/srs';
 });
 </script>
 {% endblock %}

@@ -104,6 +104,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "جستجوی ویکی");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "مدیریت ZIM");
     data.insert("wiki.status", "وضعیت");
     data.insert("wiki.loaded", "بارگذاری شده");
@@ -221,5 +222,31 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "نمودار دانش");
     data.insert("app.footer", "دانش برای همه");
 
+    // === USB ===
+    data.insert("usb.title", "همگام‌سازی USB");
+    data.insert("usb.scan", "اسکن");
+    data.insert("usb.scanning", "در حال جستجوی دستگاه‌های USB");
+    data.insert("usb.no_usb", "USB لازاروس یافت نشد");
+    data.insert(
+        "usb.no_usb_hint",
+        "USB با فایل lazarus.sync وارد کنید یا زیر مقداردهی کنید",
+    );
+    data.insert("usb.error", "خطا در اسکن");
+    data.insert("usb.init_title", "مقداردهی USB");
+    data.insert("usb.init_desc", "ایجاد USB لازاروس جدید برای اشتراک آفلاین");
+    data.insert("usb.init_btn", "مقداردهی");
+    data.insert("usb.init_error", "خطا در مقداردهی");
+    data.insert("usb.enter_path", "مسیر USB را وارد کنید");
+    data.insert("usb.notes", "یادداشت‌ها");
+    data.insert("usb.posts", "پست‌ها");
+    data.insert("usb.packages", "بسته‌ها");
+    data.insert("usb.sync", "همگام‌سازی");
+    data.insert("usb.export", "صادرات");
+    data.insert("usb.import", "واردات");
+    data.insert("home.usb_sync", "همگام‌سازی USB");
+    data.insert("home.shortcut.wiki", "ویکی");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "نمودار");
+    data.insert("home.shortcut.review", "مرور");
     Translations::new(data)
 }

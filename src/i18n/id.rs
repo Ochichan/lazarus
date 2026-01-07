@@ -104,6 +104,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "Cari Wiki");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "Kelola ZIM");
     data.insert("wiki.status", "Status");
     data.insert("wiki.loaded", "dimuat");
@@ -231,5 +232,34 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "Grafik Pengetahuan");
     data.insert("app.footer", "Pengetahuan untuk Semua");
 
+    // === USB ===
+    data.insert("usb.title", "Sinkronisasi USB");
+    data.insert("usb.scan", "Pindai");
+    data.insert("usb.scanning", "Mencari perangkat USB");
+    data.insert("usb.no_usb", "USB Lazarus tidak terdeteksi");
+    data.insert(
+        "usb.no_usb_hint",
+        "Masukkan USB dengan lazarus.sync atau inisialisasi di bawah",
+    );
+    data.insert("usb.error", "Gagal memindai");
+    data.insert("usb.init_title", "Inisialisasi USB");
+    data.insert(
+        "usb.init_desc",
+        "Buat USB Lazarus baru untuk berbagi offline",
+    );
+    data.insert("usb.init_btn", "Inisialisasi");
+    data.insert("usb.init_error", "Gagal inisialisasi");
+    data.insert("usb.enter_path", "Masukkan path USB");
+    data.insert("usb.notes", "Catatan");
+    data.insert("usb.posts", "Postingan");
+    data.insert("usb.packages", "Paket");
+    data.insert("usb.sync", "Sinkronisasi");
+    data.insert("usb.export", "Ekspor");
+    data.insert("usb.import", "Impor");
+    data.insert("home.usb_sync", "Sinkronisasi USB");
+    data.insert("home.shortcut.wiki", "Wiki");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "Grafik");
+    data.insert("home.shortcut.review", "Review");
     Translations::new(data)
 }

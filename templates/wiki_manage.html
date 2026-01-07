@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block nav_wiki_active %}active{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["wiki.manage"] }} - Lazarus{% endblock %}
+
+{% block content %}
+<div class="manage-container">
+    <h1>📖 {{ t["wiki.manage"] }}</h1>
+    
+    <div class="section">
+        <h2>📊 {{ t["wiki.status"] }}</h2>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">{{ zim_count }}</div>
+                <div class="stat-label">{{ t["wiki.loaded_zims"] }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📂 {{ t["wiki.directory"] }}</h2>
+        <div class="dir-path">{{ zim_dir }}</div>
+        <div class="dir-hint">💡 {{ t["wiki.directory_hint"] }}</div>
+        <div class="action-row">
+            <button class="btn btn-primary" onclick="reloadZims()">🔄 {{ t["wiki.refresh"] }}</button>
+            <button class="btn btn-secondary" onclick="openDir()">📁 {{ t["wiki.open_folder"] }}</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>➕ {{ t["wiki.add"] }}</h2>
+        <div class="add-form">
+            <input type="text" id="zim-path" placeholder="{{ t["wiki.add_placeholder"] }}">
+            <button class="btn btn-primary" onclick="addZim()">{{ t["wiki.add_btn"] }}</button>
+        </div>
+        <div class="dir-hint">💡 {{ t["wiki.add_hint"] }}</div>
+    </div>
+
+    <div class="section">
+        <h2>📚 {{ t["wiki.loaded_files"] }}</h2>
+        <table class="zim-table">
+            <thead>
+                <tr>
+                    <th>{{ t["wiki.name"] }}</th>
+                    <th>{{ t["wiki.path"] }}</th>
+                    <th>{{ t["wiki.action"] }}</th>
+                </tr>
+            </thead>
+            <tbody id="zim-list">
+                {% if zim_list.is_empty() %}
+                <tr><td colspan="3" class="empty">{{ t["wiki.no_zim_loaded"] }}</td></tr>
+                {% else %}
+                {% for zim in zim_list %}
+                <tr>
+                    <td><strong>{{ zim.0 }}</strong></td>
+                    <td class="path">{{ zim.1 }}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm" onclick="removeZim('{{ zim.0 }}')">{{ t["wiki.remove"] }}</button>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<style>
+.manage-container { max-width: 900px; margin: 0 auto; padding: 2rem; }
+.section {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+}
+.section h2 { margin-top: 0; margin-bottom: 1rem; }
+.stats { display: flex; gap: 2rem; }
+.stat { text-align: center; }
+.stat-value { font-size: 2rem; font-weight: bold; color: var(--accent); }
+.stat-label { color: var(--text-secondary); font-size: 0.875rem; }
+.dir-path {
+    background: var(--bg);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-family: monospace;
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+}
+.dir-hint { color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.5rem; }
+.action-row { display: flex; gap: 0.5rem; margin-top: 1rem; }
+.add-form { display: flex; gap: 0.5rem; }
+.add-form input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: monospace;
+}
+.zim-table { width: 100%; border-collapse: collapse; }
+.zim-table th, .zim-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+.zim-table th { color: var(--text-secondary); font-weight: 600; }
+.zim-table .path { font-family: monospace; font-size: 0.875rem; color: var(--text-secondary); word-break: break-all; }
+.zim-table .empty { text-align: center; color: var(--text-secondary); padding: 2rem; }
+.btn-sm { padding: 0.25rem 0.75rem; font-size: 0.875rem; }
+.btn-danger { background: #dc2626; }
+.btn-danger:hover { background: #b91c1c; }
+.toast {
+    position: fixed; bottom: 2rem; right: 2rem;
+    padding: 1rem 1.5rem; background: var(--accent); color: white;
+    border-radius: 8px; opacity: 0; transform: translateY(20px);
+    transition: all 0.3s; z-index: 1000;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { background: #dc2626; }
+.toast.success { background: #16a34a; }
+</style>
+
+<script>
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.className = 'toast ' + type + ' show';
+    setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+async function reloadZims() {
+    try {
+        const res = await fetch('/api/zim/reload', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.added.length > 0 ? 'Added: ' + data.added.join(', ') : 'No new ZIM files', 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Refresh failed', 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+async function addZim() {
+    const path = document.getElementById('zim-path').value.trim();
+    if (!path) { showToast('Enter path', 'error'); return; }
+    try {
+        const res = await fetch('/api/zim/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Added: ' + data.name, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.error || 'Add failed', 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+async function removeZim(name) {
+    if (!confirm('Remove "' + name + '"?')) return;
+    try {
+        const res = await fetch('/api/zim/' + encodeURIComponent(name), { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Removed: ' + name, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast('Remove failed', 'error');
+        }
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error');
+    }
+}
+
+function openDir() {
+    showToast('Directory: {{ zim_dir }}', 'success');
+}
+
+document.getElementById('zim-path')?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addZim();
+});
+</script>
+{% endblock %}

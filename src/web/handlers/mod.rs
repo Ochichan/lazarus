@@ -10,4 +10,5 @@ pub mod search;
 pub mod security;
 pub mod srs;
 pub mod sync;
+pub mod usb;
 pub mod wiki;

@@ -101,6 +101,7 @@ pub fn translations() -> Translations {
 
     // 위키
     data.insert("wiki.search", "위키 검색");
+    data.insert("wiki.recent_articles", "최근 문서");
     data.insert("wiki.manage", "ZIM 관리");
     data.insert("wiki.status", "현황");
     data.insert("wiki.loaded", "개 로드됨");
@@ -225,5 +226,31 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "지식 그래프");
     data.insert("app.footer", "모두를 위한 지식");
 
+    // === USB ===
+    data.insert("usb.title", "USB 동기화");
+    data.insert("usb.scan", "스캔");
+    data.insert("usb.scanning", "USB 장치 검색 중");
+    data.insert("usb.no_usb", "Lazarus USB가 감지되지 않았습니다");
+    data.insert(
+        "usb.no_usb_hint",
+        "lazarus.sync 파일이 있는 USB를 연결하거나 아래에서 초기화하세요",
+    );
+    data.insert("usb.error", "스캔 실패");
+    data.insert("usb.init_title", "USB 초기화");
+    data.insert("usb.init_desc", "오프라인 공유를 위한 Lazarus USB 생성");
+    data.insert("usb.init_btn", "초기화");
+    data.insert("usb.init_error", "초기화 실패");
+    data.insert("usb.enter_path", "USB 경로 입력");
+    data.insert("usb.notes", "노트");
+    data.insert("usb.posts", "게시글");
+    data.insert("usb.packages", "패키지");
+    data.insert("usb.sync", "동기화");
+    data.insert("usb.export", "내보내기");
+    data.insert("usb.import", "가져오기");
+    data.insert("home.usb_sync", "USB 동기화");
+    data.insert("home.shortcut.wiki", "위키");
+    data.insert("home.shortcut.usb", "USB 동기화");
+    data.insert("home.shortcut.graph", "그래프");
+    data.insert("home.shortcut.review", "복습");
     Translations::new(data)
 }

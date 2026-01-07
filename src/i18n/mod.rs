@@ -237,6 +237,11 @@ fn translation_keys() -> &'static [&'static str] {
         "home.shortcut.search",
         "home.shortcut.help",
         "home.knowledge_graph",
+        "home.usb_sync",
+        "home.shortcut.wiki",
+        "home.shortcut.usb",
+        "home.shortcut.graph",
+        "home.shortcut.review",
         "app.footer",
         // 에디터
         "editor.title_placeholder",
@@ -300,6 +305,7 @@ fn translation_keys() -> &'static [&'static str] {
         "search.tip3",
         // 위키
         "wiki.search",
+        "wiki.recent_articles",
         "wiki.manage",
         "wiki.status",
         "wiki.loaded",
@@ -397,5 +403,23 @@ fn translation_keys() -> &'static [&'static str] {
         "settings.version",
         "settings.storage",
         "settings.about",
+        // USB
+        "usb.title",
+        "usb.scan",
+        "usb.scanning",
+        "usb.no_usb",
+        "usb.no_usb_hint",
+        "usb.error",
+        "usb.init_title",
+        "usb.init_desc",
+        "usb.init_btn",
+        "usb.init_error",
+        "usb.enter_path",
+        "usb.notes",
+        "usb.posts",
+        "usb.packages",
+        "usb.sync",
+        "usb.export",
+        "usb.import",
     ]
 }

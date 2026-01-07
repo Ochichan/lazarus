@@ -436,7 +436,6 @@ struct NotesSplitTemplate {
 }
 
 /// GET /notes/split
-/// GET /notes/split
 pub async fn notes_split(State(state): State<AppState>) -> Result<Html<String>> {
     let db = state.db.read().await;
     let lang = state.get_lang().await;
@@ -520,6 +519,32 @@ pub async fn notes_split_with_id(
         note_title: selected.title,
         note_content: selected.content,
         note_tags: selected.tags.join(", "),
+        lang: lang.code(),
+        t,
+    };
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
+}
+
+// === USB 페이지 ===
+
+#[derive(Template)]
+#[template(path = "usb.html")]
+struct UsbTemplate<'a> {
+    version: &'a str,
+    lang: &'a str,
+    t: std::collections::HashMap<String, String>,
+}
+
+/// USB 동기화 페이지
+pub async fn usb_page(State(state): State<AppState>) -> Result<Html<String>> {
+    let lang = state.get_lang().await;
+    let t = all_translations(lang);
+    let template = UsbTemplate {
+        version: state.version,
         lang: lang.code(),
         t,
     };

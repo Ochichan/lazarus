@@ -81,6 +81,7 @@ pub fn create_router(state: AppState) -> Router {
         )
         // === 설정 ===
         .route("/settings", get(handlers::pages::settings_view))
+        .route("/usb", get(handlers::pages::usb_page))
         // === 링크 라우트 ===
         .route("/notes/by-title/:title", get(handlers::notes::get_by_title))
         // === API 라우트 ===
@@ -108,6 +109,11 @@ pub fn create_router(state: AppState) -> Router {
         // === 동기화 라우트 ===
         .route("/sync/export", post(handlers::sync::export))
         .route("/sync/import", post(handlers::sync::import))
+        // === USB 라우트 ===
+        .route("/api/usb", get(handlers::usb::list_usbs))
+        .route("/api/usb/scan", post(handlers::usb::scan_usbs))
+        .route("/api/usb/init", post(handlers::usb::init_usb))
+        .route("/api/usb/manifest", get(handlers::usb::get_manifest))
         // === 헬스체크 ===
         .route("/health", get(handlers::health::check))
         // === 정적 파일 ===

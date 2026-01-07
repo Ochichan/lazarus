@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block nav_wiki_active %}active{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["wiki.search"] }} - Lazarus{% endblock %}
+
+{% block content %}
+<div class="wiki-container">
+    <div class="wiki-header">
+        <h1>🔍 {{ t["wiki.search"] }}</h1>
+        {% if zim_options.len() > 1 %}
+        <select id="zim-select" onchange="changeZim(this.value)" class="zim-selector">
+            {% for option in zim_options %}
+            <option value="{{ option.0 }}" {% if option.1 %}selected{% endif %}>{{ option.0 }}</option>
+            {% endfor %}
+        </select>
+        {% endif %}
+    </div>
+
+    <form class="search-form" action="/wiki/search" method="GET">
+        <input type="hidden" name="zim" value="{{ selected_zim }}">
+        <input type="text" name="q" value="{{ query }}" placeholder="{{ t["search.placeholder"] }}" autofocus>
+        <button type="submit" class="btn btn-primary">{{ t["search.button"] }}</button>
+    </form>
+
+    <p class="result-count">
+        {% if query.is_empty() %}{{ t["wiki.recent_articles"] }}{% else %}"{{ query }}" - {{ results.len() }}건{% endif %}
+    </p>
+
+    <div class="results-list">
+        {% for entry in results %}
+        <a href="/wiki/{{ entry.url_encoded }}?zim={{ selected_zim }}" class="search-result">
+            <div class="result-title">{{ entry.title }}</div>
+            <div class="result-url">{{ entry.url }}</div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.wiki-container { max-width: 800px; margin: 0 auto; padding: 2rem; }
+.wiki-header { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
+.wiki-header h1 { margin: 0; flex: 1; }
+.zim-selector {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+.search-form { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.search-form input[type="text"] {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+}
+.result-count { color: var(--text-secondary); margin-bottom: 1rem; }
+.search-result {
+    display: block;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background: var(--surface);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+}
+.search-result:hover { border-color: var(--accent); }
+.result-title { font-weight: 600; margin-bottom: 0.25rem; }
+.result-url { font-size: 0.85rem; color: var(--text-secondary); }
+</style>
+
+<script>
+function changeZim(name) {
+    const url = new URL(window.location);
+    url.searchParams.set('zim', name);
+    window.location = url;
+}
+</script>
+{% endblock %}

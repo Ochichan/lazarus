@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["usb.title"] }} - Lazarus{% endblock %}
+
+{% block content %}
+<div class="usb-container">
+    <div class="usb-header">
+        <h1>🔌 {{ t["usb.title"] }}</h1>
+        <button class="btn btn-primary" onclick="scanUsb()">
+            🔄 {{ t["usb.scan"] }}
+        </button>
+    </div>
+
+    <div id="usb-list" class="usb-list">
+        <div class="loading">{{ t["usb.scanning"] }}...</div>
+    </div>
+
+    <div class="usb-actions">
+        <h2>💾 {{ t["usb.init_title"] }}</h2>
+        <p class="usb-desc">{{ t["usb.init_desc"] }}</p>
+        <div class="init-form">
+            <input type="text" id="usb-path" placeholder="/media/usb" class="input-path">
+            <button class="btn btn-secondary" onclick="initUsb()">
+                {{ t["usb.init_btn"] }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.usb-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.usb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.usb-header h1 {
+    margin: 0;
+}
+
+.usb-list {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.usb-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+}
+
+.usb-card:hover {
+    border-color: var(--accent);
+}
+
+.usb-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.usb-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.usb-path {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-family: monospace;
+}
+
+.usb-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.usb-stat {
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--bg);
+    border-radius: 8px;
+}
+
+.usb-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.usb-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.usb-actions-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.usb-actions {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.usb-actions h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+}
+
+.usb-desc {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.init-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.input-path {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: monospace;
+}
+
+.input-path:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.empty-state-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+/* RTL Support */
+[dir="rtl"] .usb-header {
+    flex-direction: row-reverse;
+}
+
+[dir="rtl"] .init-form {
+    flex-direction: row-reverse;
+}
+</style>
+
+<script>
+async function scanUsb() {
+    const list = document.getElementById('usb-list');
+    list.innerHTML = '<div class="loading">{{ t["usb.scanning"] }}...</div>';
+
+    try {
+        const res = await fetch('/api/usb/scan', { method: 'POST' });
+        const data = await res.json();
+        renderUsbList(data.usbs);
+    } catch (err) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">❌</div>{{ t["usb.error"] }}</div>';
+    }
+}
+
+function renderUsbList(usbs) {
+    const list = document.getElementById('usb-list');
+
+    if (usbs.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">🔌</div>
+                <p>{{ t["usb.no_usb"] }}</p>
+                <p style="font-size: 0.85rem;">{{ t["usb.no_usb_hint"] }}</p>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = usbs.map(usb => `
+        <div class="usb-card">
+            <div class="usb-card-header">
+                <div>
+                    <div class="usb-name">
+                        💾 ${usb.name}
+                        ${usb.has_manifest ? '✅' : '⚠️'}
+                    </div>
+                    <div class="usb-path">${usb.path}</div>
+                </div>
+            </div>
+            <div class="usb-stats">
+                <div class="usb-stat">
+                    <div class="usb-stat-value">${usb.note_count}</div>
+                    <div class="usb-stat-label">📝 {{ t["usb.notes"] }}</div>
+                </div>
+                <div class="usb-stat">
+                    <div class="usb-stat-value">${usb.post_count}</div>
+                    <div class="usb-stat-label">📋 {{ t["usb.posts"] }}</div>
+                </div>
+                <div class="usb-stat">
+                    <div class="usb-stat-value">${usb.qna_count}</div>
+                    <div class="usb-stat-label">❓ Q&A</div>
+                </div>
+                <div class="usb-stat">
+                    <div class="usb-stat-value">${usb.package_count}</div>
+                    <div class="usb-stat-label">📦 {{ t["usb.packages"] }}</div>
+                </div>
+            </div>
+            <div class="usb-actions-row">
+                <button class="btn btn-primary btn-sm" onclick="syncUsb('${usb.path}')">
+                    🔄 {{ t["usb.sync"] }}
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="exportToUsb('${usb.path}')">
+                    📤 {{ t["usb.export"] }}
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="importFromUsb('${usb.path}')">
+                    📥 {{ t["usb.import"] }}
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+async function initUsb() {
+    const path = document.getElementById('usb-path').value.trim();
+    if (!path) {
+        alert('{{ t["usb.enter_path"] }}');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/usb/init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ path })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            alert('✅ ' + data.message);
+            scanUsb();
+        } else {
+            alert('❌ ' + data.message);
+        }
+    } catch (err) {
+        alert('❌ {{ t["usb.init_error"] }}');
+    }
+}
+
+async function syncUsb(path) {
+    alert('🔄 동기화 기능은 곧 추가됩니다!');
+    // TODO: 구현
+}
+
+async function exportToUsb(path) {
+    alert('📤 내보내기 기능은 곧 추가됩니다!');
+    // TODO: 구현
+}
+
+async function importFromUsb(path) {
+    alert('📥 가져오기 기능은 곧 추가됩니다!');
+    // TODO: 구현
+}
+
+// 페이지 로드 시 스캔
+document.addEventListener('DOMContentLoaded', scanUsb);
+</script>
+{% endblock %}

@@ -101,6 +101,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "Wiki検索");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "ZIM管理");
     data.insert("wiki.status", "状態");
     data.insert("wiki.loaded", "読み込み済み");
@@ -225,5 +226,31 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "ナレッジグラフ");
     data.insert("app.footer", "すべての人に知識を");
 
+    // === USB ===
+    data.insert("usb.title", "USB同期");
+    data.insert("usb.scan", "スキャン");
+    data.insert("usb.scanning", "USBデバイスを検索中");
+    data.insert("usb.no_usb", "Lazarus USBが検出されません");
+    data.insert(
+        "usb.no_usb_hint",
+        "lazarus.syncファイルのあるUSBを挿入するか、以下で初期化してください",
+    );
+    data.insert("usb.error", "スキャン失敗");
+    data.insert("usb.init_title", "USB初期化");
+    data.insert("usb.init_desc", "オフライン共有用の新しいLazarus USBを作成");
+    data.insert("usb.init_btn", "初期化");
+    data.insert("usb.init_error", "初期化失敗");
+    data.insert("usb.enter_path", "USBパスを入力");
+    data.insert("usb.notes", "ノート");
+    data.insert("usb.posts", "投稿");
+    data.insert("usb.packages", "パッケージ");
+    data.insert("usb.sync", "同期");
+    data.insert("usb.export", "エクスポート");
+    data.insert("usb.import", "インポート");
+    data.insert("home.usb_sync", "USB同期");
+    data.insert("home.shortcut.wiki", "ウィキ");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "グラフ");
+    data.insert("home.shortcut.review", "復習");
     Translations::new(data)
 }

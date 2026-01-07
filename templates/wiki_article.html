@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Lazarus Wiki</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        :root { --wiki-nav-height: 50px; }
+        .wiki-nav {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: var(--wiki-nav-height); background: var(--bg);
+            padding: 0 1rem; display: flex; align-items: center; gap: 0.5rem;
+            border-bottom: 1px solid var(--border); z-index: 1000;
+        }
+        .wiki-nav-left, .wiki-nav-right { display: flex; align-items: center; gap: 0.5rem; }
+        .wiki-nav-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 1rem; }
+        .wiki-nav a, .wiki-nav button {
+            color: var(--text); text-decoration: none; padding: 0.4rem 0.75rem;
+            border-radius: 8px; border: none; background: transparent;
+            cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 0.25rem;
+        }
+        .wiki-nav a:hover, .wiki-nav button:hover { background: var(--surface); }
+        .wiki-nav .logo { font-weight: bold; font-size: 1rem; }
+        .nav-btn { background: var(--surface) !important; border: 1px solid var(--border) !important; }
+        .nav-btn:hover { background: var(--accent) !important; color: white !important; }
+        .wiki-title { color: var(--text-secondary); font-size: 0.85rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .zim-select { padding: 0.3rem 0.5rem; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.85rem; }
+        .wiki-content { margin-top: calc(var(--wiki-nav-height) + 1rem); padding: 1rem; max-width: 900px; margin-left: auto; margin-right: auto; }
+        .wiki-content img { max-width: 100%; height: auto; }
+        .wiki-content a { color: var(--accent); }
+        .wiki-content h1, .wiki-content h2, .wiki-content h3 { margin-top: 1.5rem; margin-bottom: 0.5rem; }
+        .wiki-content p { line-height: 1.7; margin-bottom: 1rem; }
+        .wiki-content table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+        .wiki-content th, .wiki-content td { border: 1px solid var(--border); padding: 0.5rem; text-align: left; }
+        .wiki-content th { background: var(--surface); }
+        .wiki-content pre, .wiki-content code { background: var(--surface); padding: 0.2rem 0.4rem; border-radius: 4px; font-family: monospace; }
+        .wiki-content pre { padding: 1rem; overflow-x: auto; }
+        .wiki-content blockquote { border-left: 3px solid var(--accent); margin: 1rem 0; padding-left: 1rem; color: var(--text-secondary); }
+        .breadcrumb { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; }
+        .breadcrumb a { color: var(--text-secondary); }
+        .breadcrumb a:hover { color: var(--accent); }
+        .selection-popup { display: none; position: absolute; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 2000; gap: 0.25rem; }
+        .selection-popup.show { display: flex; }
+        .selection-popup button { padding: 0.4rem 0.6rem; border: none; background: var(--surface); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 0.8rem; white-space: nowrap; }
+        .selection-popup button:hover { background: var(--accent); color: white; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 3000; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: var(--bg); border-radius: 12px; padding: 1.5rem; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal h3 { margin: 0 0 1rem 0; }
+        .modal label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+        .modal input, .modal textarea, .modal select { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); margin-bottom: 1rem; font-family: inherit; }
+        .modal textarea { min-height: 80px; resize: vertical; }
+        .modal-buttons { display: flex; gap: 0.5rem; justify-content: flex-end; }
+        .modal-buttons button { padding: 0.5rem 1rem; border: none; border-radius: 8px; cursor: pointer; }
+        .modal-buttons .btn-primary { background: var(--accent); color: white; }
+        .modal-buttons .btn-secondary { background: var(--surface); color: var(--text); }
+        .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: var(--accent); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; z-index: 4000; display: none; }
+        .toast.show { display: block; animation: fadeInOut 2s ease; }
+        @keyframes fadeInOut { 0% { opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
+        #split-container { display: block; }
+        #editor-panel { display: none; position: fixed; top: var(--wiki-nav-height); right: 0; bottom: 0; width: 50%; border-left: 2px solid var(--border); background: var(--bg); z-index: 900; }
+        #editor-frame { width: 100%; height: 100%; border: none; }
+        #split-container.split-active #editor-panel { display: block; }
+        #split-container.split-active .wiki-content { width: 50%; margin-right: 50%; }
+        @media (max-width: 768px) { .wiki-nav-center { display: none; } .wiki-title { max-width: 150px; } }
+    </style>
+</head>
+<body>
+<div id="split-container">
+    <nav class="wiki-nav">
+        <div class="wiki-nav-left">
+            <a href="/" class="logo">📚</a>
+            <button onclick="goBack()" class="nav-btn" title="Back">←</button>
+            <button onclick="goForward()" class="nav-btn" title="Forward">→</button>
+        </div>
+        <div class="wiki-nav-center">
+            <a href="/notes">📝 Notes</a>
+            <a href="/search">🔍 Search</a>
+            <a href="/wiki/search?zim={{ selected_zim }}">📖 Wiki</a>
+            <a href="/srs">🧠 SRS</a>
+        </div>
+        <div class="wiki-nav-right">
+            <button id="split-btn" onclick="toggleSplitView()" class="nav-btn" title="New Note">📝+</button>
+            {% if zim_options.len() > 1 %}
+            <select onchange="changeZim(this.value)" class="zim-select">
+                {% for opt in zim_options %}
+                <option value="{{ opt.0 }}" {% if opt.1 %}selected{% endif %}>{{ opt.0 }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            <span class="wiki-title" title="{{ title }}">{{ title }}</span>
+        </div>
+    </nav>
+
+    <div id="selection-popup" class="selection-popup">
+        <button onclick="createCard('basic')">📝 Basic</button>
+        <button onclick="createCard('cloze')">📦 Cloze</button>
+        <button onclick="createCard('definition')">📖 Definition</button>
+    </div>
+
+    <div id="card-modal" class="modal-overlay">
+        <div class="modal">
+            <h3>🧠 Create Flashcard</h3>
+            <label>Type</label>
+            <select id="card-type">
+                <option value="basic">Basic (Q&A)</option>
+                <option value="cloze">Cloze (Fill-in)</option>
+                <option value="definition">Definition</option>
+            </select>
+            <label>Question</label>
+            <textarea id="card-question" placeholder="Enter question..."></textarea>
+            <label>Answer</label>
+            <textarea id="card-answer" placeholder="Enter answer..."></textarea>
+            <div class="modal-buttons">
+                <button class="btn-secondary" onclick="closeCardModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveCard()">Create Card</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <main class="wiki-content">
+        <div class="breadcrumb">
+            <a href="/">Home</a> → <a href="/wiki/search?zim={{ selected_zim }}">Wiki</a> → {{ title }}
+        </div>
+        {{ content|safe }}
+    </main>
+
+    <div id="editor-panel">
+        <iframe id="editor-frame" src="about:blank"></iframe>
+    </div>
+</div>
+
+<script>
+const wikiTitle = "{{ title }}";
+const wikiUrl = window.location.href;
+const selectedZim = "{{ selected_zim }}";
+let selectedText = '';
+let splitMode = false;
+
+function goBack() { window.history.back(); }
+function goForward() { window.history.forward(); }
+function changeZim(name) { window.location = '/wiki/search?zim=' + name; }
+
+function toggleSplitView() {
+    splitMode = !splitMode;
+    const container = document.getElementById('split-container');
+    const splitBtn = document.getElementById('split-btn');
+    if (splitMode) {
+        container.classList.add('split-active');
+        splitBtn.textContent = '✕';
+        splitBtn.title = 'Close editor';
+        const editorFrame = document.getElementById('editor-frame');
+        const initialContent = encodeURIComponent(`# ${wikiTitle}\n\nSource: [Wikipedia](${wikiUrl})\n\n`);
+        editorFrame.src = `/notes/new?embed=1&title=${encodeURIComponent(wikiTitle)}&wiki_content=${initialContent}`;
+    } else {
+        container.classList.remove('split-active');
+        splitBtn.textContent = '📝+';
+        splitBtn.title = 'New Note';
+    }
+}
+
+document.addEventListener('mouseup', (e) => {
+    const selection = window.getSelection();
+    const text = selection.toString().trim();
+    const popup = document.getElementById('selection-popup');
+    if (text.length > 3 && text.length < 1000) {
+        selectedText = text;
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        popup.style.left = (rect.left + window.scrollX) + 'px';
+        popup.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+        popup.classList.add('show');
+    } else {
+        popup.classList.remove('show');
+    }
+});
+
+document.addEventListener('mousedown', (e) => {
+    const popup = document.getElementById('selection-popup');
+    if (!popup.contains(e.target)) popup.classList.remove('show');
+});
+
+function createCard(type) {
+    document.getElementById('selection-popup').classList.remove('show');
+    document.getElementById('card-type').value = type;
+    const questionEl = document.getElementById('card-question');
+    const answerEl = document.getElementById('card-answer');
+    if (type === 'basic') { questionEl.value = ''; answerEl.value = selectedText; }
+    else if (type === 'cloze') { questionEl.value = selectedText.replace(/(\S+)$/, '{' + '{$1}' + '}'); answerEl.value = selectedText.match(/(\S+)$/)?.[1] || ''; }
+    else if (type === 'definition') { questionEl.value = wikiTitle; answerEl.value = selectedText; }
+    document.getElementById('card-modal').classList.add('show');
+}
+
+function closeCardModal() { document.getElementById('card-modal').classList.remove('show'); }
+
+async function saveCard() {
+    const type = document.getElementById('card-type').value;
+    const question = document.getElementById('card-question').value;
+    const answer = document.getElementById('card-answer').value;
+    if (!question || !answer) { showToast('❌ Question and answer required'); return; }
+    try {
+        const res = await fetch('/api/srs/cards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question, answer, card_type: type, source_wiki_url: wikiUrl })
+        });
+        if (res.ok) { showToast('✅ Card created!'); closeCardModal(); }
+        else { showToast('❌ Failed to create card'); }
+    } catch (err) { showToast('❌ Error: ' + err.message); }
+}
+
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+document.querySelectorAll('.wiki-content a').forEach(a => {
+    const href = a.getAttribute('href');
+    if (href && !href.startsWith('http') && !href.startsWith('/') && !href.startsWith('#')) {
+        a.href = '/wiki/' + href.replace(/^\.\.?\//g, '').replace(/^\/+/, '') + '?zim=' + selectedZim;
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.altKey && e.key === 'ArrowLeft') goBack();
+    if (e.altKey && e.key === 'ArrowRight') goForward();
+    if (e.key === 'Escape') { if (splitMode) toggleSplitView(); else closeCardModal(); }
+    if (e.ctrlKey && e.key === 'e') { e.preventDefault(); toggleSplitView(); }
+});
+</script>
+</body>
+</html>

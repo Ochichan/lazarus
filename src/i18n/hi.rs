@@ -98,6 +98,7 @@ pub fn translations() -> Translations {
 
     // Wiki
     data.insert("wiki.search", "विकी खोजें");
+    data.insert("wiki.recent_articles", "Recent Articles");
     data.insert("wiki.manage", "ZIM प्रबंधन");
     data.insert("wiki.status", "स्थिति");
     data.insert("wiki.loaded", "लोड किया गया");
@@ -216,5 +217,31 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "ज्ञान ग्राफ");
     data.insert("app.footer", "सभी के लिए ज्ञान");
 
+    // === USB ===
+    data.insert("usb.title", "USB सिंक");
+    data.insert("usb.scan", "स्कैन");
+    data.insert("usb.scanning", "USB डिवाइस खोज रहे हैं");
+    data.insert("usb.no_usb", "कोई Lazarus USB नहीं मिला");
+    data.insert(
+        "usb.no_usb_hint",
+        "lazarus.sync वाला USB डालें या नीचे इनिशियलाइज़ करें",
+    );
+    data.insert("usb.error", "स्कैन विफल");
+    data.insert("usb.init_title", "USB इनिशियलाइज़");
+    data.insert("usb.init_desc", "ऑफलाइन शेयरिंग के लिए नया Lazarus USB बनाएं");
+    data.insert("usb.init_btn", "इनिशियलाइज़");
+    data.insert("usb.init_error", "इनिशियलाइज़ विफल");
+    data.insert("usb.enter_path", "USB पथ दर्ज करें");
+    data.insert("usb.notes", "नोट्स");
+    data.insert("usb.posts", "पोस्ट");
+    data.insert("usb.packages", "पैकेज");
+    data.insert("usb.sync", "सिंक");
+    data.insert("usb.export", "एक्सपोर्ट");
+    data.insert("usb.import", "इम्पोर्ट");
+    data.insert("home.usb_sync", "USB सिंक");
+    data.insert("home.shortcut.wiki", "विकी");
+    data.insert("home.shortcut.usb", "USB");
+    data.insert("home.shortcut.graph", "ग्राफ");
+    data.insert("home.shortcut.review", "रिव्यू");
     Translations::new(data)
 }

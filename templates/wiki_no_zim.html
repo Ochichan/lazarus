@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block nav_wiki_active %}active{% endblock %}
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["wiki.search"] }} - Lazarus{% endblock %}
+
+{% block content %}
+<div class="empty-state-container">
+    <div class="empty-state">
+        <h2>📖 {{ t["wiki.no_zim"] }}</h2>
+        <p>{{ t["wiki.no_zim_hint"] }}</p>
+        <pre>lazarus --zim /path/to/wikipedia.zim</pre>
+        <p>{{ t["wiki.or_multiple"] }}</p>
+        <pre>lazarus --zim wiki1.zim --zim wiki2.zim</pre>
+        <p>{{ t["wiki.or_directory"] }}</p>
+        <pre>lazarus --zim-dir /path/to/zims/</pre>
+        <a href="/wiki/manage" class="btn btn-primary">{{ t["wiki.manage"] }}</a>
+    </div>
+</div>
+
+<style>
+.empty-state-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+}
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    max-width: 600px;
+}
+.empty-state h2 {
+    margin-bottom: 1rem;
+}
+.empty-state p {
+    color: var(--text-secondary);
+    margin: 0.5rem 0;
+}
+.empty-state pre {
+    background: var(--surface);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    text-align: left;
+    overflow-x: auto;
+    margin: 0.5rem 0 1rem;
+}
+.empty-state .btn {
+    margin-top: 1.5rem;
+}
+</style>
+{% endblock %}
