@@ -217,11 +217,11 @@ pmap -x $(pgrep lazarus) | tail -n 1
 | `g` | Graph view |
 | `r` | SRS Review |
 
-### 🌍 Internationalization (17 Languages)
+### 🌍 Globalization (17 Languages)
 
-| Tier | Languages |
+|      | Languages |
 |------|-----------|
-| **Base** | 🇺🇸 English, 🇰🇷 Korean |
+|          | 🇺🇸 English, 🇰🇷 Korean |
 |          | 🇸🇦 Arabic (RTL), 🇮🇷 Persian (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi, 🇧🇩 Bengali |
 |          | 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian, 🇹🇷 Turkish |
 |          | 🇯🇵 Japanese, 🇨🇳 简体中文, 🇹🇼 繁體中文, 🇭🇰 廣東話 |
