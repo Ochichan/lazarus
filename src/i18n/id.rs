@@ -228,10 +228,6 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "Grafik Pengetahuan");
     data.insert("app.footer", "Pengetahuan untuk Semua");
 
-    // Knowledge Graph & Footer
-    data.insert("home.knowledge_graph", "Grafik Pengetahuan");
-    data.insert("app.footer", "Pengetahuan untuk Semua");
-
     // === USB ===
     data.insert("usb.title", "Sinkronisasi USB");
     data.insert("usb.scan", "Pindai");

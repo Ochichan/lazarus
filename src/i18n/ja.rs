@@ -222,10 +222,6 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "ナレッジグラフ");
     data.insert("app.footer", "すべての人に知識を");
 
-    // Knowledge Graph & Footer
-    data.insert("home.knowledge_graph", "ナレッジグラフ");
-    data.insert("app.footer", "すべての人に知識を");
-
     // === USB ===
     data.insert("usb.title", "USB同期");
     data.insert("usb.scan", "スキャン");

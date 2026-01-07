@@ -12,6 +12,7 @@ mod hi;
 mod id;
 mod ja;
 mod ko;
+mod my;
 mod pt;
 mod ru;
 mod sw;
@@ -41,6 +42,7 @@ pub enum Lang {
     ZhCn, // 중국어 간체
     ZhTw, // 중국어 번체
     Yue,  // 광둥어
+    My,   // 버마어
 }
 
 impl Lang {
@@ -81,6 +83,8 @@ impl Lang {
             Self::ZhTw
         } else if header.starts_with("zh") || header.contains("zh-") || header.contains("zh,") {
             Self::ZhCn
+        } else if header.starts_with("my") || header.contains("my-") || header.contains("my,") {
+            Self::My
         } else {
             Self::En
         }
@@ -106,6 +110,7 @@ impl Lang {
             Self::ZhCn => "zh-CN",
             Self::ZhTw => "zh-TW",
             Self::Yue => "yue",
+            Self::My => "my",
         }
     }
 
@@ -134,6 +139,7 @@ impl Lang {
             Self::ZhCn => "简体中文",
             Self::ZhTw => "繁體中文",
             Self::Yue => "廣東話",
+            Self::My => "မြန်မာ",
         }
     }
 
@@ -157,6 +163,7 @@ impl Lang {
             Self::ZhCn,
             Self::ZhTw,
             Self::Yue,
+            Self::My,
         ]
     }
 }
@@ -196,6 +203,7 @@ pub fn get_translations(lang: Lang) -> Translations {
         Lang::ZhCn => zh_cn::translations(),
         Lang::ZhTw => zh_tw::translations(),
         Lang::Yue => yue::translations(),
+        Lang::My => my::translations(),
     }
 }
 

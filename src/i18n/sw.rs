@@ -228,10 +228,6 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "Grafu ya Maarifa");
     data.insert("app.footer", "Maarifa kwa Wote");
 
-    // Knowledge Graph & Footer
-    data.insert("home.knowledge_graph", "Grafu ya Maarifa");
-    data.insert("app.footer", "Maarifa kwa Wote");
-
     // === USB ===
     data.insert("usb.title", "Usawazishaji wa USB");
     data.insert("usb.scan", "Changanua");

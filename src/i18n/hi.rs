@@ -213,10 +213,6 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "ज्ञान ग्राफ");
     data.insert("app.footer", "सभी के लिए ज्ञान");
 
-    // Knowledge Graph & Footer
-    data.insert("home.knowledge_graph", "ज्ञान ग्राफ");
-    data.insert("app.footer", "सभी के लिए ज्ञान");
-
     // === USB ===
     data.insert("usb.title", "USB सिंक");
     data.insert("usb.scan", "स्कैन");

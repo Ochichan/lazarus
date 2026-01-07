@@ -234,10 +234,6 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "Grafo de Conocimiento");
     data.insert("app.footer", "Conocimiento para Todos");
 
-    // Knowledge Graph & Footer
-    data.insert("home.knowledge_graph", "Grafo de Conocimiento");
-    data.insert("app.footer", "Conocimiento para Todos");
-
     // === USB ===
     data.insert("usb.title", "Sincronización USB");
     data.insert("usb.scan", "Escanear");

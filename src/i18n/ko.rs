@@ -222,10 +222,6 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "지식 그래프");
     data.insert("app.footer", "모두를 위한 지식");
 
-    // Knowledge Graph & Footer
-    data.insert("home.knowledge_graph", "지식 그래프");
-    data.insert("app.footer", "모두를 위한 지식");
-
     // === USB ===
     data.insert("usb.title", "USB 동기화");
     data.insert("usb.scan", "스캔");

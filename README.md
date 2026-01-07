@@ -23,7 +23,7 @@
 open http://127.0.0.1:8080
 ```
 
-**7.4MB binary** · **8MB RAM** · **4ms cold start** · **115GB Wikipedia** · **17 languages** · **Fully offline**
+**7.4MB binary** · **8MB RAM** · **4ms cold start** · **115GB Wikipedia** · **18 languages** · **Fully offline**
 
 ---
 
@@ -217,14 +217,14 @@ pmap -x $(pgrep lazarus) | tail -n 1
 | `g` | Graph view |
 | `r` | SRS Review |
 
-### 🌍 Globalization (17 Languages)
+### 🌍 Globalization (18 Languages)
 
-|      | Languages |
-|------|-----------|
-|          | 🇺🇸 English, 🇰🇷 Korean |
-|          | 🇸🇦 Arabic (RTL), 🇮🇷 Persian (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi, 🇧🇩 Bengali |
-|          | 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian, 🇹🇷 Turkish |
-|          | 🇯🇵 Japanese, 🇨🇳 简体中文, 🇹🇼 繁體中文, 🇭🇰 廣東話 |
+| Languages |
+|-----------|
+| 🇺🇸 English, 🇰🇷 Korean |
+| 🇸🇦 Arabic (RTL), 🇮🇷 Persian (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi, 🇧🇩 Bengali |
+| 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian, 🇹🇷 Turkish |
+| 🇯🇵 Japanese, 🇨🇳 简体中文, 🇹🇼 繁體中文, 🇭🇰 廣東話, 🇲🇲 မြန်မာ |
 
 - **Full RTL support** for Arabic and Persian
 - **170+ translation keys** per language
@@ -376,20 +376,20 @@ Browser ←HTTP→ Axum Server
 | Crypto | XChaCha20-Poly1305 + Argon2id |
 | SRS | FSRS algorithm |
 | Wikipedia | OpenZIM (mmap, multi-file) |
-| i18n | 17 languages, RTL support |
+| i18n | 18 languages, RTL support |
 
 ---
 
 ## 🗺️ Roadmap
 
 ### v0.3 - Current ✅
-- [x] 17 languages with RTL
+- [x] 18 languages with RTL
 - [x] Note linking + Graph view
 - [x] Memory benchmark CI
 - [x] Multi-ZIM simultaneous loading
 
 ### v0.4 - USB Community
-- [ ] USB auto-detection
+- [x] USB auto-detection
 - [x] USB Sync page
 - [ ] Offline bulletin board
 - [ ] Package hub

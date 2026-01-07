@@ -26,6 +26,7 @@ pub async fn set_lang(
         "hi" => Lang::Hi,
         "bn" => Lang::Bn,
         "fa" => Lang::Fa,
+        "my" => Lang::My,
         "es" => Lang::Es,
         "pt" => Lang::Pt,
         "fr" => Lang::Fr,

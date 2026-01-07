@@ -204,10 +204,6 @@ pub fn translations() -> Translations {
     data.insert("home.knowledge_graph", "知識圖譜");
     data.insert("app.footer", "知識屬於每個人");
 
-    // Knowledge Graph & Footer
-    data.insert("home.knowledge_graph", "知識圖譜");
-    data.insert("app.footer", "知識屬於每個人");
-
     // === USB ===
     data.insert("usb.title", "USB同步");
     data.insert("usb.scan", "掃描");
