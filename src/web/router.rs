@@ -114,6 +114,10 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/usb/scan", post(handlers::usb::scan_usbs))
         .route("/api/usb/init", post(handlers::usb::init_usb))
         .route("/api/usb/manifest", get(handlers::usb::get_manifest))
+        .route("/api/usb/export", post(handlers::usb::export_to_usb))
+        .route("/api/usb/import", post(handlers::usb::import_from_usb))
+        .route("/api/usb/remove", post(handlers::usb::remove_usb))
+        .route("/api/usb/sync", post(handlers::usb::sync_with_usb))
         // === 헬스체크 ===
         .route("/health", get(handlers::health::check))
         // === 정적 파일 ===

@@ -10,7 +10,7 @@ use tracing::{debug, info, warn};
 
 /// USB 마운트 포인트 (OS별)
 #[cfg(target_os = "linux")]
-const MOUNT_POINTS: &[&str] = &["/media", "/mnt", "/run/media"];
+const MOUNT_POINTS: &[&str] = &["/media", "/mnt", "/run/media", "/tmp"];
 
 #[cfg(target_os = "macos")]
 const MOUNT_POINTS: &[&str] = &["/Volumes"];
@@ -56,7 +56,7 @@ impl LazarusUsb {
             .to_string();
 
         // 각 폴더의 파일 개수 세기
-        let note_count = count_files(&path.join("notes"), "laz");
+        let note_count = count_files(&path.join("notes"), "json");
         let post_count = count_lines(&path.join("bulletin/posts.jsonl"));
         let qna_count = count_lines(&path.join("qna/questions.jsonl"));
         let package_count = count_files(&path.join("packages"), "laz");

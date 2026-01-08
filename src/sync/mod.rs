@@ -7,18 +7,24 @@
 //! - 노트/게시판/Q&A 동기화
 //! - 충돌 해결 (CRDT)
 //! - 매니페스트 관리
+use crate::db::Note;
 
 pub mod detect;
 pub mod manifest;
 pub mod watcher;
+pub mod state;
 
 pub use detect::{LazarusUsb, UsbDetector};
 pub use manifest::{ContentSummary, SyncDirection, SyncRecord, UsbManifest};
 pub use watcher::{UsbEvent, UsbWatcher};
+pub use state::{SyncState, SyncResult};
 
+use std::fs;
 use std::path::Path;
 use thiserror::Error;
 use tracing::info;
+
+use chrono::Utc;
 
 #[derive(Error, Debug)]
 pub enum SyncError {
@@ -98,9 +104,144 @@ impl Default for SyncManager {
     }
 }
 
+/// 노트를 USB로 내보내기
+pub fn export_notes(usb_path: &Path, notes: &[Note]) -> Result<usize, SyncError> {
+    let notes_dir = usb_path.join("notes");
+    fs::create_dir_all(&notes_dir)?;
+
+    let mut count = 0;
+    for note in notes {
+        let filename = format!("{}.json", note.id);
+        let filepath = notes_dir.join(&filename);
+        let json = serde_json::to_string_pretty(note)?;
+        fs::write(&filepath, json)?;
+        count += 1;
+    }
+
+    // 매니페스트 업데이트
+    let mut manifest =
+        UsbManifest::load(usb_path).unwrap_or_else(|_| UsbManifest::new("Lazarus USB".to_string()));
+    manifest.content_summary.total_notes = count;
+    manifest.last_sync = Some(chrono::Utc::now());
+    manifest.save(usb_path)?;
+
+    info!("📤 {} 노트 내보내기 완료: {}", count, usb_path.display());
+    Ok(count)
+}
+
+/// USB에서 노트 가져오기
+pub fn import_notes(usb_path: &Path) -> Result<Vec<Note>, SyncError> {
+    let notes_dir = usb_path.join("notes");
+    if !notes_dir.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut notes = Vec::new();
+    for entry in fs::read_dir(&notes_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().map(|e| e == "json").unwrap_or(false) {
+            let content = fs::read_to_string(&path)?;
+            if let Ok(note) = serde_json::from_str::<Note>(&content) {
+                notes.push(note);
+            }
+        }
+    }
+
+    info!(
+        "📥 {} 노트 가져오기 완료: {}",
+        notes.len(),
+        usb_path.display()
+    );
+    Ok(notes)
+}
+
+/// 양방향 동기화
+pub fn sync_notes(usb_path: &Path, local_notes: &[Note], db_save: impl Fn(&Note) -> Result<(), SyncError>) -> Result<SyncResult, SyncError> {
+    let notes_dir = usb_path.join("notes");
+    fs::create_dir_all(&notes_dir)?;
+
+    // 동기화 상태 로드
+    let mut sync_state = SyncState::load(usb_path).unwrap_or_else(|_| SyncState::new("local".to_string()));
+    let mut result = SyncResult::default();
+
+    // Local 노트를 HashMap으로
+    let local_map: std::collections::HashMap<u64, &Note> = local_notes.iter().map(|n| (n.id, n)).collect();
+
+    // USB 노트 로드
+    let usb_notes = import_notes(usb_path)?;
+    let usb_map: std::collections::HashMap<u64, Note> = usb_notes.into_iter().map(|n| (n.id, n)).collect();
+
+    // 모든 ID 수집
+    let mut all_ids: std::collections::HashSet<u64> = local_map.keys().copied().collect();
+    all_ids.extend(usb_map.keys());
+
+    for id in all_ids {
+        let local_note = local_map.get(&id);
+        let usb_note = usb_map.get(&id);
+
+        match (local_note, usb_note) {
+            // Local에만 있음 → USB로 업로드
+            (Some(local), None) => {
+                let filepath = notes_dir.join(format!("{}.json", id));
+                let json = serde_json::to_string_pretty(local)?;
+                fs::write(&filepath, json)?;
+                sync_state.mark_synced(id, local.updated_at);
+                result.uploaded += 1;
+            }
+            // USB에만 있음 → Local로 다운로드
+            (None, Some(usb)) => {
+                db_save(usb)?;
+                sync_state.mark_synced(id, usb.updated_at);
+                result.downloaded += 1;
+            }
+            // 양쪽 다 있음 → 최신 것 선택
+            (Some(local), Some(usb)) => {
+                if local.updated_at > usb.updated_at {
+                    // Local이 더 최신 → USB로
+                    let filepath = notes_dir.join(format!("{}.json", id));
+                    let json = serde_json::to_string_pretty(local)?;
+                    fs::write(&filepath, json)?;
+                    sync_state.mark_synced(id, local.updated_at);
+                    result.uploaded += 1;
+                    if sync_state.synced_notes.contains_key(&id) {
+                        result.conflicts += 1;
+                    }
+                } else if usb.updated_at > local.updated_at {
+                    // USB가 더 최신 → Local로
+                    db_save(usb)?;
+                    sync_state.mark_synced(id, usb.updated_at);
+                    result.downloaded += 1;
+                    if sync_state.synced_notes.contains_key(&id) {
+                        result.conflicts += 1;
+                    }
+                } else {
+                    // 동일 → skip
+                    result.unchanged += 1;
+                }
+            }
+            (None, None) => unreachable!(),
+        }
+    }
+
+    // 매니페스트 업데이트
+    let mut manifest = UsbManifest::load(usb_path)
+        .unwrap_or_else(|_| UsbManifest::new("Lazarus USB".to_string()));
+    manifest.content_summary.total_notes = local_map.len() + result.downloaded;
+    manifest.last_sync = Some(Utc::now());
+    manifest.save(usb_path)?;
+
+    // 동기화 상태 저장
+    sync_state.save(usb_path)?;
+
+    info!("🔄 동기화 완료: ↑{} ↓{} conflicts:{} unchanged:{}",
+        result.uploaded, result.downloaded, result.conflicts, result.unchanged);
+
+    Ok(result)
+}
+
 // TODO: 향후 구현
-// - export_notes(): 노트 내보내기
-// - import_notes(): 노트 가져오기
+
 // - sync_bulletin(): 게시판 동기화
 // - sync_qna(): Q&A 동기화
 // - resolve_conflicts(): 충돌 해결
