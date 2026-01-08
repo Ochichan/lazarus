@@ -186,6 +186,13 @@ pmap -x $(pgrep lazarus) | tail -n 1
 - **One-click** flashcard creation
 - Source URL auto-saved
 
+### 📋 Community Features
+- **Posts** — Offline bulletin board for community sharing
+- **Q&A** — Stack Overflow-style questions and answers
+- Replies, voting, answer acceptance
+- UUID-based IDs for offline sync
+- JSONL storage for easy portability
+
 ### 🔐 Security
 - **XChaCha20-Poly1305** encryption (same as Signal, WireGuard)
 - **Argon2id** key derivation (Password Hashing Competition winner)
@@ -204,7 +211,8 @@ pmap -x $(pgrep lazarus) | tail -n 1
 ### 🔌 USB Sync
 - USB device scanning and detection
 - Initialize Lazarus USB for offline sharing
-- Sync notes across air-gapped devices
+- **Sync Notes, Posts, and Q&A** across air-gapped devices
+- Bidirectional sync with conflict resolution (Last-Write-Wins)
 - Works completely offline
 
 ### ⌨️ Keyboard Shortcuts
@@ -221,10 +229,10 @@ pmap -x $(pgrep lazarus) | tail -n 1
 
 | Languages |
 |-----------|
-| 🇺🇸 English, 🇰🇷 Korean |
-| 🇸🇦 Arabic (RTL), 🇮🇷 Persian (RTL), 🇰🇪 Swahili, 🇮🇩 Indonesian, 🇮🇳 Hindi, 🇧🇩 Bengali |
+| 🇺🇸 English, 🇰🇷 Korean 🇯🇵 Japanese, 🇮🇩 Indonesian|
+| 🇸🇦 Arabic (RTL), 🇮🇷 Persian (RTL), 🇰🇪 Swahili, 🇮🇳 Hindi, 🇧🇩 Bengali |
 | 🇪🇸 Spanish, 🇧🇷 Portuguese, 🇫🇷 French, 🇷🇺 Russian, 🇹🇷 Turkish |
-| 🇯🇵 Japanese, 🇨🇳 简体中文, 🇹🇼 繁體中文, 🇭🇰 廣東話, 🇲🇲 မြန်မာ |
+| 🇨🇳 简体中文, 🇹🇼 繁體中文, 🇭🇰 廣東話, 🇲🇲 မြန်မာ |
 
 - **Full RTL support** for Arabic and Persian
 - **170+ translation keys** per language
@@ -382,16 +390,11 @@ Browser ←HTTP→ Axum Server
 
 ## 🗺️ Roadmap
 
-### v0.3 - Current ✅
-- [x] 18 languages with RTL
-- [x] Note linking + Graph view
-- [x] Memory benchmark CI
-- [x] Multi-ZIM simultaneous loading
-
-### v0.4 - USB Community
+### v0.4 - USB Community - Current ✅
 - [x] USB auto-detection
 - [x] USB Sync page
-- [ ] Offline bulletin board
+- [x] Offline bulletin board
+- [x] Q&A system
 - [ ] Package hub
 
 ### v0.5 - Advanced

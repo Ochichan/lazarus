@@ -343,12 +343,8 @@ pub async fn sync_with_usb(
         let rt = tokio::runtime::Handle::current();
         rt.block_on(async {
             let mut db = state_clone.db.write().await;
-            db.save(note, None).map_err(|e| {
-                crate::sync::SyncError::Io(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    e.to_string(),
-                ))
-            })?;
+            db.save(note, None)
+                .map_err(|e| crate::sync::SyncError::Io(std::io::Error::other(e.to_string())))?;
             Ok(())
         })
     };
