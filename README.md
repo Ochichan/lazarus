@@ -395,7 +395,7 @@ Browser ←HTTP→ Axum Server
 - [x] USB Sync page
 - [x] Offline bulletin board
 - [x] Q&A system
-- [ ] Package hub
+- [x] Package hub
 
 ### v0.5 - Advanced
 - [ ] Plugin system

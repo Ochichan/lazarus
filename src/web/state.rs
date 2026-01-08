@@ -7,7 +7,7 @@ use tokio::sync::RwLock;
 
 use crate::crypto::{CryptoManager, SecurityConfig};
 use crate::db::{BackupManager, StorageEngine};
-use crate::db::{PostStore, QnaStore};
+use crate::db::{PackageStore, PostStore, QnaStore};
 use crate::error::Result;
 use crate::i18n::{get_translations, Lang, Translations};
 use crate::links::LinkIndex;
@@ -41,6 +41,7 @@ pub struct AppState {
     pub link_index: Arc<RwLock<LinkIndex>>,
     pub posts: Arc<RwLock<PostStore>>,
     pub qna: Arc<RwLock<QnaStore>>,
+    pub packages: Arc<RwLock<PackageStore>>,
 }
 
 impl AppState {
@@ -57,7 +58,8 @@ impl AppState {
             .map_err(|e| crate::error::LazarusError::DbInit(e.to_string()))?;
         let qna = QnaStore::open(&data_dir)
             .map_err(|e| crate::error::LazarusError::DbInit(e.to_string()))?;
-
+        let packages = PackageStore::open(&data_dir)
+            .map_err(|e| crate::error::LazarusError::DbInit(e.to_string()))?;
         // ZIM 디렉토리 생성
         if !zim_dir.exists() {
             std::fs::create_dir_all(&zim_dir)?;
@@ -152,6 +154,7 @@ impl AppState {
             link_index: Arc::new(RwLock::new(LinkIndex::new())),
             posts: Arc::new(RwLock::new(posts)),
             qna: Arc::new(RwLock::new(qna)),
+            packages: Arc::new(RwLock::new(packages)),
         })
     }
     /// 현재 언어 가져오기

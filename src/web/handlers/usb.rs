@@ -6,7 +6,7 @@ use axum::{extract::State, http::StatusCode, response::Json};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
-use crate::sync::{LazarusUsb, SyncManager, UsbManifest};
+use crate::sync::{LazarusUsb, UsbDetector, UsbManifest};
 use crate::web::state::AppState;
 
 /// USB 목록 응답
@@ -60,7 +60,7 @@ pub struct ApiResponse {
 /// USB 목록 조회
 /// GET /api/usb
 pub async fn list_usbs() -> Json<UsbListResponse> {
-    let manager = SyncManager::new();
+    let manager = UsbDetector::new();
     let usbs = manager.scan().await;
 
     let usb_infos: Vec<UsbInfo> = usbs.into_iter().map(|u| u.into()).collect();
@@ -75,7 +75,7 @@ pub async fn list_usbs() -> Json<UsbListResponse> {
 /// USB 스캔 (수동)
 /// POST /api/usb/scan
 pub async fn scan_usbs() -> Json<UsbListResponse> {
-    let manager = SyncManager::new();
+    let manager = UsbDetector::new();
     let usbs = manager.scan().await;
 
     let usb_infos: Vec<UsbInfo> = usbs.into_iter().map(|u| u.into()).collect();
@@ -94,7 +94,7 @@ pub async fn init_usb(
 ) -> Result<Json<ApiResponse>, (StatusCode, Json<ApiResponse>)> {
     let path = std::path::Path::new(&req.path);
 
-    match SyncManager::init_usb(path) {
+    match UsbDetector::init_usb(path) {
         Ok(()) => Ok(Json(ApiResponse {
             success: true,
             message: format!("USB 초기화 완료: {}", req.path),
@@ -162,7 +162,7 @@ pub async fn export_to_usb(
     let usb_path = std::path::Path::new(&req.usb_path);
 
     // USB 경로 검증
-    if !SyncManager::is_lazarus_usb(usb_path) {
+    if !UsbDetector::is_lazarus_usb(usb_path) {
         return Err((
             StatusCode::BAD_REQUEST,
             Json(ApiResponse {
@@ -189,22 +189,42 @@ pub async fn export_to_usb(
         all_notes
     };
 
-    match export_notes(usb_path, &notes_to_export) {
-        Ok(count) => Ok(Json(ExportResponse {
-            success: true,
-            count,
-            message: format!("{} 노트 내보내기 완료", count),
-        })),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse {
-                success: false,
-                message: format!("내보내기 실패: {}", e),
-            }),
-        )),
-    }
-}
+    let note_count = match export_notes(usb_path, &notes_to_export) {
+        Ok(count) => count,
+        Err(e) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse {
+                    success: false,
+                    message: format!("노트 내보내기 실패: {}", e),
+                }),
+            ))
+        }
+    };
 
+    // 패키지 내보내기
+    let packages_store = state.packages.read().await;
+    let local_packages = packages_store.list();
+    let packages_dir = state.data_dir.join("packages");
+    drop(packages_store);
+
+    let pkg_count = if let Ok((_, uploaded, _)) =
+        crate::sync::sync_packages(usb_path, &local_packages, &packages_dir)
+    {
+        uploaded
+    } else {
+        0
+    };
+
+    Ok(Json(ExportResponse {
+        success: true,
+        count: note_count + pkg_count,
+        message: format!(
+            "{}개 노트, {}개 패키지 내보내기 완료",
+            note_count, pkg_count
+        ),
+    }))
+}
 /// Import 요청
 #[derive(Deserialize)]
 pub struct ImportRequest {
@@ -229,7 +249,7 @@ pub async fn import_from_usb(
     let usb_path = std::path::Path::new(&req.usb_path);
 
     // USB 경로 검증
-    if !SyncManager::is_lazarus_usb(usb_path) {
+    if !UsbDetector::is_lazarus_usb(usb_path) {
         return Err((
             StatusCode::BAD_REQUEST,
             Json(ApiResponse {
@@ -314,7 +334,7 @@ pub async fn sync_with_usb(
 
     let usb_path = std::path::Path::new(&req.usb_path);
 
-    if !SyncManager::is_lazarus_usb(usb_path) {
+    if !UsbDetector::is_lazarus_usb(usb_path) {
         return Err((
             StatusCode::BAD_REQUEST,
             Json(ApiResponse {
@@ -385,6 +405,25 @@ pub async fn sync_with_usb(
         if !downloaded_questions.is_empty() {
             let mut qna_store = state.qna.write().await;
             let _ = qna_store.merge(downloaded_questions);
+        }
+        // === Packages 동기화 ===
+        let packages_store = state.packages.read().await;
+        let local_packages: Vec<_> = packages_store.list();
+        let packages_dir = state.data_dir.join("packages");
+        drop(packages_store);
+
+        if let Ok((downloaded_files, uploaded, _)) =
+            crate::sync::sync_packages(usb_path, &local_packages, &packages_dir)
+        {
+            total_uploaded += uploaded;
+            total_downloaded += downloaded_files.len();
+
+            // 새 패키지 인덱스 갱신
+            if !downloaded_files.is_empty() {
+                let packages_store = state.packages.write().await;
+                // PackageStore가 자동으로 sync_index 하므로 drop 후 reopen이 필요
+                drop(packages_store);
+            }
         }
     }
 
