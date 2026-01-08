@@ -308,9 +308,9 @@ pub struct SyncResponse {
 /// POST /api/usb/sync - 양방향 동기화
 pub async fn sync_with_usb(
     State(state): State<AppState>,
-    Json(req): Json<ImportRequest>, // usb_path만 필요하니 재사용
+    Json(req): Json<ImportRequest>,
 ) -> Result<Json<SyncResponse>, (StatusCode, Json<ApiResponse>)> {
-    use crate::sync::sync_notes;
+    use crate::sync::{sync_notes, sync_posts, sync_qna};
 
     let usb_path = std::path::Path::new(&req.usb_path);
 
@@ -319,21 +319,25 @@ pub async fn sync_with_usb(
             StatusCode::BAD_REQUEST,
             Json(ApiResponse {
                 success: false,
-                message: "유효한 Lazarus USB가 아닙니다".to_string(),
+                message: "Not a Valid USB".to_string(),
             }),
         ));
     }
 
-    // Local 노트 가져오기
+    let mut total_uploaded = 0;
+    let mut total_downloaded = 0;
+    let mut total_conflicts = 0;
+    let mut total_unchanged = 0;
+
+    // === Notes 동기화 ===
     let db = state.db.read().await;
     let local_notes: Vec<_> = db
         .list_ids()
         .into_iter()
         .filter_map(|id| db.get(id).ok().flatten())
         .collect();
-    drop(db); // 락 해제
+    drop(db);
 
-    // 동기화 실행
     let state_clone = state.clone();
     let save_fn = |note: &crate::db::Note| -> Result<(), crate::sync::SyncError> {
         let rt = tokio::runtime::Handle::current();
@@ -349,21 +353,51 @@ pub async fn sync_with_usb(
         })
     };
 
-    match sync_notes(usb_path, &local_notes, save_fn) {
-        Ok(result) => Ok(Json(SyncResponse {
-            success: true,
-            uploaded: result.uploaded,
-            downloaded: result.downloaded,
-            conflicts: result.conflicts,
-            unchanged: result.unchanged,
-            message: format!("동기화 완료: ↑{} ↓{}", result.uploaded, result.downloaded),
-        })),
-        Err(e) => Err((
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse {
-                success: false,
-                message: format!("동기화 실패: {}", e),
-            }),
-        )),
+    if let Ok(result) = sync_notes(usb_path, &local_notes, save_fn) {
+        total_uploaded += result.uploaded;
+        total_downloaded += result.downloaded;
+        total_conflicts += result.conflicts;
+        total_unchanged += result.unchanged;
     }
+
+    // === Posts 동기화 ===
+    let posts_store = state.posts.read().await;
+    let local_posts = posts_store.all();
+    drop(posts_store);
+
+    if let Ok((downloaded_posts, uploaded)) = sync_posts(usb_path, &local_posts) {
+        total_uploaded += uploaded;
+        total_downloaded += downloaded_posts.len();
+
+        // 다운로드한 posts 저장
+        if !downloaded_posts.is_empty() {
+            let mut posts_store = state.posts.write().await;
+            let _ = posts_store.merge(downloaded_posts);
+        }
+    }
+
+    // === Q&A 동기화 ===
+    let qna_store = state.qna.read().await;
+    let local_questions = qna_store.all();
+    drop(qna_store);
+
+    if let Ok((downloaded_questions, uploaded)) = sync_qna(usb_path, &local_questions) {
+        total_uploaded += uploaded;
+        total_downloaded += downloaded_questions.len();
+
+        // 다운로드한 questions 저장
+        if !downloaded_questions.is_empty() {
+            let mut qna_store = state.qna.write().await;
+            let _ = qna_store.merge(downloaded_questions);
+        }
+    }
+
+    Ok(Json(SyncResponse {
+        success: true,
+        uploaded: total_uploaded,
+        downloaded: total_downloaded,
+        conflicts: total_conflicts,
+        unchanged: total_unchanged,
+        message: format!("Sync Complete: ↑{} ↓{}", total_uploaded, total_downloaded),
+    }))
 }
