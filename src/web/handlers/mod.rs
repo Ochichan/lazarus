@@ -6,6 +6,8 @@ pub mod lang;
 pub mod laz;
 pub mod notes;
 pub mod pages;
+pub mod posts;
+pub mod qna;
 pub mod search;
 pub mod security;
 pub mod srs;

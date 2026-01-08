@@ -248,5 +248,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB 동기화");
     data.insert("home.shortcut.graph", "그래프");
     data.insert("home.shortcut.review", "복습");
+
+    // === Posts ===
+    data.insert("posts.title", "게시판");
+    data.insert("posts.new_post", "새 글");
+    data.insert("posts.no_posts", "게시글이 없습니다");
+    data.insert("posts.be_first", "첫 번째 글을 작성해보세요!");
+    data.insert("posts.author", "이름");
+    data.insert("posts.title_placeholder", "제목");
+    data.insert("posts.content_placeholder", "내용...");
+    data.insert("posts.tags_placeholder", "태그 (쉼표로 구분)");
+    data.insert("posts.post_btn", "게시");
+    data.insert("posts.replies", "댓글");
+    data.insert("posts.delete_confirm", "이 글을 삭제하시겠습니까?");
+    data.insert("posts.write_reply", "댓글 작성...");
+    data.insert("posts.reply_btn", "댓글 달기");
+
+    // === Q&A ===
+    data.insert("qna.title", "질문과 답변");
+    data.insert("qna.ask_question", "질문하기");
+    data.insert("qna.no_questions", "질문이 없습니다");
+    data.insert("qna.be_first", "첫 번째 질문을 해보세요!");
+    data.insert("qna.question_title", "질문 제목");
+    data.insert("qna.question_content", "질문 내용을 작성하세요...");
+    data.insert("qna.post_question", "질문 등록");
+    data.insert("qna.answers", "답변");
+    data.insert("qna.write_answer", "답변 작성...");
+    data.insert("qna.post_answer", "답변 등록");
+    data.insert("qna.accept", "채택");
+    data.insert("qna.accepted", "채택됨");
+    data.insert("qna.delete_confirm", "이 질문을 삭제하시겠습니까?");
     Translations::new(data)
 }

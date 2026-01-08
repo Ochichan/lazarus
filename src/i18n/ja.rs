@@ -248,5 +248,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "グラフ");
     data.insert("home.shortcut.review", "復習");
+
+    // === Posts ===
+    data.insert("posts.title", "投稿");
+    data.insert("posts.new_post", "新規投稿");
+    data.insert("posts.no_posts", "投稿がありません");
+    data.insert("posts.be_first", "最初の投稿をしましょう！");
+    data.insert("posts.author", "名前");
+    data.insert("posts.title_placeholder", "タイトル");
+    data.insert("posts.content_placeholder", "内容...");
+    data.insert("posts.tags_placeholder", "タグ（カンマ区切り）");
+    data.insert("posts.post_btn", "投稿");
+    data.insert("posts.replies", "返信");
+    data.insert("posts.delete_confirm", "この投稿を削除しますか？");
+    data.insert("posts.write_reply", "返信を書く...");
+    data.insert("posts.reply_btn", "返信");
+    // === Q&A ===
+    data.insert("qna.title", "Q&A");
+    data.insert("qna.ask_question", "質問する");
+    data.insert("qna.no_questions", "質問がありません");
+    data.insert("qna.be_first", "最初の質問をしましょう！");
+    data.insert("qna.question_title", "質問のタイトル");
+    data.insert("qna.question_content", "質問の内容を書いてください...");
+    data.insert("qna.post_question", "質問を投稿");
+    data.insert("qna.answers", "回答");
+    data.insert("qna.write_answer", "回答を書く...");
+    data.insert("qna.post_answer", "回答を投稿");
+    data.insert("qna.accept", "採用");
+    data.insert("qna.accepted", "採用済み");
+    data.insert("qna.delete_confirm", "この質問を削除しますか？");
+
     Translations::new(data)
 }

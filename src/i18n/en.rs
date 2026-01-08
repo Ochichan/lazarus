@@ -255,5 +255,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB Sync");
     data.insert("home.shortcut.graph", "Graph");
     data.insert("home.shortcut.review", "Review");
+
+    // === Posts ===
+    data.insert("posts.title", "Posts");
+    data.insert("posts.new_post", "New Post");
+    data.insert("posts.no_posts", "No posts yet");
+    data.insert("posts.be_first", "Be the first to post!");
+    data.insert("posts.author", "Your name");
+    data.insert("posts.title_placeholder", "Title");
+    data.insert("posts.content_placeholder", "Content...");
+    data.insert("posts.tags_placeholder", "Tags (comma separated)");
+    data.insert("posts.post_btn", "Post");
+    data.insert("posts.replies", "replies");
+    data.insert("posts.delete_confirm", "Delete this post?");
+    data.insert("posts.write_reply", "Write a reply...");
+    data.insert("posts.reply_btn", "Reply");
+
+    // === Q&A ===
+    data.insert("qna.title", "Q&A");
+    data.insert("qna.ask_question", "Ask Question");
+    data.insert("qna.no_questions", "No questions yet");
+    data.insert("qna.be_first", "Be the first to ask!");
+    data.insert("qna.question_title", "Question title");
+    data.insert("qna.question_content", "Describe your question...");
+    data.insert("qna.post_question", "Post Question");
+    data.insert("qna.answers", "answers");
+    data.insert("qna.write_answer", "Write your answer...");
+    data.insert("qna.post_answer", "Post Answer");
+    data.insert("qna.accept", "Accept");
+    data.insert("qna.accepted", "Accepted");
+    data.insert("qna.delete_confirm", "Delete this question?");
     Translations::new(data)
 }

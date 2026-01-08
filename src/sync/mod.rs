@@ -8,16 +8,19 @@
 //! - 충돌 해결 (CRDT)
 //! - 매니페스트 관리
 use crate::db::Note;
+use crate::db::{Post, Question};
 
 pub mod detect;
+pub mod jsonl;
 pub mod manifest;
-pub mod watcher;
 pub mod state;
+pub mod watcher;
 
 pub use detect::{LazarusUsb, UsbDetector};
+pub use jsonl::{append_jsonl, count_jsonl, read_jsonl, write_jsonl};
 pub use manifest::{ContentSummary, SyncDirection, SyncRecord, UsbManifest};
+pub use state::{SyncResult, SyncState};
 pub use watcher::{UsbEvent, UsbWatcher};
-pub use state::{SyncState, SyncResult};
 
 use std::fs;
 use std::path::Path;
@@ -157,20 +160,27 @@ pub fn import_notes(usb_path: &Path) -> Result<Vec<Note>, SyncError> {
 }
 
 /// 양방향 동기화
-pub fn sync_notes(usb_path: &Path, local_notes: &[Note], db_save: impl Fn(&Note) -> Result<(), SyncError>) -> Result<SyncResult, SyncError> {
+pub fn sync_notes(
+    usb_path: &Path,
+    local_notes: &[Note],
+    db_save: impl Fn(&Note) -> Result<(), SyncError>,
+) -> Result<SyncResult, SyncError> {
     let notes_dir = usb_path.join("notes");
     fs::create_dir_all(&notes_dir)?;
 
     // 동기화 상태 로드
-    let mut sync_state = SyncState::load(usb_path).unwrap_or_else(|_| SyncState::new("local".to_string()));
+    let mut sync_state =
+        SyncState::load(usb_path).unwrap_or_else(|_| SyncState::new("local".to_string()));
     let mut result = SyncResult::default();
 
     // Local 노트를 HashMap으로
-    let local_map: std::collections::HashMap<u64, &Note> = local_notes.iter().map(|n| (n.id, n)).collect();
+    let local_map: std::collections::HashMap<u64, &Note> =
+        local_notes.iter().map(|n| (n.id, n)).collect();
 
     // USB 노트 로드
     let usb_notes = import_notes(usb_path)?;
-    let usb_map: std::collections::HashMap<u64, Note> = usb_notes.into_iter().map(|n| (n.id, n)).collect();
+    let usb_map: std::collections::HashMap<u64, Note> =
+        usb_notes.into_iter().map(|n| (n.id, n)).collect();
 
     // 모든 ID 수집
     let mut all_ids: std::collections::HashSet<u64> = local_map.keys().copied().collect();
@@ -225,8 +235,8 @@ pub fn sync_notes(usb_path: &Path, local_notes: &[Note], db_save: impl Fn(&Note)
     }
 
     // 매니페스트 업데이트
-    let mut manifest = UsbManifest::load(usb_path)
-        .unwrap_or_else(|_| UsbManifest::new("Lazarus USB".to_string()));
+    let mut manifest =
+        UsbManifest::load(usb_path).unwrap_or_else(|_| UsbManifest::new("Lazarus USB".to_string()));
     manifest.content_summary.total_notes = local_map.len() + result.downloaded;
     manifest.last_sync = Some(Utc::now());
     manifest.save(usb_path)?;
@@ -234,10 +244,79 @@ pub fn sync_notes(usb_path: &Path, local_notes: &[Note], db_save: impl Fn(&Note)
     // 동기화 상태 저장
     sync_state.save(usb_path)?;
 
-    info!("🔄 동기화 완료: ↑{} ↓{} conflicts:{} unchanged:{}",
-        result.uploaded, result.downloaded, result.conflicts, result.unchanged);
+    info!(
+        "🔄 동기화 완료: ↑{} ↓{} conflicts:{} unchanged:{}",
+        result.uploaded, result.downloaded, result.conflicts, result.unchanged
+    );
 
     Ok(result)
+}
+/// Posts 동기화
+pub fn sync_posts(usb_path: &Path, local_posts: &[Post]) -> Result<(Vec<Post>, usize), SyncError> {
+    let posts_path = usb_path.join("bulletin/posts.jsonl");
+
+    // USB에서 읽기
+    let usb_posts: Vec<Post> = jsonl::read_jsonl(&posts_path)?;
+    let usb_ids: std::collections::HashSet<_> = usb_posts.iter().map(|p| p.id.clone()).collect();
+    let local_ids: std::collections::HashSet<_> =
+        local_posts.iter().map(|p| p.id.clone()).collect();
+
+    // Local → USB (USB에 없는 것)
+    let to_upload: Vec<&Post> = local_posts
+        .iter()
+        .filter(|p| !usb_ids.contains(&p.id))
+        .collect();
+
+    // USB → Local (Local에 없는 것)
+    let to_download: Vec<Post> = usb_posts
+        .into_iter()
+        .filter(|p| !local_ids.contains(&p.id))
+        .collect();
+
+    // USB에 추가
+    let uploaded = to_upload.len();
+    for post in &to_upload {
+        jsonl::append_jsonl(&posts_path, post)?;
+    }
+
+    info!("📋 Posts 동기화: ↑{} ↓{}", uploaded, to_download.len());
+    Ok((to_download, uploaded))
+}
+
+/// Q&A 동기화
+pub fn sync_qna(
+    usb_path: &Path,
+    local_questions: &[Question],
+) -> Result<(Vec<Question>, usize), SyncError> {
+    let qna_path = usb_path.join("qna/questions.jsonl");
+
+    // USB에서 읽기
+    let usb_questions: Vec<Question> = jsonl::read_jsonl(&qna_path)?;
+    let usb_ids: std::collections::HashSet<_> =
+        usb_questions.iter().map(|q| q.id.clone()).collect();
+    let local_ids: std::collections::HashSet<_> =
+        local_questions.iter().map(|q| q.id.clone()).collect();
+
+    // Local → USB
+    let to_upload: Vec<&Question> = local_questions
+        .iter()
+        .filter(|q| !usb_ids.contains(&q.id))
+        .collect();
+
+    // USB → Local
+    let to_download: Vec<Question> = usb_questions
+        .into_iter()
+        .filter(|q| !local_ids.contains(&q.id))
+        .collect();
+
+    // USB에 추가
+    let uploaded = to_upload.len();
+    for question in &to_upload {
+        jsonl::append_jsonl(&qna_path, question)?;
+    }
+
+    info!("❓ Q&A 동기화: ↑{} ↓{}", uploaded, to_download.len());
+    Ok((to_download, uploaded))
 }
 
 // TODO: 향후 구현

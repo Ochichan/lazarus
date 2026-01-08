@@ -239,5 +239,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "ग्राफ");
     data.insert("home.shortcut.review", "रिव्यू");
+
+    // === Posts ===
+    data.insert("posts.title", "पोस्ट");
+    data.insert("posts.new_post", "नई पोस्ट");
+    data.insert("posts.no_posts", "कोई पोस्ट नहीं");
+    data.insert("posts.be_first", "पहले पोस्ट करें!");
+    data.insert("posts.author", "आपका नाम");
+    data.insert("posts.title_placeholder", "शीर्षक");
+    data.insert("posts.content_placeholder", "सामग्री...");
+    data.insert("posts.tags_placeholder", "टैग (अल्पविराम से अलग)");
+    data.insert("posts.post_btn", "पोस्ट");
+    data.insert("posts.replies", "जवाब");
+    data.insert("posts.delete_confirm", "इस पोस्ट को हटाएं?");
+    data.insert("posts.write_reply", "जवाब लिखें...");
+    data.insert("posts.reply_btn", "जवाब दें");
+    // === Q&A ===
+    data.insert("qna.title", "प्रश्न और उत्तर");
+    data.insert("qna.ask_question", "प्रश्न पूछें");
+    data.insert("qna.no_questions", "कोई प्रश्न नहीं");
+    data.insert("qna.be_first", "पहला प्रश्न पूछें!");
+    data.insert("qna.question_title", "प्रश्न का शीर्षक");
+    data.insert("qna.question_content", "अपना प्रश्न बताएं...");
+    data.insert("qna.post_question", "प्रश्न पोस्ट करें");
+    data.insert("qna.answers", "उत्तर");
+    data.insert("qna.write_answer", "अपना उत्तर लिखें...");
+    data.insert("qna.post_answer", "उत्तर पोस्ट करें");
+    data.insert("qna.accept", "स्वीकार");
+    data.insert("qna.accepted", "स्वीकृत");
+    data.insert("qna.delete_confirm", "इस प्रश्न को हटाएं?");
+
     Translations::new(data)
 }

@@ -120,6 +120,28 @@ pub fn create_router(state: AppState) -> Router {
         .route("/api/usb/sync", post(handlers::usb::sync_with_usb))
         // === 헬스체크 ===
         .route("/health", get(handlers::health::check))
+        // Posts API
+        .route("/api/posts", get(handlers::posts::list_posts))
+        .route("/api/posts", post(handlers::posts::create_post))
+        .route("/api/posts/:id", get(handlers::posts::get_post))
+        .route("/api/posts/:id", delete(handlers::posts::delete_post))
+        .route("/api/posts/:id/replies", post(handlers::posts::add_reply))
+        // Q&A API
+        .route("/api/qna", get(handlers::qna::list_questions))
+        .route("/api/qna", post(handlers::qna::create_question))
+        .route("/api/qna/:id", get(handlers::qna::get_question))
+        .route("/api/qna/:id", delete(handlers::qna::delete_question))
+        .route("/api/qna/:id/answers", post(handlers::qna::add_answer))
+        .route(
+            "/api/qna/:id/accept/:answer_id",
+            post(handlers::qna::accept_answer),
+        )
+        .route(
+            "/api/qna/:id/vote/:answer_id",
+            post(handlers::qna::vote_answer),
+        )
+        .route("/posts", get(handlers::pages::posts_page))
+        .route("/qna", get(handlers::pages::qna_page))
         // === 정적 파일 ===
         .nest_service("/static", ServeDir::new("static"))
         // === 미들웨어 ===

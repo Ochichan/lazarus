@@ -308,7 +308,7 @@ pub struct SyncResponse {
 /// POST /api/usb/sync - 양방향 동기화
 pub async fn sync_with_usb(
     State(state): State<AppState>,
-    Json(req): Json<ImportRequest>,  // usb_path만 필요하니 재사용
+    Json(req): Json<ImportRequest>, // usb_path만 필요하니 재사용
 ) -> Result<Json<SyncResponse>, (StatusCode, Json<ApiResponse>)> {
     use crate::sync::sync_notes;
 
@@ -326,11 +326,12 @@ pub async fn sync_with_usb(
 
     // Local 노트 가져오기
     let db = state.db.read().await;
-    let local_notes: Vec<_> = db.list_ids()
+    let local_notes: Vec<_> = db
+        .list_ids()
         .into_iter()
         .filter_map(|id| db.get(id).ok().flatten())
         .collect();
-    drop(db);  // 락 해제
+    drop(db); // 락 해제
 
     // 동기화 실행
     let state_clone = state.clone();
@@ -338,9 +339,12 @@ pub async fn sync_with_usb(
         let rt = tokio::runtime::Handle::current();
         rt.block_on(async {
             let mut db = state_clone.db.write().await;
-            db.save(note, None).map_err(|e| crate::sync::SyncError::Io(
-                std::io::Error::new(std::io::ErrorKind::Other, e.to_string())
-            ))?;
+            db.save(note, None).map_err(|e| {
+                crate::sync::SyncError::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    e.to_string(),
+                ))
+            })?;
             Ok(())
         })
     };

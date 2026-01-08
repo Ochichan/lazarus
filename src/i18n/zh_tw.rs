@@ -227,5 +227,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "圖表");
     data.insert("home.shortcut.review", "複習");
+
+    // === Posts ===
+    data.insert("posts.title", "貼文");
+    data.insert("posts.new_post", "新貼文");
+    data.insert("posts.no_posts", "尚無貼文");
+    data.insert("posts.be_first", "成為第一個發文的人！");
+    data.insert("posts.author", "你的名字");
+    data.insert("posts.title_placeholder", "標題");
+    data.insert("posts.content_placeholder", "內容...");
+    data.insert("posts.tags_placeholder", "標籤（用逗號分隔）");
+    data.insert("posts.post_btn", "發布");
+    data.insert("posts.replies", "回覆");
+    data.insert("posts.delete_confirm", "刪除這則貼文？");
+    data.insert("posts.write_reply", "寫回覆...");
+    data.insert("posts.reply_btn", "回覆");
+    // === Q&A ===
+    data.insert("qna.title", "問答");
+    data.insert("qna.ask_question", "提問");
+    data.insert("qna.no_questions", "尚無問題");
+    data.insert("qna.be_first", "成為第一個提問的人！");
+    data.insert("qna.question_title", "問題標題");
+    data.insert("qna.question_content", "描述你的問題...");
+    data.insert("qna.post_question", "發布問題");
+    data.insert("qna.answers", "回答");
+    data.insert("qna.write_answer", "寫你的回答...");
+    data.insert("qna.post_answer", "發布回答");
+    data.insert("qna.accept", "採納");
+    data.insert("qna.accepted", "已採納");
+    data.insert("qna.delete_confirm", "刪除這個問題？");
+
     Translations::new(data)
 }

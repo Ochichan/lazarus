@@ -245,5 +245,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "رسم بياني");
     data.insert("home.shortcut.review", "مراجعة");
+
+    // === Posts ===
+    data.insert("posts.title", "المنشورات");
+    data.insert("posts.new_post", "منشور جديد");
+    data.insert("posts.no_posts", "لا توجد منشورات");
+    data.insert("posts.be_first", "كن أول من ينشر!");
+    data.insert("posts.author", "اسمك");
+    data.insert("posts.title_placeholder", "العنوان");
+    data.insert("posts.content_placeholder", "المحتوى...");
+    data.insert("posts.tags_placeholder", "الوسوم (مفصولة بفواصل)");
+    data.insert("posts.post_btn", "نشر");
+    data.insert("posts.replies", "ردود");
+    data.insert("posts.delete_confirm", "حذف هذا المنشور؟");
+    data.insert("posts.write_reply", "اكتب رداً...");
+    data.insert("posts.reply_btn", "رد");
+    // === Q&A ===
+    data.insert("qna.title", "أسئلة وأجوبة");
+    data.insert("qna.ask_question", "اطرح سؤالاً");
+    data.insert("qna.no_questions", "لا توجد أسئلة");
+    data.insert("qna.be_first", "كن أول من يسأل!");
+    data.insert("qna.question_title", "عنوان السؤال");
+    data.insert("qna.question_content", "اشرح سؤالك...");
+    data.insert("qna.post_question", "نشر السؤال");
+    data.insert("qna.answers", "إجابات");
+    data.insert("qna.write_answer", "اكتب إجابتك...");
+    data.insert("qna.post_answer", "نشر الإجابة");
+    data.insert("qna.accept", "قبول");
+    data.insert("qna.accepted", "مقبول");
+    data.insert("qna.delete_confirm", "حذف هذا السؤال؟");
+
     Translations::new(data)
 }

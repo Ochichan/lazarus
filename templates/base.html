@@ -48,6 +48,14 @@
                     <span class="sidebar-icon">🔌</span>
                     <span class="sidebar-label">USB</span>
                 </a>
+                <a href="/posts" class="sidebar-item {% block nav_posts_active %}{% endblock %}" title="Posts">
+                    <span class="sidebar-icon">📋</span>
+                    <span class="sidebar-label">Posts</span>
+                </a>
+                <a href="/qna" class="sidebar-item {% block nav_qna_active %}{% endblock %}" title="Q&A">
+                    <span class="sidebar-icon">❓</span>
+                    <span class="sidebar-label">Q&A</span>
+                </a>
             </nav>
         </div>
         <div class="sidebar-bottom">
@@ -61,7 +69,7 @@
             </a>
         </div>
     </aside>
-    
+
     <div class="main-wrapper">
         <main>
             {% block content %}{% endblock %}
@@ -70,7 +78,7 @@
             <p>Lazarus v{% block version %}0.1.0{% endblock %} - {% block footer_text %}Knowledge for All{% endblock %}</p>
         </footer>
     </div>
-    
+
     <!-- 모바일 하단 네비게이션 -->
     <nav class="mobile-nav">
         <a href="/notes" class="mobile-nav-item {% block nav_notes_active_mobile %}{% endblock %}">

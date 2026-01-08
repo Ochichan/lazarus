@@ -554,3 +554,55 @@ pub async fn usb_page(State(state): State<AppState>) -> Result<Html<String>> {
             .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
     ))
 }
+
+// === Posts 페이지 ===
+
+#[derive(Template)]
+#[template(path = "posts.html")]
+struct PostsTemplate<'a> {
+    version: &'a str,
+    lang: &'a str,
+    t: std::collections::HashMap<String, String>,
+}
+
+/// 게시판 페이지
+pub async fn posts_page(State(state): State<AppState>) -> Result<Html<String>> {
+    let lang = state.get_lang().await;
+    let t = all_translations(lang);
+    let template = PostsTemplate {
+        version: state.version,
+        lang: lang.code(),
+        t,
+    };
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
+}
+
+// === Q&A 페이지 ===
+
+#[derive(Template)]
+#[template(path = "qna.html")]
+struct QnaTemplate<'a> {
+    version: &'a str,
+    lang: &'a str,
+    t: std::collections::HashMap<String, String>,
+}
+
+/// Q&A 페이지
+pub async fn qna_page(State(state): State<AppState>) -> Result<Html<String>> {
+    let lang = state.get_lang().await;
+    let t = all_translations(lang);
+    let template = QnaTemplate {
+        version: state.version,
+        lang: lang.code(),
+        t,
+    };
+    Ok(Html(
+        template
+            .render()
+            .map_err(|e| LazarusError::ServerStart(e.to_string()))?,
+    ))
+}

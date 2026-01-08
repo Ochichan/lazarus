@@ -254,5 +254,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "Граф");
     data.insert("home.shortcut.review", "Повторение");
+
+    // === Posts ===
+    data.insert("posts.title", "Публикации");
+    data.insert("posts.new_post", "Новая публикация");
+    data.insert("posts.no_posts", "Нет публикаций");
+    data.insert("posts.be_first", "Будьте первым!");
+    data.insert("posts.author", "Ваше имя");
+    data.insert("posts.title_placeholder", "Заголовок");
+    data.insert("posts.content_placeholder", "Содержание...");
+    data.insert("posts.tags_placeholder", "Теги (через запятую)");
+    data.insert("posts.post_btn", "Опубликовать");
+    data.insert("posts.replies", "ответов");
+    data.insert("posts.delete_confirm", "Удалить публикацию?");
+    data.insert("posts.write_reply", "Написать ответ...");
+    data.insert("posts.reply_btn", "Ответить");
+    // === Q&A ===
+    data.insert("qna.title", "Вопросы и ответы");
+    data.insert("qna.ask_question", "Задать вопрос");
+    data.insert("qna.no_questions", "Нет вопросов");
+    data.insert("qna.be_first", "Задайте первый вопрос!");
+    data.insert("qna.question_title", "Заголовок вопроса");
+    data.insert("qna.question_content", "Опишите ваш вопрос...");
+    data.insert("qna.post_question", "Опубликовать вопрос");
+    data.insert("qna.answers", "ответов");
+    data.insert("qna.write_answer", "Напишите ответ...");
+    data.insert("qna.post_answer", "Опубликовать ответ");
+    data.insert("qna.accept", "Принять");
+    data.insert("qna.accepted", "Принят");
+    data.insert("qna.delete_confirm", "Удалить вопрос?");
+
     Translations::new(data)
 }

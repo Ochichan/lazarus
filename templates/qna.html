@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["qna.title"] }} - Lazarus{% endblock %}
+
+{% block content %}
+<div class="qna-container">
+    <div class="qna-header">
+        <h1>❓ {{ t["qna.title"] }}</h1>
+        <button class="btn btn-primary" onclick="showNewQuestionForm()">
+            ✏️ {{ t["qna.ask_question"] }}
+        </button>
+    </div>
+
+    <!-- 새 질문 폼 -->
+    <div id="new-question-form" class="new-form" style="display: none;">
+        <h3>{{ t["qna.ask_question"] }}</h3>
+        <input type="text" id="q-author" placeholder="{{ t["posts.author"] }}" class="input-field">
+        <input type="text" id="q-title" placeholder="{{ t["qna.question_title"] }}" class="input-field">
+        <textarea id="q-content" placeholder="{{ t["qna.question_content"] }}" class="textarea-field"></textarea>
+        <input type="text" id="q-tags" placeholder="{{ t["posts.tags_placeholder"] }}" class="input-field">
+        <div class="form-actions">
+            <button class="btn btn-primary" onclick="createQuestion()">{{ t["qna.post_question"] }}</button>
+            <button class="btn btn-secondary" onclick="hideNewQuestionForm()">{{ t["common.cancel"] }}</button>
+        </div>
+    </div>
+
+    <!-- 질문 목록 -->
+    <div id="questions-list" class="questions-list">
+        <div class="loading">{{ t["common.loading"] }}</div>
+    </div>
+</div>
+
+<style>
+.qna-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.qna-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.qna-header h1 {
+    margin: 0;
+}
+
+.new-form {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+}
+
+.new-form h3 {
+    margin: 0 0 1rem 0;
+}
+
+.input-field, .textarea-field {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.textarea-field {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.input-field:focus, .textarea-field:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.questions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.question-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+}
+
+.question-card:hover {
+    border-color: var(--accent);
+}
+
+.question-card.has-accepted {
+    border-left: 4px solid #22c55e;
+}
+
+.question-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.question-title:hover {
+    color: var(--accent);
+}
+
+.accepted-badge {
+    color: #22c55e;
+    font-size: 1rem;
+}
+
+.question-meta {
+    display: flex;
+    gap: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.question-content {
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.question-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background: var(--accent);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.question-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.answer-count {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.btn-success {
+    background: #22c55e;
+    color: white;
+}
+
+.btn-danger {
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.answers-section {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.answer-item {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    position: relative;
+}
+
+.answer-item.accepted {
+    border: 2px solid #22c55e;
+}
+
+.answer-meta {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.vote-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vote-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+}
+
+.vote-count {
+    font-weight: bold;
+    min-width: 2rem;
+    text-align: center;
+}
+
+.new-answer-form {
+    margin-top: 1rem;
+}
+
+.new-answer-form input,
+.new-answer-form textarea {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+</style>
+
+<script>
+const T = {
+    no_questions: "{{ t["qna.no_questions"] }}",
+    be_first: "{{ t["qna.be_first"] }}",
+    answers: "{{ t["qna.answers"] }}",
+    delete_confirm: "{{ t["qna.delete_confirm"] }}",
+    author: "{{ t["posts.author"] }}",
+    write_answer: "{{ t["qna.write_answer"] }}",
+    post_answer: "{{ t["qna.post_answer"] }}",
+    accept: "{{ t["qna.accept"] }}",
+    accepted: "{{ t["qna.accepted"] }}",
+    error: "{{ t["common.error"] }}"
+};
+
+let currentQuestionId = null;
+
+async function loadQuestions() {
+    const list = document.getElementById('questions-list');
+    try {
+        const res = await fetch('/api/qna');
+        const data = await res.json();
+        renderQuestions(data.questions);
+    } catch (err) {
+        list.innerHTML = `<div class="empty-state">❌ ${T.error}</div>`;
+    }
+}
+
+function renderQuestions(questions) {
+    const list = document.getElementById('questions-list');
+
+    if (questions.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <p>❓ ${T.no_questions}</p>
+                <p>${T.be_first}</p>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = questions.map(q => `
+        <div class="question-card ${q.has_accepted ? 'has-accepted' : ''}">
+            <div class="question-title" onclick="viewQuestion('${q.id}')">
+                ${q.has_accepted ? '<span class="accepted-badge">✅</span>' : ''}
+                ${escapeHtml(q.title)}
+            </div>
+            <div class="question-meta">
+                <span>👤 ${escapeHtml(q.author)}</span>
+                <span>📅 ${q.created_at}</span>
+            </div>
+            <div class="question-content">${escapeHtml(q.content).substring(0, 200)}${q.content.length > 200 ? '...' : ''}</div>
+            ${q.tags.length > 0 ? `
+                <div class="question-tags">
+                    ${q.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+                </div>
+            ` : ''}
+            <div class="question-footer">
+                <span class="answer-count">💬 ${q.answer_count} ${T.answers}</span>
+                <button class="btn btn-danger btn-sm" onclick="deleteQuestion('${q.id}')">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showNewQuestionForm() {
+    document.getElementById('new-question-form').style.display = 'block';
+}
+
+function hideNewQuestionForm() {
+    document.getElementById('new-question-form').style.display = 'none';
+    document.getElementById('q-author').value = '';
+    document.getElementById('q-title').value = '';
+    document.getElementById('q-content').value = '';
+    document.getElementById('q-tags').value = '';
+}
+
+async function createQuestion() {
+    const author = document.getElementById('q-author').value.trim() || 'Anonymous';
+    const title = document.getElementById('q-title').value.trim();
+    const content = document.getElementById('q-content').value.trim();
+    const tagsStr = document.getElementById('q-tags').value.trim();
+    const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
+
+    if (!title || !content) {
+        alert('Please enter title and content');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/qna', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author, title, content, tags })
+        });
+        if (res.ok) {
+            hideNewQuestionForm();
+            loadQuestions();
+        } else {
+            alert('Failed to create question');
+        }
+    } catch (err) {
+        alert(T.error + ': ' + err.message);
+    }
+}
+
+async function deleteQuestion(id) {
+    if (!confirm(T.delete_confirm)) return;
+    try {
+        await fetch(`/api/qna/${id}`, { method: 'DELETE' });
+        loadQuestions();
+    } catch (err) {
+        alert(T.error);
+    }
+}
+
+async function viewQuestion(id) {
+    try {
+        const res = await fetch(`/api/qna/${id}`);
+        const question = await res.json();
+        showQuestionModal(question);
+    } catch (err) {
+        alert(T.error);
+    }
+}
+
+function showQuestionModal(question) {
+    currentQuestionId = question.id;
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'question-modal';
+    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>${escapeHtml(question.title)}</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="question-meta">
+                <span>👤 ${escapeHtml(question.author)}</span>
+                <span>📅 ${question.created_at}</span>
+            </div>
+            <div class="question-content" style="margin: 1rem 0; white-space: pre-wrap;">${escapeHtml(question.content)}</div>
+            ${question.tags.length > 0 ? `
+                <div class="question-tags">
+                    ${question.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+                </div>
+            ` : ''}
+            <div class="answers-section">
+                <h3>💬 ${T.answers} (${question.answers.length})</h3>
+                <div id="answers-list">
+                    ${question.answers.map(a => `
+                        <div class="answer-item ${question.accepted_answer === a.id ? 'accepted' : ''}">
+                            <div class="answer-meta">
+                                <span>👤 ${escapeHtml(a.author)} · ${a.created_at} ${question.accepted_answer === a.id ? '✅ ' + T.accepted : ''}</span>
+                                <div class="vote-controls">
+                                    <button class="vote-btn" onclick="vote('${a.id}', true)">👍</button>
+                                    <span class="vote-count">${a.votes}</span>
+                                    <button class="vote-btn" onclick="vote('${a.id}', false)">👎</button>
+                                    ${!question.accepted_answer ? `<button class="btn btn-success btn-sm" onclick="acceptAnswer('${a.id}')">${T.accept}</button>` : ''}
+                                </div>
+                            </div>
+                            <div style="white-space: pre-wrap;">${escapeHtml(a.content)}</div>
+                        </div>
+                    `).join('') || `<p style="color: var(--text-secondary);">No answers yet</p>`}
+                </div>
+                <div class="new-answer-form">
+                    <input type="text" id="answer-author" placeholder="${T.author}" class="input-field">
+                    <textarea id="answer-content" placeholder="${T.write_answer}" class="textarea-field" style="min-height: 80px;"></textarea>
+                    <button class="btn btn-primary" onclick="addAnswer()">${T.post_answer}</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+function closeModal() {
+    const modal = document.getElementById('question-modal');
+    if (modal) modal.remove();
+    currentQuestionId = null;
+}
+
+async function addAnswer() {
+    if (!currentQuestionId) return;
+
+    const author = document.getElementById('answer-author').value.trim() || 'Anonymous';
+    const content = document.getElementById('answer-content').value.trim();
+
+    if (!content) {
+        alert('Please enter your answer');
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/qna/${currentQuestionId}/answers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author, content })
+        });
+        if (res.ok) {
+            closeModal();
+            viewQuestion(currentQuestionId);
+            loadQuestions();
+        }
+    } catch (err) {
+        alert(T.error);
+    }
+}
+
+async function acceptAnswer(answerId) {
+    if (!currentQuestionId) return;
+    try {
+        await fetch(`/api/qna/${currentQuestionId}/accept/${answerId}`, { method: 'POST' });
+        closeModal();
+        viewQuestion(currentQuestionId);
+        loadQuestions();
+    } catch (err) {
+        alert(T.error);
+    }
+}
+
+async function vote(answerId, up) {
+    if (!currentQuestionId) return;
+    try {
+        await fetch(`/api/qna/${currentQuestionId}/vote/${answerId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ up })
+        });
+        closeModal();
+        viewQuestion(currentQuestionId);
+    } catch (err) {
+        alert(T.error);
+    }
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+document.addEventListener('DOMContentLoaded', loadQuestions);
+</script>
+{% endblock %}

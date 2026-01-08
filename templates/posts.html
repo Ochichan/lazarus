@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block version %}{{ version }}{% endblock %}
+{% block title %}{{ t["posts.title"] }} - Lazarus{% endblock %}
+
+{% block content %}
+<div class="posts-container">
+    <div class="posts-header">
+        <h1>📋 {{ t["posts.title"] }}</h1>
+        <button class="btn btn-primary" onclick="showNewPostForm()">
+            ✏️ {{ t["posts.new_post"] }}
+        </button>
+    </div>
+
+    <!-- 새 게시글 폼 -->
+    <div id="new-post-form" class="new-post-form" style="display: none;">
+        <h3>{{ t["posts.new_post"] }}</h3>
+        <input type="text" id="post-author" placeholder="{{ t["posts.author"] }}" class="input-field">
+        <input type="text" id="post-title" placeholder="{{ t["posts.title_placeholder"] }}" class="input-field">
+        <textarea id="post-content" placeholder="{{ t["posts.content_placeholder"] }}" class="textarea-field"></textarea>
+        <input type="text" id="post-tags" placeholder="{{ t["posts.tags_placeholder"] }}" class="input-field">
+        <div class="form-actions">
+            <button class="btn btn-primary" onclick="createPost()">{{ t["posts.post_btn"] }}</button>
+            <button class="btn btn-secondary" onclick="hideNewPostForm()">{{ t["common.cancel"] }}</button>
+        </div>
+    </div>
+
+    <!-- 게시글 목록 -->
+    <div id="posts-list" class="posts-list">
+        <div class="loading">{{ t["common.loading"] }}</div>
+    </div>
+</div>
+
+<style>
+.posts-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.posts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.posts-header h1 {
+    margin: 0;
+}
+
+.new-post-form {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
+}
+
+.new-post-form h3 {
+    margin: 0 0 1rem 0;
+}
+
+.input-field, .textarea-field {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+}
+
+.textarea-field {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.input-field:focus, .textarea-field:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.form-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.posts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.post-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+    transition: border-color 0.2s;
+}
+
+.post-card:hover {
+    border-color: var(--accent);
+}
+
+.post-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+}
+
+.post-title:hover {
+    color: var(--accent);
+}
+
+.post-meta {
+    display: flex;
+    gap: 1rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.post-content {
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.post-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background: var(--accent);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.reply-count {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.btn-danger {
+    background: transparent;
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}
+
+.btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.replies-section {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.reply-item {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.reply-meta {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.new-reply-form {
+    margin-top: 1rem;
+}
+
+.new-reply-form input,
+.new-reply-form textarea {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+</style>
+
+<script>
+const T = {
+    no_posts: "{{ t["posts.no_posts"] }}",
+    be_first: "{{ t["posts.be_first"] }}",
+    replies: "{{ t["posts.replies"] }}",
+    delete_confirm: "{{ t["posts.delete_confirm"] }}",
+    author: "{{ t["posts.author"] }}",
+    write_reply: "{{ t["posts.write_reply"] }}",
+    reply_btn: "{{ t["posts.reply_btn"] }}",
+    error: "{{ t["common.error"] }}"
+};
+
+let currentPostId = null;
+
+async function loadPosts() {
+    const list = document.getElementById('posts-list');
+    try {
+        const res = await fetch('/api/posts');
+        const data = await res.json();
+        renderPosts(data.posts);
+    } catch (err) {
+        list.innerHTML = `<div class="empty-state">❌ ${T.error}</div>`;
+    }
+}
+
+function renderPosts(posts) {
+    const list = document.getElementById('posts-list');
+
+    if (posts.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <p>📭 ${T.no_posts}</p>
+                <p>${T.be_first}</p>
+            </div>
+        `;
+        return;
+    }
+
+    list.innerHTML = posts.map(post => `
+        <div class="post-card">
+            <div class="post-title" onclick="viewPost('${post.id}')">${escapeHtml(post.title)}</div>
+            <div class="post-meta">
+                <span>👤 ${escapeHtml(post.author)}</span>
+                <span>📅 ${post.created_at}</span>
+            </div>
+            <div class="post-content">${escapeHtml(post.content).substring(0, 200)}${post.content.length > 200 ? '...' : ''}</div>
+            ${post.tags.length > 0 ? `
+                <div class="post-tags">
+                    ${post.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+                </div>
+            ` : ''}
+            <div class="post-footer">
+                <span class="reply-count">💬 ${post.reply_count} ${T.replies}</span>
+                <button class="btn btn-danger btn-sm" onclick="deletePost('${post.id}')">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function showNewPostForm() {
+    document.getElementById('new-post-form').style.display = 'block';
+}
+
+function hideNewPostForm() {
+    document.getElementById('new-post-form').style.display = 'none';
+    document.getElementById('post-author').value = '';
+    document.getElementById('post-title').value = '';
+    document.getElementById('post-content').value = '';
+    document.getElementById('post-tags').value = '';
+}
+
+async function createPost() {
+    const author = document.getElementById('post-author').value.trim() || 'Anonymous';
+    const title = document.getElementById('post-title').value.trim();
+    const content = document.getElementById('post-content').value.trim();
+    const tagsStr = document.getElementById('post-tags').value.trim();
+    const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
+
+    if (!title || !content) {
+        alert('Please enter title and content');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author, title, content, tags })
+        });
+        if (res.ok) {
+            hideNewPostForm();
+            loadPosts();
+        } else {
+            alert('Failed to create post');
+        }
+    } catch (err) {
+        alert(T.error + ': ' + err.message);
+    }
+}
+
+async function deletePost(id) {
+    if (!confirm(T.delete_confirm)) return;
+    try {
+        await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+        loadPosts();
+    } catch (err) {
+        alert(T.error);
+    }
+}
+
+async function viewPost(id) {
+    try {
+        const res = await fetch(`/api/posts/${id}`);
+        const post = await res.json();
+        showPostModal(post);
+    } catch (err) {
+        alert(T.error);
+    }
+}
+
+function showPostModal(post) {
+    currentPostId = post.id;
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'post-modal';
+    modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>${escapeHtml(post.title)}</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="post-meta">
+                <span>👤 ${escapeHtml(post.author)}</span>
+                <span>📅 ${post.created_at}</span>
+            </div>
+            <div class="post-content" style="margin: 1rem 0; white-space: pre-wrap;">${escapeHtml(post.content)}</div>
+            ${post.tags.length > 0 ? `
+                <div class="post-tags">
+                    ${post.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+                </div>
+            ` : ''}
+            <div class="replies-section">
+                <h3>💬 ${T.replies} (${post.replies.length})</h3>
+                <div id="replies-list">
+                    ${post.replies.map(r => `
+                        <div class="reply-item">
+                            <div class="reply-meta">👤 ${escapeHtml(r.author)} · ${r.created_at}</div>
+                            <div>${escapeHtml(r.content)}</div>
+                        </div>
+                    `).join('') || `<p style="color: var(--text-secondary);">No replies yet</p>`}
+                </div>
+                <div class="new-reply-form">
+                    <input type="text" id="reply-author" placeholder="${T.author}" class="input-field">
+                    <textarea id="reply-content" placeholder="${T.write_reply}" class="textarea-field" style="min-height: 80px;"></textarea>
+                    <button class="btn btn-primary" onclick="addReply()">${T.reply_btn}</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+function closeModal() {
+    const modal = document.getElementById('post-modal');
+    if (modal) modal.remove();
+    currentPostId = null;
+}
+
+async function addReply() {
+    if (!currentPostId) return;
+
+    const author = document.getElementById('reply-author').value.trim() || 'Anonymous';
+    const content = document.getElementById('reply-content').value.trim();
+
+    if (!content) {
+        alert('Please enter reply content');
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/posts/${currentPostId}/replies`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author, content })
+        });
+        if (res.ok) {
+            closeModal();
+            viewPost(currentPostId);
+            loadPosts();
+        }
+    } catch (err) {
+        alert(T.error);
+    }
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+document.addEventListener('DOMContentLoaded', loadPosts);
+</script>
+{% endblock %}

@@ -257,5 +257,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "Grafik");
     data.insert("home.shortcut.review", "Review");
+
+    // === Posts ===
+    data.insert("posts.title", "Postingan");
+    data.insert("posts.new_post", "Postingan Baru");
+    data.insert("posts.no_posts", "Belum ada postingan");
+    data.insert("posts.be_first", "Jadilah yang pertama posting!");
+    data.insert("posts.author", "Nama Anda");
+    data.insert("posts.title_placeholder", "Judul");
+    data.insert("posts.content_placeholder", "Konten...");
+    data.insert("posts.tags_placeholder", "Tag (pisahkan dengan koma)");
+    data.insert("posts.post_btn", "Posting");
+    data.insert("posts.replies", "balasan");
+    data.insert("posts.delete_confirm", "Hapus postingan ini?");
+    data.insert("posts.write_reply", "Tulis balasan...");
+    data.insert("posts.reply_btn", "Balas");
+    // === Q&A ===
+    data.insert("qna.title", "Tanya Jawab");
+    data.insert("qna.ask_question", "Ajukan Pertanyaan");
+    data.insert("qna.no_questions", "Belum ada pertanyaan");
+    data.insert("qna.be_first", "Jadilah yang pertama bertanya!");
+    data.insert("qna.question_title", "Judul pertanyaan");
+    data.insert("qna.question_content", "Jelaskan pertanyaan Anda...");
+    data.insert("qna.post_question", "Posting Pertanyaan");
+    data.insert("qna.answers", "jawaban");
+    data.insert("qna.write_answer", "Tulis jawaban Anda...");
+    data.insert("qna.post_answer", "Posting Jawaban");
+    data.insert("qna.accept", "Terima");
+    data.insert("qna.accepted", "Diterima");
+    data.insert("qna.delete_confirm", "Hapus pertanyaan ini?");
+
     Translations::new(data)
 }

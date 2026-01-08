@@ -275,5 +275,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "Graphe");
     data.insert("home.shortcut.review", "Réviser");
+
+    // === Posts ===
+    data.insert("posts.title", "Publications");
+    data.insert("posts.new_post", "Nouvelle publication");
+    data.insert("posts.no_posts", "Aucune publication");
+    data.insert("posts.be_first", "Soyez le premier à publier!");
+    data.insert("posts.author", "Votre nom");
+    data.insert("posts.title_placeholder", "Titre");
+    data.insert("posts.content_placeholder", "Contenu...");
+    data.insert("posts.tags_placeholder", "Tags (séparés par des virgules)");
+    data.insert("posts.post_btn", "Publier");
+    data.insert("posts.replies", "réponses");
+    data.insert("posts.delete_confirm", "Supprimer cette publication?");
+    data.insert("posts.write_reply", "Écrire une réponse...");
+    data.insert("posts.reply_btn", "Répondre");
+    // === Q&A ===
+    data.insert("qna.title", "Questions et Réponses");
+    data.insert("qna.ask_question", "Poser une question");
+    data.insert("qna.no_questions", "Aucune question");
+    data.insert("qna.be_first", "Soyez le premier à demander!");
+    data.insert("qna.question_title", "Titre de la question");
+    data.insert("qna.question_content", "Décrivez votre question...");
+    data.insert("qna.post_question", "Publier la question");
+    data.insert("qna.answers", "réponses");
+    data.insert("qna.write_answer", "Écrivez votre réponse...");
+    data.insert("qna.post_answer", "Publier la réponse");
+    data.insert("qna.accept", "Accepter");
+    data.insert("qna.accepted", "Acceptée");
+    data.insert("qna.delete_confirm", "Supprimer cette question?");
+
     Translations::new(data)
 }

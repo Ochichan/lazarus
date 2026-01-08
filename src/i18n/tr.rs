@@ -257,5 +257,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "Grafik");
     data.insert("home.shortcut.review", "Gözden Geçir");
+
+    // === Posts ===
+    data.insert("posts.title", "Gönderiler");
+    data.insert("posts.new_post", "Yeni Gönderi");
+    data.insert("posts.no_posts", "Henüz gönderi yok");
+    data.insert("posts.be_first", "İlk gönderiyi yapın!");
+    data.insert("posts.author", "Adınız");
+    data.insert("posts.title_placeholder", "Başlık");
+    data.insert("posts.content_placeholder", "İçerik...");
+    data.insert("posts.tags_placeholder", "Etiketler (virgülle ayırın)");
+    data.insert("posts.post_btn", "Gönder");
+    data.insert("posts.replies", "yanıt");
+    data.insert("posts.delete_confirm", "Bu gönderi silinsin mi?");
+    data.insert("posts.write_reply", "Yanıt yazın...");
+    data.insert("posts.reply_btn", "Yanıtla");
+    // === Q&A ===
+    data.insert("qna.title", "Soru ve Cevap");
+    data.insert("qna.ask_question", "Soru Sor");
+    data.insert("qna.no_questions", "Henüz soru yok");
+    data.insert("qna.be_first", "İlk soruyu sorun!");
+    data.insert("qna.question_title", "Soru başlığı");
+    data.insert("qna.question_content", "Sorunuzu açıklayın...");
+    data.insert("qna.post_question", "Soruyu Gönder");
+    data.insert("qna.answers", "cevap");
+    data.insert("qna.write_answer", "Cevabınızı yazın...");
+    data.insert("qna.post_answer", "Cevabı Gönder");
+    data.insert("qna.accept", "Kabul Et");
+    data.insert("qna.accepted", "Kabul Edildi");
+    data.insert("qna.delete_confirm", "Bu soru silinsin mi?");
+
     Translations::new(data)
 }

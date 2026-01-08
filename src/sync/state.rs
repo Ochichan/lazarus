@@ -34,9 +34,8 @@ impl SyncState {
             return Ok(Self::new(Self::generate_device_id()));
         }
         let content = std::fs::read_to_string(&path)?;
-        serde_json::from_str(&content).map_err(|e| {
-            std::io::Error::new(std::io::ErrorKind::InvalidData, e)
-        })
+        serde_json::from_str(&content)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
     }
 
     /// 파일에 저장

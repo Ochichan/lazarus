@@ -257,5 +257,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "Grafu");
     data.insert("home.shortcut.review", "Kagua");
+
+    // === Posts ===
+    data.insert("posts.title", "Machapisho");
+    data.insert("posts.new_post", "Chapisho Jipya");
+    data.insert("posts.no_posts", "Hakuna machapisho");
+    data.insert("posts.be_first", "Kuwa wa kwanza kuchapisha!");
+    data.insert("posts.author", "Jina lako");
+    data.insert("posts.title_placeholder", "Kichwa");
+    data.insert("posts.content_placeholder", "Maudhui...");
+    data.insert("posts.tags_placeholder", "Tagi (tenganisha na koma)");
+    data.insert("posts.post_btn", "Chapisha");
+    data.insert("posts.replies", "majibu");
+    data.insert("posts.delete_confirm", "Futa chapisho hili?");
+    data.insert("posts.write_reply", "Andika jibu...");
+    data.insert("posts.reply_btn", "Jibu");
+    // === Q&A ===
+    data.insert("qna.title", "Maswali na Majibu");
+    data.insert("qna.ask_question", "Uliza Swali");
+    data.insert("qna.no_questions", "Hakuna maswali");
+    data.insert("qna.be_first", "Kuwa wa kwanza kuuliza!");
+    data.insert("qna.question_title", "Kichwa cha swali");
+    data.insert("qna.question_content", "Eleza swali lako...");
+    data.insert("qna.post_question", "Chapisha Swali");
+    data.insert("qna.answers", "majibu");
+    data.insert("qna.write_answer", "Andika jibu lako...");
+    data.insert("qna.post_answer", "Chapisha Jibu");
+    data.insert("qna.accept", "Kubali");
+    data.insert("qna.accepted", "Imekubaliwa");
+    data.insert("qna.delete_confirm", "Futa swali hili?");
+
     Translations::new(data)
 }

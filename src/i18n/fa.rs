@@ -248,5 +248,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "نمودار");
     data.insert("home.shortcut.review", "مرور");
+
+    // === Posts ===
+    data.insert("posts.title", "پست‌ها");
+    data.insert("posts.new_post", "پست جدید");
+    data.insert("posts.no_posts", "هنوز پستی نیست");
+    data.insert("posts.be_first", "اولین نفر باشید!");
+    data.insert("posts.author", "نام شما");
+    data.insert("posts.title_placeholder", "عنوان");
+    data.insert("posts.content_placeholder", "محتوا...");
+    data.insert("posts.tags_placeholder", "برچسب‌ها (با کاما جدا کنید)");
+    data.insert("posts.post_btn", "ارسال");
+    data.insert("posts.replies", "پاسخ");
+    data.insert("posts.delete_confirm", "این پست حذف شود؟");
+    data.insert("posts.write_reply", "پاسخ بنویسید...");
+    data.insert("posts.reply_btn", "پاسخ");
+    // === Q&A ===
+    data.insert("qna.title", "پرسش و پاسخ");
+    data.insert("qna.ask_question", "سوال بپرسید");
+    data.insert("qna.no_questions", "هنوز سوالی نیست");
+    data.insert("qna.be_first", "اولین سوال را بپرسید!");
+    data.insert("qna.question_title", "عنوان سوال");
+    data.insert("qna.question_content", "سوال خود را شرح دهید...");
+    data.insert("qna.post_question", "ارسال سوال");
+    data.insert("qna.answers", "پاسخ");
+    data.insert("qna.write_answer", "پاسخ خود را بنویسید...");
+    data.insert("qna.post_answer", "ارسال پاسخ");
+    data.insert("qna.accept", "پذیرش");
+    data.insert("qna.accepted", "پذیرفته شده");
+    data.insert("qna.delete_confirm", "این سوال حذف شود؟");
+
     Translations::new(data)
 }

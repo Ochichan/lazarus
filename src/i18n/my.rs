@@ -232,5 +232,34 @@ pub fn translations() -> Translations {
     data.insert("usb.export", "ထုတ်ယူ");
     data.insert("usb.import", "သွင်းယူ");
 
+    // === Posts ===
+    data.insert("posts.title", "ပို့စ်များ");
+    data.insert("posts.new_post", "ပို့စ်အသစ်");
+    data.insert("posts.no_posts", "ပို့စ်မရှိသေးပါ");
+    data.insert("posts.be_first", "ပထမဆုံးရေးသူဖြစ်ပါ!");
+    data.insert("posts.author", "သင့်နာမည်");
+    data.insert("posts.title_placeholder", "ခေါင်းစဉ်");
+    data.insert("posts.content_placeholder", "အကြောင်းအရာ...");
+    data.insert("posts.tags_placeholder", "တက်ဂ်များ (ကော်မာခြား)");
+    data.insert("posts.post_btn", "တင်မည်");
+    data.insert("posts.replies", "မှတ်ချက်");
+    data.insert("posts.delete_confirm", "ဤပို့စ်ကိုဖျက်မလား?");
+    data.insert("posts.write_reply", "မှတ်ချက်ရေးပါ...");
+    data.insert("posts.reply_btn", "မှတ်ချက်");
+    // === Q&A ===
+    data.insert("qna.title", "မေးခွန်းနှင့်အဖြေ");
+    data.insert("qna.ask_question", "မေးခွန်းမေးရန်");
+    data.insert("qna.no_questions", "မေးခွန်းမရှိသေးပါ");
+    data.insert("qna.be_first", "ပထမဆုံးမေးသူဖြစ်ပါ!");
+    data.insert("qna.question_title", "မေးခွန်းခေါင်းစဉ်");
+    data.insert("qna.question_content", "မေးခွန်းအသေးစိတ်...");
+    data.insert("qna.post_question", "မေးခွန်းတင်မည်");
+    data.insert("qna.answers", "အဖြေ");
+    data.insert("qna.write_answer", "အဖြေရေးပါ...");
+    data.insert("qna.post_answer", "အဖြေတင်မည်");
+    data.insert("qna.accept", "လက်ခံ");
+    data.insert("qna.accepted", "လက်ခံပြီး");
+    data.insert("qna.delete_confirm", "ဤမေးခွန်းကိုဖျက်မလား?");
+
     Translations::new(data)
 }

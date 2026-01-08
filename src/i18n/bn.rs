@@ -242,5 +242,35 @@ pub fn translations() -> Translations {
     data.insert("home.shortcut.usb", "USB");
     data.insert("home.shortcut.graph", "গ্রাফ");
     data.insert("home.shortcut.review", "রিভিউ");
+
+    // === Posts ===
+    data.insert("posts.title", "পোস্ট");
+    data.insert("posts.new_post", "নতুন পোস্ট");
+    data.insert("posts.no_posts", "কোনো পোস্ট নেই");
+    data.insert("posts.be_first", "প্রথম পোস্ট করুন!");
+    data.insert("posts.author", "আপনার নাম");
+    data.insert("posts.title_placeholder", "শিরোনাম");
+    data.insert("posts.content_placeholder", "বিষয়বস্তু...");
+    data.insert("posts.tags_placeholder", "ট্যাগ (কমা দিয়ে আলাদা)");
+    data.insert("posts.post_btn", "পোস্ট");
+    data.insert("posts.replies", "উত্তর");
+    data.insert("posts.delete_confirm", "এই পোস্ট মুছবেন?");
+    data.insert("posts.write_reply", "উত্তর লিখুন...");
+    data.insert("posts.reply_btn", "উত্তর দিন");
+    // === Q&A ===
+    data.insert("qna.title", "প্রশ্নোত্তর");
+    data.insert("qna.ask_question", "প্রশ্ন করুন");
+    data.insert("qna.no_questions", "কোনো প্রশ্ন নেই");
+    data.insert("qna.be_first", "প্রথম প্রশ্ন করুন!");
+    data.insert("qna.question_title", "প্রশ্নের শিরোনাম");
+    data.insert("qna.question_content", "আপনার প্রশ্ন বর্ণনা করুন...");
+    data.insert("qna.post_question", "প্রশ্ন পোস্ট");
+    data.insert("qna.answers", "উত্তর");
+    data.insert("qna.write_answer", "উত্তর লিখুন...");
+    data.insert("qna.post_answer", "উত্তর পোস্ট");
+    data.insert("qna.accept", "গ্রহণ");
+    data.insert("qna.accepted", "গৃহীত");
+    data.insert("qna.delete_confirm", "এই প্রশ্ন মুছবেন?");
+
     Translations::new(data)
 }

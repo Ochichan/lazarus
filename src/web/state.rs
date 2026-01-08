@@ -7,6 +7,7 @@ use tokio::sync::RwLock;
 
 use crate::crypto::{CryptoManager, SecurityConfig};
 use crate::db::{BackupManager, StorageEngine};
+use crate::db::{PostStore, QnaStore};
 use crate::error::Result;
 use crate::i18n::{get_translations, Lang, Translations};
 use crate::links::LinkIndex;
@@ -38,6 +39,8 @@ pub struct AppState {
     /// 편집 중인 노트 락 (note_id -> timestamp)
     pub edit_locks: Arc<RwLock<HashMap<u64, chrono::DateTime<chrono::Utc>>>>,
     pub link_index: Arc<RwLock<LinkIndex>>,
+    pub posts: Arc<RwLock<PostStore>>,
+    pub qna: Arc<RwLock<QnaStore>>,
 }
 
 impl AppState {
@@ -49,6 +52,11 @@ impl AppState {
         let backup_dir = data_dir.join("backups");
         let security_path = data_dir.join("security.json");
         let zim_dir = data_dir.join("zims");
+        // Posts/Q&A 저장소
+        let posts = PostStore::open(&data_dir)
+            .map_err(|e| crate::error::LazarusError::DbInit(e.to_string()))?;
+        let qna = QnaStore::open(&data_dir)
+            .map_err(|e| crate::error::LazarusError::DbInit(e.to_string()))?;
 
         // ZIM 디렉토리 생성
         if !zim_dir.exists() {
@@ -142,6 +150,8 @@ impl AppState {
             security: Arc::new(RwLock::new(security)),
             crypto: Arc::new(RwLock::new(None)), // PIN 입력 전까지 None
             link_index: Arc::new(RwLock::new(LinkIndex::new())),
+            posts: Arc::new(RwLock::new(posts)),
+            qna: Arc::new(RwLock::new(qna)),
         })
     }
     /// 현재 언어 가져오기
