@@ -412,36 +412,37 @@ Browser ←HTTP→ Axum Server
 
 ## 🗺️ Roadmap
 
+## 🗺️ Roadmap
+
 ### v0.4 - USB Community ✅
-- [x] USB auto-detection
-- [x] USB Sync page
+- [x] USB auto-detection & sync page
 - [x] Offline bulletin board (Posts)
-- [x] Q&A system
-- [x] Package sync
-- [x] Keyfile security (HKDF)
+- [x] Q&A system (Stack Overflow-style)
+- [x] Package sync (.laz files)
+- [x] Keyfile security (HKDF + Argon2id 64MB)
 
 ### v0.5 - Shadow Network
 - [ ] Anonymous sync (ID masking)
-- [ ] Multi-hop relay (A→B→C)
-- [ ] E2E sync encryption
-- [ ] Self-destruct mode (5 PIN failures)
-- [ ] Dead man's switch
+- [ ] Multi-hop relay (A→B→C→D)
+- [ ] E2E sync encryption (shared keyfile)
+- [ ] Self-destruct (5 PIN failures → shred)
+- [ ] Dead man's switch (X days → auto-delete)
 
 ### v0.6 - Stealth
-- [ ] Plausible deniability (hidden volume)
-- [ ] Steganography (.laz → PNG/WAV)
+- [ ] Plausible deniability (hidden volume + decoy data)
+- [ ] Steganography (.laz → PNG/WAV disguise)
 - [ ] Bluetooth/WiFi-Direct sync
-- [ ] CRDT conflict resolution
+- [ ] CRDT conflict-free merge
 
 ### v0.7 - Portable
 - [ ] ARM binary (Raspberry Pi)
+- [ ] USB live mode (boot → sync → shred)
 - [ ] Plugin system
-- [ ] USB bootable mode
 
 ### v0.8 - Mobile
 - [ ] Android APK
+- [ ] Background sync (JobScheduler)
 - [ ] iOS (maybe)
-```
 
 ---
 
