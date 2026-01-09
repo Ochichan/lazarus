@@ -11,6 +11,7 @@ use crate::crypto::{CryptoManager, SecurityConfig};
 use crate::error::Result;
 use crate::i18n::all_translations;
 use crate::web::state::AppState;
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 
 /// PIN 상태 응답
 #[derive(Serialize)]
@@ -326,6 +327,23 @@ pub async fn security_page(State(state): State<AppState>) -> Result<Html<String>
             padding: 0.25rem 0.75rem;
             font-size: 0.875rem;
         }}
+        .keyfile-section {{
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }}
+        .keyfile-row {{
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            margin: 0.5rem 0;
+        }}
+        .keyfile-warning {{
+            color: #f59e0b;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }}
     </style>
 </head>
 <body>
@@ -345,6 +363,22 @@ pub async fn security_page(State(state): State<AppState>) -> Result<Html<String>
             <div class="status">
                 <div class="status-icon">{}</div>
                 <div>{}</div>
+            </div>
+
+            <div class="keyfile-section">
+                <label style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <input type="checkbox" id="use-keyfile" onchange="toggleKeyfile()">
+                    🔑 Use Keyfile (Optional)
+                </label>
+                <div id="keyfile-controls" style="display: none;">
+                    <div class="keyfile-row">
+                        <input type="file" id="keyfile-input" accept=".lazkey" style="display: none;">
+                        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('keyfile-input').click()">📁 Select Keyfile</button>
+                        <button class="btn btn-secondary btn-sm" onclick="generateKeyfile()">⬇️ Generate New</button>
+                    </div>
+                    <div id="keyfile-name" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+                    <div class="keyfile-warning">⚠️ Lost keyfile = Permanent data loss</div>
+                </div>
             </div>
 
             <div id="pin-section">
@@ -440,10 +474,10 @@ pub async fn security_page(State(state): State<AppState>) -> Result<Html<String>
                 return;
             }}
 
-            const res = await fetch('/api/security/set-pin', {{
+            const res = await fetch('/api/security/set-pin-with-keyfile', {{
                 method: 'POST',
                 headers: {{ 'Content-Type': 'application/json' }},
-                body: JSON.stringify({{ new_pin: pin }})
+                body: JSON.stringify({{ new_pin: pin, new_keyfile: selectedKeyfile }})
             }});
             const data = await res.json();
 
@@ -459,10 +493,10 @@ pub async fn security_page(State(state): State<AppState>) -> Result<Html<String>
                 showToast(t.enter_current_pin, 'error');
                 return;
             }}
-            const res = await fetch('/api/security/remove-pin', {{
+            const res = await fetch('/api/security/unlock-with-keyfile', {{
                 method: 'POST',
                 headers: {{ 'Content-Type': 'application/json' }},
-                body: JSON.stringify({{ pin }})
+                body: JSON.stringify({{ pin, keyfile: selectedKeyfile }})
             }});
             const data = await res.json();
             showToast(data.message, data.success ? 'success' : 'error');
@@ -477,6 +511,42 @@ pub async fn security_page(State(state): State<AppState>) -> Result<Html<String>
             showToast(data.message, 'success');
             setTimeout(() => location.reload(), 1000);
         }}
+        let selectedKeyfile = null;
+
+         function toggleKeyfile() {{
+             const controls = document.getElementById('keyfile-controls');
+             const checkbox = document.getElementById('use-keyfile');
+             controls.style.display = checkbox.checked ? 'block' : 'none';
+             if (!checkbox.checked) selectedKeyfile = null;
+         }}
+
+         document.getElementById('keyfile-input').addEventListener('change', (e) => {{
+             const file = e.target.files[0];
+             if (file) {{
+                 const reader = new FileReader();
+                 reader.onload = () => {{
+                     selectedKeyfile = btoa(String.fromCharCode(...new Uint8Array(reader.result)));
+                     document.getElementById('keyfile-name').textContent = '✓ ' + file.name;
+                 }};
+                 reader.readAsArrayBuffer(file);
+             }}
+         }});
+
+         async function generateKeyfile() {{
+             const res = await fetch('/api/security/generate-keyfile', {{ method: 'POST' }});
+             const data = await res.json();
+             if (data.success) {{
+                 const bytes = Uint8Array.from(atob(data.keyfile), c => c.charCodeAt(0));
+                 const blob = new Blob([bytes], {{ type: 'application/octet-stream' }});
+                 const url = URL.createObjectURL(blob);
+                 const a = document.createElement('a');
+                 a.href = url;
+                 a.download = 'lazarus.lazkey';
+                 a.click();
+                 URL.revokeObjectURL(url);
+                 showToast('Keyfile downloaded!', 'success');
+             }}
+         }}
 
         digits[0].focus();
     </script>
@@ -511,4 +581,186 @@ pub async fn security_page(State(state): State<AppState>) -> Result<Html<String>
             .unwrap_or_default(),
     );
     Ok(Html(html))
+}
+
+/// 키파일 생성 응답
+#[derive(Serialize)]
+pub struct KeyfileResponse {
+    pub success: bool,
+    pub keyfile: Option<String>, // base64
+    pub message: String,
+}
+
+/// POST /api/security/generate-keyfile - 새 키파일 생성
+pub async fn generate_keyfile() -> Json<KeyfileResponse> {
+    let keyfile = CryptoManager::generate_keyfile();
+    let encoded = BASE64.encode(&keyfile);
+    Json(KeyfileResponse {
+        success: true,
+        keyfile: Some(encoded),
+        message: "Keyfile generated".to_string(),
+    })
+}
+
+/// PIN + 키파일로 잠금 해제 요청
+#[derive(Deserialize)]
+pub struct UnlockWithKeyfileRequest {
+    pub pin: String,
+    pub keyfile: Option<String>, // base64
+}
+
+/// POST /api/security/unlock-with-keyfile
+pub async fn unlock_with_keyfile(
+    State(state): State<AppState>,
+    Json(req): Json<UnlockWithKeyfileRequest>,
+) -> Result<Json<ApiResponse>> {
+    let security = state.security.read().await;
+
+    if !security.pin_enabled {
+        return Ok(Json(ApiResponse {
+            success: true,
+            message: "PIN이 설정되지 않았습니다".to_string(),
+        }));
+    }
+
+    // 키파일 디코딩
+    let keyfile_bytes = match &req.keyfile {
+        Some(kf) => match BASE64.decode(kf) {
+            Ok(bytes) => Some(bytes),
+            Err(_) => {
+                return Ok(Json(ApiResponse {
+                    success: false,
+                    message: "Invalid keyfile format".to_string(),
+                }))
+            }
+        },
+        None => None,
+    };
+
+    // 키파일 필요한데 없으면 에러
+    if security.requires_keyfile() && keyfile_bytes.is_none() {
+        return Ok(Json(ApiResponse {
+            success: false,
+            message: "Keyfile required".to_string(),
+        }));
+    }
+
+    // PIN + 키파일 검증
+    let kf_ref = keyfile_bytes.as_deref();
+    if !security.verify_pin_with_keyfile(&req.pin, kf_ref)? {
+        return Ok(Json(ApiResponse {
+            success: false,
+            message: "잘못된 PIN 또는 키파일입니다".to_string(),
+        }));
+    }
+
+    // CryptoManager 생성 및 저장
+    if let Some(crypto) = security.get_crypto_with_keyfile(&req.pin, kf_ref)? {
+        let mut backup = state.backup.write().await;
+        backup.set_crypto(Some(crypto.clone()));
+
+        let mut crypto_lock = state.crypto.write().await;
+        *crypto_lock = Some(crypto);
+    }
+
+    Ok(Json(ApiResponse {
+        success: true,
+        message: "잠금이 해제되었습니다".to_string(),
+    }))
+}
+
+/// PIN + 키파일 설정 요청
+#[derive(Deserialize)]
+pub struct SetPinWithKeyfileRequest {
+    pub current_pin: Option<String>,
+    pub current_keyfile: Option<String>,
+    pub new_pin: String,
+    pub new_keyfile: Option<String>,
+}
+
+/// POST /api/security/set-pin-with-keyfile
+pub async fn set_pin_with_keyfile(
+    State(state): State<AppState>,
+    Json(req): Json<SetPinWithKeyfileRequest>,
+) -> Result<Json<ApiResponse>> {
+    // PIN 유효성 검사
+    if req.new_pin.len() < 6 || req.new_pin.len() > 32 {
+        return Ok(Json(ApiResponse {
+            success: false,
+            message: "PIN must be 6-32 characters".to_string(),
+        }));
+    }
+    if !req.new_pin.chars().all(|c| c.is_ascii_alphanumeric()) {
+        return Ok(Json(ApiResponse {
+            success: false,
+            message: "PIN must be alphanumeric only".to_string(),
+        }));
+    }
+
+    let mut security = state.security.write().await;
+
+    // 기존 PIN 검증
+    if security.pin_enabled {
+        let current_pin = match &req.current_pin {
+            Some(p) => p,
+            None => {
+                return Ok(Json(ApiResponse {
+                    success: false,
+                    message: "현재 PIN을 입력해주세요".to_string(),
+                }))
+            }
+        };
+
+        let current_kf = match &req.current_keyfile {
+            Some(kf) => match BASE64.decode(kf) {
+                Ok(bytes) => Some(bytes),
+                Err(_) => {
+                    return Ok(Json(ApiResponse {
+                        success: false,
+                        message: "Invalid keyfile format".to_string(),
+                    }))
+                }
+            },
+            None => None,
+        };
+
+        if !security.verify_pin_with_keyfile(current_pin, current_kf.as_deref())? {
+            return Ok(Json(ApiResponse {
+                success: false,
+                message: "현재 PIN 또는 키파일이 잘못되었습니다".to_string(),
+            }));
+        }
+    }
+
+    // 새 키파일 디코딩
+    let new_kf = match &req.new_keyfile {
+        Some(kf) => match BASE64.decode(kf) {
+            Ok(bytes) => Some(bytes),
+            Err(_) => {
+                return Ok(Json(ApiResponse {
+                    success: false,
+                    message: "Invalid keyfile format".to_string(),
+                }))
+            }
+        },
+        None => None,
+    };
+
+    // 새 PIN + 키파일 설정
+    security.set_pin_with_keyfile(&req.new_pin, new_kf.as_deref())?;
+
+    // 저장
+    let security_path = state.data_dir.join("security.json");
+    security.save(&security_path)?;
+
+    // CryptoManager 업데이트
+    if let Some(crypto) = security.get_crypto_with_keyfile(&req.new_pin, new_kf.as_deref())? {
+        let mut crypto_lock = state.crypto.write().await;
+        *crypto_lock = Some(crypto);
+    }
+
+    Ok(Json(ApiResponse {
+        success: true,
+        message: "PIN이 설정되었습니다".to_string(),
+    }))
 }

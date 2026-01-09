@@ -2,7 +2,7 @@
 //!
 //! XChaCha20-Poly1305 + Argon2id
 
-use argon2::Argon2;
+use argon2::{Algorithm, Argon2, Params, Version};
 use chacha20poly1305::{aead::Aead, KeyInit, XChaCha20Poly1305, XNonce};
 use rand::RngCore;
 
@@ -26,10 +26,11 @@ impl CryptoManager {
     pub fn from_pin(pin: &str, salt: &[u8]) -> Result<Self> {
         let mut key = [0u8; 32];
 
-        let argon2 = Argon2::default();
+        let params = Params::new(65536, 3, 4, Some(32)).map_err(|_| LazarusError::Encryption)?;
+        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
         argon2
             .hash_password_into(pin.as_bytes(), salt, &mut key)
-            .map_err(|e| LazarusError::Encryption)?;
+            .map_err(|_| LazarusError::Encryption)?;
 
         Ok(Self { key })
     }
@@ -103,40 +104,71 @@ pub struct EncryptedHeader {
     pub salt: String,
     /// PIN 검증용 암호화된 테스트 데이터 (base64)
     pub verify_data: String,
+    /// 키파일 사용 여부
+    #[serde(default)]
+    pub keyfile_enabled: bool,
 }
 
 impl EncryptedHeader {
-    /// 새 헤더 생성 (PIN 설정 시)
+    /// 새 헤더 생성 (PIN만)
     pub fn new(pin: &str) -> Result<Self> {
-        let salt = CryptoManager::generate_salt();
-        let crypto = CryptoManager::from_pin(pin, &salt)?;
+        Self::new_with_keyfile(pin, None)
+    }
 
-        // 검증용 데이터 암호화
+    /// 새 헤더 생성 (PIN + 선택적 키파일)
+    pub fn new_with_keyfile(pin: &str, keyfile: Option<&[u8]>) -> Result<Self> {
+        let salt = CryptoManager::generate_salt();
+
+        let crypto = match keyfile {
+            Some(kf) => CryptoManager::from_pin_and_keyfile(pin, &salt, kf)?,
+            None => CryptoManager::from_pin(pin, &salt)?,
+        };
+
         let test_data = b"LAZARUS_PIN_OK";
         let verify_data = crypto.encrypt(test_data)?;
 
         Ok(Self {
             salt: base64_encode(&salt),
             verify_data: base64_encode(&verify_data),
+            keyfile_enabled: keyfile.is_some(),
         })
     }
-
-    /// PIN 검증
+    /// PIN 검증 (키파일 선택적)
     pub fn verify(&self, pin: &str) -> Result<bool> {
+        self.verify_with_keyfile(pin, None)
+    }
+
+    /// PIN + 키파일 검증
+    pub fn verify_with_keyfile(&self, pin: &str, keyfile: Option<&[u8]>) -> Result<bool> {
         let salt = base64_decode(&self.salt)?;
         let verify_data = base64_decode(&self.verify_data)?;
 
-        let crypto = CryptoManager::from_pin(pin, &salt)?;
+        let crypto = match keyfile {
+            Some(kf) => CryptoManager::from_pin_and_keyfile(pin, &salt, kf)?,
+            None => CryptoManager::from_pin(pin, &salt)?,
+        };
+
         Ok(crypto.verify_pin(&verify_data, b"LAZARUS_PIN_OK"))
     }
 
     /// CryptoManager 생성
     pub fn get_crypto(&self, pin: &str) -> Result<CryptoManager> {
+        self.get_crypto_with_keyfile(pin, None)
+    }
+
+    /// CryptoManager 생성 (키파일 포함)
+    pub fn get_crypto_with_keyfile(
+        &self,
+        pin: &str,
+        keyfile: Option<&[u8]>,
+    ) -> Result<CryptoManager> {
         let salt = base64_decode(&self.salt)?;
-        CryptoManager::from_pin(pin, &salt)
+        match keyfile {
+            Some(kf) => CryptoManager::from_pin_and_keyfile(pin, &salt, kf),
+            None => CryptoManager::from_pin(pin, &salt),
+        }
     }
 }
-
 /// Base64 인코딩
 fn base64_encode(data: &[u8]) -> String {
     use std::fmt::Write;
@@ -292,5 +324,80 @@ impl SecurityConfig {
             Some(header) => Ok(Some(header.get_crypto(pin)?)),
             None => Ok(None),
         }
+    }
+
+    /// PIN + 키파일 설정
+    pub fn set_pin_with_keyfile(&mut self, pin: &str, keyfile: Option<&[u8]>) -> Result<()> {
+        let header = EncryptedHeader::new_with_keyfile(pin, keyfile)?;
+        self.pin_enabled = true;
+        self.header = Some(header);
+        Ok(())
+    }
+
+    /// PIN + 키파일 검증
+    pub fn verify_pin_with_keyfile(&self, pin: &str, keyfile: Option<&[u8]>) -> Result<bool> {
+        match &self.header {
+            Some(header) => header.verify_with_keyfile(pin, keyfile),
+            None => Ok(true),
+        }
+    }
+
+    /// CryptoManager 가져오기 (키파일 포함)
+    pub fn get_crypto_with_keyfile(
+        &self,
+        pin: &str,
+        keyfile: Option<&[u8]>,
+    ) -> Result<Option<CryptoManager>> {
+        match &self.header {
+            Some(header) => Ok(Some(header.get_crypto_with_keyfile(pin, keyfile)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// 키파일 필요 여부
+    pub fn requires_keyfile(&self) -> bool {
+        self.header
+            .as_ref()
+            .map(|h| h.keyfile_enabled)
+            .unwrap_or(false)
+    }
+}
+
+/// 키파일 크기 (32 bytes = 256 bits)
+pub const KEYFILE_SIZE: usize = 32;
+
+impl CryptoManager {
+    /// PIN + 키파일에서 암호화 키 유도
+    pub fn from_pin_and_keyfile(pin: &str, salt: &[u8], keyfile: &[u8]) -> Result<Self> {
+        use hkdf::Hkdf;
+        use sha2::Sha256;
+
+        // 1단계: PIN → Argon2id → 중간키
+        let mut intermediate_key = [0u8; 32];
+        let params = Params::new(65536, 3, 4, Some(32)).map_err(|_| LazarusError::Encryption)?;
+        let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+        argon2
+            .hash_password_into(pin.as_bytes(), salt, &mut intermediate_key)
+            .map_err(|_| LazarusError::Encryption)?;
+
+        // 2단계: 중간키 + 키파일 → HKDF → 최종키
+        let hkdf = Hkdf::<Sha256>::new(Some(keyfile), &intermediate_key);
+        let mut final_key = [0u8; 32];
+        hkdf.expand(b"lazarus-keyfile-v1", &mut final_key)
+            .map_err(|_| LazarusError::Encryption)?;
+
+        Ok(Self { key: final_key })
+    }
+
+    /// 새 키파일 생성 (CSPRNG)
+    pub fn generate_keyfile() -> [u8; KEYFILE_SIZE] {
+        let mut keyfile = [0u8; KEYFILE_SIZE];
+        rand::thread_rng().fill_bytes(&mut keyfile);
+        keyfile
+    }
+
+    /// 키파일 검증 (크기 체크)
+    pub fn validate_keyfile(keyfile: &[u8]) -> bool {
+        keyfile.len() == KEYFILE_SIZE
     }
 }

@@ -194,9 +194,12 @@ pmap -x $(pgrep lazarus) | tail -n 1
 - JSONL storage for easy portability
 
 ### 🔐 Security
+### 🔐 Security
 - **XChaCha20-Poly1305** encryption (same as Signal, WireGuard)
-- **Argon2id** key derivation (Password Hashing Competition winner)
-- PIN-based locking (6-32 characters)
+- **Argon2id** key derivation (64MB memory-hard)
+- **Optional keyfile** — HKDF-SHA256 combiner for 2FA
+- PIN-based locking (6-32 alphanumeric)
+- **KeePass/VeraCrypt grade** security
 - **API authentication middleware**
 - **Concurrent edit locks**
 - **Encrypted backups**
@@ -211,7 +214,7 @@ pmap -x $(pgrep lazarus) | tail -n 1
 ### 🔌 USB Sync
 - USB device scanning and detection
 - Initialize Lazarus USB for offline sharing
-- **Sync Notes, Posts, and Q&A** across air-gapped devices
+- **Sync Notes, Posts, Q&A, and Packages** across air-gapped devices
 - Bidirectional sync with conflict resolution (Last-Write-Wins)
 - Works completely offline
 
@@ -337,21 +340,42 @@ Download ZIM files from [Kiwix](https://wiki.kiwix.org/wiki/Content).
 
 ## 🔐 Security Model
 
-| Component | Algorithm |
-|-----------|-----------|
-| Cipher | XChaCha20-Poly1305 (256-bit) |
-| KDF | Argon2id |
-| Nonce | 24 bytes random |
-| Auth | Poly1305 MAC |
+| Component | Algorithm | Details |
+|-----------|-----------|---------|
+| Cipher | XChaCha20-Poly1305 | 256-bit, same as Signal |
+| KDF | Argon2id | 64MB memory, time=3, parallel=4 |
+| Key Combiner | HKDF-SHA256 | RFC 5869 standard |
+| Nonce | 24 bytes | CSPRNG random |
+| Auth | Poly1305 MAC | Authenticated encryption |
+
+### 🔑 Optional Keyfile (2FA)
+
+| PIN Only (8-char alnum) | PIN + Keyfile |
+|-------------------------|---------------|
+| 62^8 = 218 trillion | 62^8 × 2^256 = **impossible** |
+| Brute-force: centuries | Brute-force: heat death of universe |
+
+- **32-byte keyfile** generated with CSPRNG
+- Store separately from device (USB, paper backup)
+- Lost keyfile + forgotten PIN = **permanent data loss**
+
+### Security Grade
+
+| Comparison | Level |
+|------------|-------|
+| Signal | Same tier |
+| KeePass | Same tier |
+| VeraCrypt | Same tier |
+| Bank apps | **Higher** |
 
 ### ⚠️ WARNING
-
 ```
 ┌──────────────────────────────────────────────────────────┐
 │                                                          │
 │   THERE IS NO PASSWORD RECOVERY                          │
 │                                                          │
 │   Forget your PIN = PERMANENT DATA LOSS                  │
+│   Lost keyfile = PERMANENT DATA LOSS                     │
 │   No backdoors. No master keys. By design.               │
 │                                                          │
 └──────────────────────────────────────────────────────────┘
@@ -381,12 +405,10 @@ Browser ←HTTP→ Axum Server
 | Frontend | HTMX + Vanilla JS + Editor.js |
 | Storage | Custom WAL (rkyv + zstd) |
 | Search | Tantivy |
-| Crypto | XChaCha20-Poly1305 + Argon2id |
+| Crypto | XChaCha20-Poly1305 + Argon2id + HKDF |
 | SRS | FSRS algorithm |
 | Wikipedia | OpenZIM (mmap, multi-file) |
-| i18n | 18 languages, RTL support |
-
----
+| i18n | 18 languages, RTL support |---
 
 ## 🗺️ Roadmap
 

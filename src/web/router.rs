@@ -55,6 +55,18 @@ pub fn create_router(state: AppState) -> Router {
             "/api/security/remove-pin",
             post(handlers::security::remove_pin),
         )
+        .route(
+            "/api/security/generate-keyfile",
+            post(handlers::security::generate_keyfile),
+        )
+        .route(
+            "/api/security/unlock-with-keyfile",
+            post(handlers::security::unlock_with_keyfile),
+        )
+        .route(
+            "/api/security/set-pin-with-keyfile",
+            post(handlers::security::set_pin_with_keyfile),
+        )
         //노트 중복 확인 및 제거, laz
         .route(
             "/api/notes/duplicates",
