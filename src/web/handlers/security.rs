@@ -594,7 +594,7 @@ pub struct KeyfileResponse {
 /// POST /api/security/generate-keyfile - 새 키파일 생성
 pub async fn generate_keyfile() -> Json<KeyfileResponse> {
     let keyfile = CryptoManager::generate_keyfile();
-    let encoded = BASE64.encode(&keyfile);
+    let encoded = BASE64.encode(keyfile);
     Json(KeyfileResponse {
         success: true,
         keyfile: Some(encoded),
